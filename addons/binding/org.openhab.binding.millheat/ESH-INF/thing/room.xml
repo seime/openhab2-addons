@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="millheat"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
+
+
+
+
+	<thing-type id="room">
+
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="bridge" />
+		</supported-bridge-type-refs>
+
+		<label>Room with one or more WIFI enabled heaters</label>
+
+		<channels>
+		
+            <channel id="currentTemperature" typeId="currentTemperature" />
+            <channel id="comfortTemperature" typeId="comfortTemperature" />
+            <channel id="sleepTemperature" typeId="sleepTemperature" />
+            <channel id="awayTemperature" typeId="awayTemperature" />
+            <channel id="heatingActive" typeId="heatingActive" />
+
+
+			<!-- name = None device_id = None current_temp = None set_temp = None fan_status = None power_status = None independent_device 
+				= True room = None open_window = None is_heating = None tibber_control = None sub_domain = 5332 available = False is_holiday 
+				= None can_change_temp = 1 -->
+		</channels>
+
+		<properties>
+			<property name="vendor">Mill</property>
+			<property name="protocol">WIFI</property>
+		</properties>
+
+		<representation-property>roomId</representation-property>
+		<config-description-ref uri="thing-type:millheat:room" />
+	</thing-type>
+
+
+
+</thing:thing-descriptions>

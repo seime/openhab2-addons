@@ -1,0 +1,37 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: org.openhab.binding.millheat
+Bundle-ClassPath: .
+Bundle-ManifestVersion: 2
+Bundle-Name: MillHeat Binding
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-SymbolicName: org.openhab.binding.millheat;singleton:=true
+Bundle-Vendor: openHAB
+Bundle-Version: 2.5.0.qualifier
+Import-Package: 
+ com.google.gson,
+ com.google.gson.annotations,
+ com.google.gson.stream;version="2.8.2",
+ org.apache.commons.codec.binary,
+ org.apache.commons.codec.digest,
+ org.apache.commons.io,
+ org.apache.commons.lang,
+ org.eclipse.jdt.annotation;resolution:=optional,
+ org.eclipse.jetty.client,
+ org.eclipse.jetty.client.api,
+ org.eclipse.jetty.client.util,
+ org.eclipse.jetty.http,
+ org.eclipse.jetty.util.component,
+ org.eclipse.smarthome.config.core,
+ org.eclipse.smarthome.config.discovery,
+ org.eclipse.smarthome.config.discovery.mdns,
+ org.eclipse.smarthome.core.library.types,
+ org.eclipse.smarthome.core.thing,
+ org.eclipse.smarthome.core.thing.binding,
+ org.eclipse.smarthome.core.thing.binding.builder,
+ org.eclipse.smarthome.core.thing.type,
+ org.eclipse.smarthome.core.types,
+ org.eclipse.smarthome.io.net.http,
+ org.osgi.framework;version="1.8.0",
+ org.slf4j
+Service-Component: OSGI-INF/*.xml
+Bundle-ActivationPolicy: lazy
