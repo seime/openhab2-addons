@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="millheat"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
+
+
+    <channel-type id="currentTemperature">
+        <item-type>Number:Temperature</item-type>
+        <label>Current temperature</label>
+        <description>Current temperature</description>
+        <category>Temperature</category>
+        <state readOnly="true" pattern="%d %unit%" />
+    </channel-type>
+    <channel-type id="comfortTemperature">
+        <item-type>Number:Temperature</item-type>
+        <label>Comfort temperature</label>
+        <description>Set temperature comfort mode</description>
+        <category>Temperature</category>
+        <state readOnly="false" pattern="%d %unit%" />
+    </channel-type>
+    <channel-type id="sleepTemperature">
+        <item-type>Number:Temperature</item-type>
+        <label>Sleep temperature</label>
+        <description>Set temperature sleep mode</description>
+        <category>Temperature</category>
+        <state readOnly="false" pattern="%d %unit%" />
+    </channel-type>
+    <channel-type id="awayTemperature">
+        <item-type>Number:Temperature</item-type>
+        <label>Away temperature</label>
+        <description>Set temperature away mode</description>
+        <category>Temperature</category>
+        <state readOnly="false" pattern="%d %unit%" />
+    </channel-type>
+    <channel-type id="targetTemperature">
+        <item-type>Number:Temperature</item-type>
+        <label>Target Temperature</label>
+        <description>Target temperature of the heater</description>
+        <state pattern="%d %unit%"/>
+    </channel-type>
+    <channel-type id="heatingActive">
+        <item-type>Switch</item-type>
+        <label>Heating active</label>
+        <description>Current state of the heater or heaters in room</description>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="currentPower">
+        <item-type>Number</item-type>
+        <label>Power</label>
+        <description>Actual power usage</description>
+        <category>Energy</category>
+        <state readOnly="true" pattern="%d W"></state>
+    </channel-type>
+
+
+</thing:thing-descriptions>

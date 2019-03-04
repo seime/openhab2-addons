@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config-description:config-descriptions
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:config-description="http://eclipse.org/smarthome/schemas/config-description/v1.0.0"
+	xsi:schemaLocation="http://eclipse.org/smarthome/schemas/config-description/v1.0.0
+		http://eclipse.org/smarthome/schemas/config-description-1.0.0.xsd">
+
+	<config-description uri="thing-type:millheat:bridge">
+		<parameter name="username" type="text">
+			<label>Username</label>
+			<description>Your Millheat app username (email)</description>
+			<required>true</required>
+		</parameter>
+
+		<parameter name="password" type="text">
+			<label>Password</label>
+			<description>Your Millheat app password</description>
+			<required>true</required>
+			<context>password</context>
+		</parameter>
+
+		<parameter name="refreshInterval" type="integer" required="false" min="10">
+			<label>Refresh interval</label>
+			<description>Specifies the refresh time in seconds for polling temperature updates from Millheat service</description>
+			<default>30</default>
+		</parameter>
+
+	</config-description>
+
+	<config-description uri="thing-type:millheat:heater">
+        <parameter name="macAddress" type="text" required="true">
+            <label>MAC address</label>
+        </parameter>
+        <parameter name="power" type="integer" required="false">
+            <label>Heating power in watt</label>
+            <description>Number of watts this heater is consuming when it is heating. This value is sent to the currentPower channel when the heater is heating in order to track energy usage</description>
+        </parameter>
+	</config-description>
+
+	<config-description uri="thing-type:millheat:room">
+		<parameter name="roomId" type="text" required="true">
+			<label>Room ID</label>
+		</parameter>
+	</config-description>
+
+</config-description:config-descriptions>
