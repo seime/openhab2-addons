@@ -144,6 +144,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
         } else if (StringUtils.trimToNull(config.password) == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "password not configured");
         } else {
+
             scheduler.execute(() -> {
 
                 // Call API and obtain token
