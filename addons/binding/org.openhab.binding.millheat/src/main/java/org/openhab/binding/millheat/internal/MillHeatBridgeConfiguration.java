@@ -25,4 +25,6 @@ public class MillHeatBridgeConfiguration {
     public String username;
 
     public String password;
+
+    public int refreshInterval = 60;
 }

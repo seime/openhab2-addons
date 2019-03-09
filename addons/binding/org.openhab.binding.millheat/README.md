@@ -19,10 +19,14 @@ In order to do discovery, add a thing of type Mill Heating API and add username 
 ## Thing Configuration
 
 ```
-Bridge millheat:bridge:home "Millheat account/bridge" [username="email@address.com",password="topsecret"] {
-    Thing heater heaterOffice "Office panel heater" [ macAddress="F0XXXFFFXX" ]
+Bridge millheat:bridge:home "Millheat account/bridge" [username="email@address.com",password="topsecret", refreshInterval=60] {
+    Thing heater heaterOffice "Office panel heater" [ macAddress="F0XXXFFFXX", power=900 ]
 }
 ```
+
+* username = email address used in app
+* password = password used in app
+* refreshInterval = number of seconds between refresh calls to the server. 
 
 ## Channels
 
@@ -41,8 +45,9 @@ All channels read only.
 
 All channels read only.
 
-* currentTemperature - measured temperature in your room (if more than one heater then it is the average of all heaters)
-* heatingActive - heating active
+* currentTemperature - measured temperature by this heater
+* heatingActive - heating element active
+* currentPower - watts being consumed at the moment. Value is taken from the power-attribute on the thing configuration for this heater
 
 
 ## Full Example

@@ -16,8 +16,10 @@ import static org.openhab.binding.millheat.internal.MillHeatBindingConstants.CHA
 
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -35,9 +37,11 @@ import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
+import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
+import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.millheat.internal.MillHeatBridgeConfiguration;
@@ -74,16 +78,37 @@ import com.google.gson.GsonBuilder;
 @NonNullByDefault
 public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
-    private static final int MIN_TIME_BETWEEEN_MODEL_UPDATES_MS = 60_000;
+    @Override
+    public void dispose() {
+        stopDiscovery();
+        stopPolling();
+        super.dispose();
+    }
+
+    private static final int MIN_TIME_BETWEEEN_MODEL_UPDATES_MS = 30_000;
 
     private static final int NUM_NONCE_CHARS = 16;
 
     private static final String CONTENT_TYPE = "application/x-zc-object";
 
-    private final Logger logger = LoggerFactory.getLogger(MillHeatBridgeHandler.class);
-
     public static String API_ENDPOINT_1 = "https://eurouter.ablecloud.cn:9005/zc-account/v1/";
+
     public static String API_ENDPOINT_2 = "http://eurouter.ablecloud.cn:5000/millService/v1/";
+
+    private static final String ALLOWED_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    private static final String REQUEST_TIMEOUT = "300";
+
+    private static String getRandomString(final int sizeOfRandomString) {
+        final Random random = new Random();
+        final StringBuilder sb = new StringBuilder(sizeOfRandomString);
+        for (int i = 0; i < sizeOfRandomString; ++i) {
+            sb.append(ALLOWED_CHARACTERS.charAt(random.nextInt(ALLOWED_CHARACTERS.length())));
+        }
+        return sb.toString();
+    }
+
+    private final Logger logger = LoggerFactory.getLogger(MillHeatBridgeHandler.class);
 
     private @Nullable String userId;
 
@@ -98,6 +123,13 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
     private Gson gson;
 
     private MillheatModel model = new MillheatModel();
+
+    /**
+     * Future to poll for status
+     */
+    private @Nullable ScheduledFuture<?> statusFuture;
+
+    private @Nullable MillHeatBridgeConfiguration config;
 
     public MillHeatBridgeHandler(Bridge bridge, HttpClient httpClient) {
         super(bridge);
@@ -118,6 +150,63 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
         // @formatter:on
     }
 
+    private Request addStandardHeadersAndPayload(Request req, AbstractRequest payload)
+            throws UnsupportedEncodingException {
+        requestLogger.listenTo(req);
+
+     // @formatter:off
+        return
+         req.header("Connection", "Keep-Alive")
+            .header("X-Zc-Major-Domain", "seanywell")
+            .header("X-Zc-Msg-Name", "millService")
+            .header("X-Zc-Sub-Domain", "milltype")
+            .header("X-Zc-Seq-Id", "1")
+            .header("X-Zc-Version", "1")
+            .method(HttpMethod.POST)
+            .timeout(5, TimeUnit.SECONDS)
+            .content(new BytesContentProvider((gson.toJson(payload)).getBytes("UTF-8")), CONTENT_TYPE);
+     // @formatter:on
+    }
+
+    private boolean allowModelUpdate() {
+
+        long timeSinceLastUpdate = System.currentTimeMillis() - model.lastUpdated;
+        if (timeSinceLastUpdate > MIN_TIME_BETWEEEN_MODEL_UPDATES_MS) {
+            return true;
+        }
+        return false;
+    }
+
+    private Request buildLoggedInRequest(AbstractRequest req)
+            throws NoSuchAlgorithmException, UnsupportedEncodingException {
+
+        String nonce = getRandomString(NUM_NONCE_CHARS);
+        String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
+        String signatureBasis = REQUEST_TIMEOUT + timestamp + nonce + token;
+        String signature = DigestUtils.shaHex(signatureBasis);
+        String reqJson = gson.toJson(req);
+
+        // @formatter:off
+
+        Request request = httpClient
+                .newRequest(API_ENDPOINT_2 + req.getRequestUrl());
+
+
+        return addStandardHeadersAndPayload(request,req)
+            .header("X-Zc-Timestamp",timestamp)
+            .header("X-Zc-Timeout", REQUEST_TIMEOUT)
+            .header("X-Zc-Nonce", nonce)
+            .header("X-Zc-User-Id", userId)
+            .header("X-Zc-User-Signature", signature)
+            .header("X-Zc-Content-Length", ""+reqJson.length());
+        // @formatter:on
+
+    }
+
+    public MillheatModel getModel() {
+        return model;
+    }
+
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         if (CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
@@ -136,8 +225,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void initialize() {
-        // logger.debug("Start initializing!");
-        MillHeatBridgeConfiguration config = getConfigAs(MillHeatBridgeConfiguration.class);
+        config = getConfigAs(MillHeatBridgeConfiguration.class);
 
         if (StringUtils.trimToNull(config.username) == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "username not configured");
@@ -188,6 +276,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
                                             model = refreshModel();
                                             updateStatus(ThingStatus.ONLINE);
                                             startDiscovery();
+                                            initPolling();
 
                                         } catch (Exception e) {
                                             model = new MillheatModel(); // Empty model
@@ -215,16 +304,20 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     }
 
-    private void startDiscovery() {
-        if (discoveryService != null) {
-            discoveryService.startService();
-        }
-    }
+    /**
+     * starts this things polling future
+     */
+    private void initPolling() {
+        stopPolling();
 
-    public void stopDiscovery() {
-        if (discoveryService != null) {
-            discoveryService.stopService();
-        }
+        statusFuture = scheduler.scheduleWithFixedDelay(() -> {
+            try {
+                updateModelFromServer();
+
+            } catch (Exception e) {
+                logger.warn("Error refreshing model", e);
+            }
+        }, config.refreshInterval, config.refreshInterval, TimeUnit.SECONDS);
 
     }
 
@@ -309,90 +402,52 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
         return model;
     }
 
+    public void setDiscoveryService(MillHeatDiscoveryService discoveryService) {
+        this.discoveryService = discoveryService;
+    }
+
+    private void startDiscovery() {
+        if (discoveryService != null) {
+            discoveryService.startService();
+        }
+    }
+
+    public void stopDiscovery() {
+        if (discoveryService != null) {
+            discoveryService.stopService();
+        }
+
+    }
+
+    /**
+     * Stops this thing's polling future
+     */
+    private void stopPolling() {
+
+        if (statusFuture != null && !statusFuture.isCancelled()) {
+            statusFuture.cancel(true);
+            statusFuture = null;
+        }
+    }
+
     public void updateModelFromServer() {
         if (allowModelUpdate()) {
 
             try {
                 model = refreshModel();
+                List<Thing> subThings = getThing().getThings();
+                for (Thing thing : subThings) {
+                    ThingHandler handler = thing.getHandler();
+                    if (handler != null) {
+                        MillheatBaseThingHandler mHandler = (MillheatBaseThingHandler) handler;
+                        mHandler.updateState(model);
+                    }
+                }
             } catch (NoSuchAlgorithmException | UnsupportedEncodingException | TimeoutException | ExecutionException
                     | InterruptedException e) {
                 logger.error("Error refreshing Millheat model", e);
             }
         }
-    }
-
-    private boolean allowModelUpdate() {
-
-        long timeSinceLastUpdate = System.currentTimeMillis() - model.lastUpdated;
-        if (timeSinceLastUpdate > MIN_TIME_BETWEEEN_MODEL_UPDATES_MS) {
-            return true;
-        }
-        return false;
-    }
-
-    private static final String ALLOWED_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    private static final String REQUEST_TIMEOUT = "300";
-
-    private static String getRandomString(final int sizeOfRandomString) {
-        final Random random = new Random();
-        final StringBuilder sb = new StringBuilder(sizeOfRandomString);
-        for (int i = 0; i < sizeOfRandomString; ++i) {
-            sb.append(ALLOWED_CHARACTERS.charAt(random.nextInt(ALLOWED_CHARACTERS.length())));
-        }
-        return sb.toString();
-    }
-
-    private Request addStandardHeadersAndPayload(Request req, AbstractRequest payload)
-            throws UnsupportedEncodingException {
-        requestLogger.listenTo(req);
-
-     // @formatter:off
-        return
-         req.header("Connection", "Keep-Alive")
-            .header("X-Zc-Major-Domain", "seanywell")
-            .header("X-Zc-Msg-Name", "millService")
-            .header("X-Zc-Sub-Domain", "milltype")
-            .header("X-Zc-Seq-Id", "1")
-            .header("X-Zc-Version", "1")
-            .method(HttpMethod.POST)
-            .timeout(5, TimeUnit.SECONDS)
-            .content(new BytesContentProvider((gson.toJson(payload)).getBytes("UTF-8")), CONTENT_TYPE);
-     // @formatter:on
-    }
-
-    private Request buildLoggedInRequest(AbstractRequest req)
-            throws NoSuchAlgorithmException, UnsupportedEncodingException {
-
-        String nonce = getRandomString(NUM_NONCE_CHARS);
-        String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
-        String signatureBasis = REQUEST_TIMEOUT + timestamp + nonce + token;
-        String signature = DigestUtils.sha1Hex(signatureBasis);
-        String reqJson = gson.toJson(req);
-
-        // @formatter:off
-
-        Request request = httpClient
-                .newRequest(API_ENDPOINT_2 + req.getRequestUrl());
-
-
-        return addStandardHeadersAndPayload(request,req)
-            .header("X-Zc-Timestamp",timestamp)
-            .header("X-Zc-Timeout", REQUEST_TIMEOUT)
-            .header("X-Zc-Nonce", nonce)
-            .header("X-Zc-User-Id", userId)
-            .header("X-Zc-User-Signature", signature)
-            .header("X-Zc-Content-Length", ""+reqJson.length());
-        // @formatter:on
-
-    }
-
-    public MillheatModel getModel() {
-        return model;
-    }
-
-    public void setDiscoveryService(MillHeatDiscoveryService discoveryService) {
-        this.discoveryService = discoveryService;
     }
 
 }

@@ -37,69 +37,56 @@ public final class RequestLogger {
 
     public RequestLogger() {
         parser = new JsonParser();
-        gson = new GsonBuilder().setPrettyPrinting().create();
-    }
-
-    public Request listenTo(Request request) {
-        dump(request);
-        return request;
+        gson = new GsonBuilder().setPrettyPrinting().setLenient().create();
     }
 
     private void dump(Request request) {
+
         long id = nextId.getAndIncrement();
-        StringBuilder group = new StringBuilder();
-        request.onRequestBegin(theRequest -> group.append(
-                "Request " + id + "\n" + id + " > " + theRequest.getMethod() + " " + theRequest.getURI() + "\n"));
-        request.onRequestHeaders(theRequest -> {
-            for (HttpField header : theRequest.getHeaders()) {
-                group.append(id + " > " + header + "\n");
-            }
-        });
+        if (log.isDebugEnabled()) {
+            StringBuilder group = new StringBuilder();
+            request.onRequestBegin(theRequest -> group.append(
+                    "Request " + id + "\n" + id + " > " + theRequest.getMethod() + " " + theRequest.getURI() + "\n"));
+            request.onRequestHeaders(theRequest -> {
+                for (HttpField header : theRequest.getHeaders()) {
+                    group.append(id + " > " + header + "\n");
+                }
+            });
 
-        StringBuilder contentBuffer = new StringBuilder();
-        request.onRequestContent((theRequest, content) -> contentBuffer
-                .append(reformatJson(ByteBuffers.toString(content, getCharset(theRequest.getHeaders())))));
-        request.onRequestSuccess(theRequest -> {
-            if (contentBuffer.length() > 0) {
-                group.append("\n" + contentBuffer.toString());
-            }
-            log.debug(group.toString());
-            contentBuffer.delete(0, contentBuffer.length());
-            group.delete(0, group.length());
-        });
+            StringBuilder contentBuffer = new StringBuilder();
+            request.onRequestContent((theRequest, content) -> contentBuffer
+                    .append(reformatJson(ByteBuffers.toString(content, getCharset(theRequest.getHeaders())))));
+            request.onRequestSuccess(theRequest -> {
+                if (contentBuffer.length() > 0) {
+                    group.append("\n" + contentBuffer.toString());
+                }
+                log.debug(group.toString());
+                contentBuffer.delete(0, contentBuffer.length());
+                group.delete(0, group.length());
+            });
 
-        request.onResponseBegin(theResponse -> {
-            group.append(
-                    "Response " + id + "\n" + id + " < " + theResponse.getVersion() + " " + theResponse.getStatus());
-            if (theResponse.getReason() != null) {
-                group.append(" " + theResponse.getReason());
-            }
-            group.append("\n");
-        });
-        request.onResponseHeaders(theResponse -> {
-            for (HttpField header : theResponse.getHeaders()) {
-                group.append(id + " < " + header + "\n");
-            }
-        });
-        request.onResponseContent((theResponse, content) -> contentBuffer
-                .append(reformatJson(ByteBuffers.toString(content, getCharset(theResponse.getHeaders())))));
-        request.onResponseSuccess(theResponse -> {
-            if (contentBuffer.length() > 0) {
-                group.append("\n" + contentBuffer.toString());
-            }
-            log.debug(group.toString());
-        });
-    }
-
-    private String reformatJson(String jsonString) {
-        try {
-            JsonElement json = parser.parse(jsonString);
-            return gson.toJson(json);
-        } catch (JsonSyntaxException e) {
-            log.info("Could not reformat malformed JSON due to '{}'", e.getMessage());
+            request.onResponseBegin(theResponse -> {
+                group.append("Response " + id + "\n" + id + " < " + theResponse.getVersion() + " "
+                        + theResponse.getStatus());
+                if (theResponse.getReason() != null) {
+                    group.append(" " + theResponse.getReason());
+                }
+                group.append("\n");
+            });
+            request.onResponseHeaders(theResponse -> {
+                for (HttpField header : theResponse.getHeaders()) {
+                    group.append(id + " < " + header + "\n");
+                }
+            });
+            request.onResponseContent((theResponse, content) -> contentBuffer
+                    .append(reformatJson(ByteBuffers.toString(content, getCharset(theResponse.getHeaders())))));
+            request.onResponseSuccess(theResponse -> {
+                if (contentBuffer.length() > 0) {
+                    group.append("\n" + contentBuffer.toString());
+                }
+                log.debug(group.toString());
+            });
         }
-
-        return jsonString;
     }
 
     private Charset getCharset(HttpFields headers) {
@@ -114,5 +101,21 @@ public final class RequestLogger {
         // Remove semicolons or quotes
         String encoding = tokens[1].replaceAll("[;\"]", "");
         return Charset.forName(encoding);
+    }
+
+    public Request listenTo(Request request) {
+        dump(request);
+        return request;
+    }
+
+    private String reformatJson(String jsonString) {
+        try {
+            JsonElement json = parser.parse(jsonString);
+            return gson.toJson(json);
+        } catch (JsonSyntaxException e) {
+            log.info("Could not reformat malformed JSON due to '{}'", e.getMessage());
+            return jsonString;
+        }
+
     }
 }

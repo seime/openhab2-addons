@@ -14,6 +14,7 @@ package org.openhab.binding.millheat.internal.handler;
 
 import static org.openhab.binding.millheat.internal.MillHeatBindingConstants.*;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DecimalType;
@@ -22,7 +23,6 @@ import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
-import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.millheat.internal.MillHeatBindingConstants;
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * @author Arne Seime - Initial contribution
  */
 @NonNullByDefault
-public class MillHeatRoomHandler extends BaseThingHandler {
+public class MillHeatRoomHandler extends MillheatBaseThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(MillHeatRoomHandler.class);
 
@@ -50,6 +50,7 @@ public class MillHeatRoomHandler extends BaseThingHandler {
         super(thing);
     }
 
+    @SuppressWarnings("null")
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         MillHeatBridgeHandler handler = (MillHeatBridgeHandler) getBridge().getHandler();
@@ -57,38 +58,45 @@ public class MillHeatRoomHandler extends BaseThingHandler {
         if (handler != null) {
             MillheatModel model = handler.getModel();
 
-            Room room = model.findRoomById(config.roomId);
-            if (room != null) {
-                if (CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
-                    if (command instanceof RefreshType) {
-                        updateState(channelUID, new DecimalType(room.currentTemp));
-                    }
-                } else if (CHANNEL_COMFORT_TEMPERATURE.equals(channelUID.getId())) {
-                    if (command instanceof RefreshType) {
-                        updateState(channelUID, new DecimalType(room.comfortTemp));
-                    }
-                } else if (CHANNEL_SLEEP_TEMPERATURE.equals(channelUID.getId())) {
-                    if (command instanceof RefreshType) {
-                        updateState(channelUID, new DecimalType(room.sleepTemp));
-                    }
-                } else if (CHANNEL_AWAY_TEMPERATURE.equals(channelUID.getId())) {
-                    if (command instanceof RefreshType) {
-                        updateState(channelUID, new DecimalType(room.awayTemp));
-                    }
-                } else if (MillHeatBindingConstants.CHANNEL_HEATING_ACTIVE.equals(channelUID.getId())) {
-                    if (command instanceof RefreshType) {
-                        updateState(channelUID, room.heatingActive ? OnOffType.ON : OnOffType.OFF);
-                    }
-                }
-            } else {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.GONE);
-            }
+            handleCommand(channelUID, command, model);
         } else {
             logger.error("BridgeHandler is null, cannot update data");
         }
 
     }
 
+    @Override
+    protected void handleCommand(@NonNull ChannelUID channelUID, @NonNull Command command,
+            @NonNull MillheatModel model) {
+        Room room = model.findRoomById(config.roomId);
+        if (room != null) {
+            if (CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    updateState(channelUID, new DecimalType(room.currentTemp));
+                }
+            } else if (CHANNEL_COMFORT_TEMPERATURE.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    updateState(channelUID, new DecimalType(room.comfortTemp));
+                }
+            } else if (CHANNEL_SLEEP_TEMPERATURE.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    updateState(channelUID, new DecimalType(room.sleepTemp));
+                }
+            } else if (CHANNEL_AWAY_TEMPERATURE.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    updateState(channelUID, new DecimalType(room.awayTemp));
+                }
+            } else if (MillHeatBindingConstants.CHANNEL_HEATING_ACTIVE.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    updateState(channelUID, room.heatingActive ? OnOffType.ON : OnOffType.OFF);
+                }
+            }
+        } else {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.GONE);
+        }
+    }
+
+    @SuppressWarnings("null")
     @Override
     public void initialize() {
         logger.debug("Start initializing heater");

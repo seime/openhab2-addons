@@ -6,6 +6,20 @@ import java.time.ZoneOffset;
 import org.openhab.binding.millheat.internal.dto.HomeDTO;
 
 public class Home {
+    public String id;
+
+    public String name;
+    public int type;
+    public String timezone;
+
+    public Mode mode;
+
+    public Room[] rooms = new Room[0];
+
+    public Heater[] independentHeaters = new Heater[0];
+    // TODO
+    public Program program = null;
+
     public Home(HomeDTO dto) {
         id = String.valueOf(dto.homeId);
         name = dto.name;
@@ -24,18 +38,4 @@ public class Home {
             mode = new Mode(ModeType.valueOf(dto.currentMode), modeStart, modeEnd);
         }
     }
-
-    public String id;
-    public String name;
-    public int type;
-
-    public String timezone;
-
-    public Mode mode;
-
-    public Room[] rooms = new Room[0];
-    public Heater[] independentHeaters = new Heater[0];
-
-    // TODO
-    public Program program = null;
 }

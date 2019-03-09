@@ -17,15 +17,15 @@ package org.openhab.binding.millheat.internal.dto;
  */
 public class LoginRequest extends AbstractRequest {
 
+    public String account;
+
+    public String password;
+
     public LoginRequest(String username, String password) {
         super();
         this.account = username;
         this.password = password;
     }
-
-    public String account;
-
-    public String password;
 
     @Override
     public String getRequestUrl() {

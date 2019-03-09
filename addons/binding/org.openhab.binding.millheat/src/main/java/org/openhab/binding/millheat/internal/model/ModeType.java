@@ -11,13 +11,7 @@ public enum ModeType {
     Off(5),
     AdvancedAway(-4);
 
-    private int value;
     private static Map<Integer, ModeType> map = new HashMap<>();
-
-    private ModeType(int value) {
-        this.value = value;
-    }
-
     static {
         for (ModeType Mode : ModeType.values()) {
             map.put(Mode.value, Mode);
@@ -26,6 +20,12 @@ public enum ModeType {
 
     public static ModeType valueOf(int Mode) {
         return map.get(Mode);
+    }
+
+    private int value;
+
+    private ModeType(int value) {
+        this.value = value;
     }
 
     public int getValue() {

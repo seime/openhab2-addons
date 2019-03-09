@@ -19,10 +19,10 @@
 			<context>password</context>
 		</parameter>
 
-		<parameter name="refreshInterval" type="integer" required="false" min="10">
+		<parameter name="refreshInterval" type="integer" required="false" min="30">
 			<label>Refresh interval</label>
 			<description>Specifies the refresh time in seconds for polling temperature updates from Millheat service</description>
-			<default>30</default>
+			<default>60</default>
 		</parameter>
 
 	</config-description>

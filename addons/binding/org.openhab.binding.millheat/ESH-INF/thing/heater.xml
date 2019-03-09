@@ -17,7 +17,7 @@
 		<channels>
             <channel id="currentTemperature" typeId="currentTemperature" />
             <channel id="heatingActive" typeId="heatingActive" />
-            <channel id="targetTemperature" typeId="targetTemperature" />
+            <channel id="targetTemperature" typeId="targetTemperature" /> <!--  Only for independent heaters -->
             <channel id="currentPower" typeId="currentPower" />
             
 

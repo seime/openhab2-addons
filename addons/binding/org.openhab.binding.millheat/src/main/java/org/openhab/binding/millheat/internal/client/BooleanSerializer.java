@@ -13,12 +13,12 @@ import com.google.gson.JsonSerializer;
 public class BooleanSerializer implements JsonSerializer<Boolean>, JsonDeserializer<Boolean> {
 
     @Override
-    public JsonElement serialize(Boolean arg0, Type arg1, JsonSerializationContext arg2) {
-        return new JsonPrimitive(Boolean.TRUE.equals(arg0));
+    public Boolean deserialize(JsonElement arg0, Type arg1, JsonDeserializationContext arg2) throws JsonParseException {
+        return arg0.getAsInt() == 1;
     }
 
     @Override
-    public Boolean deserialize(JsonElement arg0, Type arg1, JsonDeserializationContext arg2) throws JsonParseException {
-        return arg0.getAsInt() == 1;
+    public JsonElement serialize(Boolean arg0, Type arg1, JsonSerializationContext arg2) {
+        return new JsonPrimitive(Boolean.TRUE.equals(arg0));
     }
 }

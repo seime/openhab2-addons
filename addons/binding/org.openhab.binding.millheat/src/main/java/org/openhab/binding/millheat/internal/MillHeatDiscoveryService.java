@@ -58,27 +58,9 @@ public class MillHeatDiscoveryService extends AbstractDiscoveryService {
 
     }
 
-    public void startService() {
-        super.activate(null);
-    }
-
-    public void stopService() {
-        super.abortScan();
-        super.stopScan();
-    }
-
     @Override
     protected void startBackgroundDiscovery() {
         discoveryJob = scheduler.scheduleWithFixedDelay(this::startScan, 0, REFRESH_INTERVAL_MINUTES, TimeUnit.MINUTES);
-    }
-
-    @Override
-    protected void stopBackgroundDiscovery() {
-        stopScan();
-        if (discoveryJob != null && !discoveryJob.isCancelled()) {
-            discoveryJob.cancel(true);
-            discoveryJob = null;
-        }
     }
 
     @Override
@@ -95,14 +77,16 @@ public class MillHeatDiscoveryService extends AbstractDiscoveryService {
                         ThingUID roomUID = new ThingUID(MillHeatBindingConstants.THING_TYPE_ROOM, bridgeUID,
                                 String.valueOf(room.id));
                         DiscoveryResult discoveryResultRoom = DiscoveryResultBuilder.create(roomUID)
-                                .withBridge(bridgeUID).withLabel(room.name).withProperty("roomId", room.id).build();
+                                .withBridge(bridgeUID).withLabel(room.name).withProperty("roomId", room.id)
+                                .withRepresentationProperty("roomId").build();
                         thingDiscovered(discoveryResultRoom);
 
                         for (Heater heater : room.heaters) {
                             ThingUID heaterUID = new ThingUID(MillHeatBindingConstants.THING_TYPE_HEATER, bridgeUID,
                                     String.valueOf(heater.id));
                             DiscoveryResult discoveryResultHeater = DiscoveryResultBuilder.create(heaterUID)
-                                    .withBridge(bridgeUID).withLabel(heater.name).withProperty("heaterId", heater.id)
+                                    .withBridge(bridgeUID).withLabel(heater.name)
+                                    .withRepresentationProperty("macAddress")
                                     .withProperty("macAddress", heater.macAddress).build();
                             thingDiscovered(discoveryResultHeater);
 
@@ -113,7 +97,7 @@ public class MillHeatDiscoveryService extends AbstractDiscoveryService {
                         ThingUID heaterUID = new ThingUID(MillHeatBindingConstants.THING_TYPE_HEATER, bridgeUID,
                                 String.valueOf(heater.id));
                         DiscoveryResult discoveryResultHeater = DiscoveryResultBuilder.create(heaterUID)
-                                .withBridge(bridgeUID).withLabel(heater.name).withProperty("heaterId", heater.id)
+                                .withBridge(bridgeUID).withLabel(heater.name).withRepresentationProperty("macAddress")
                                 .withProperty("macAddress", heater.macAddress).build();
                         thingDiscovered(discoveryResultHeater);
                     }
@@ -126,10 +110,28 @@ public class MillHeatDiscoveryService extends AbstractDiscoveryService {
         }
     }
 
+    public void startService() {
+        super.activate(null);
+    }
+
+    @Override
+    protected void stopBackgroundDiscovery() {
+        stopScan();
+        if (discoveryJob != null && !discoveryJob.isCancelled()) {
+            discoveryJob.cancel(true);
+            discoveryJob = null;
+        }
+    }
+
     @Override
     protected void stopScan() {
         logger.debug("Stop scan for Millheat devices.");
 
+        super.stopScan();
+    }
+
+    public void stopService() {
+        super.abortScan();
         super.stopScan();
     }
 

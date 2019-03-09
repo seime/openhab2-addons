@@ -60,20 +60,6 @@ public class MillHeatHandlerFactory extends BaseThingHandlerFactory {
     @Nullable
     private HttpClient httpClient = null;
 
-    @Reference
-    protected void setHttpClientFactory(HttpClientFactory httpClientFactory) {
-        this.httpClient = httpClientFactory.getCommonHttpClient();
-    }
-
-    protected void unsetHttpClientFactory(HttpClientFactory httpClientFactory) {
-        this.httpClient = null;
-    }
-
-    @Override
-    public boolean supportsThingType(ThingTypeUID thingTypeUID) {
-        return SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
-    }
-
     private Map<ThingUID, ServiceRegistration<DiscoveryService>> discoveryServiceRegistrations = new HashMap<>();
 
     @Override
@@ -109,10 +95,23 @@ public class MillHeatHandlerFactory extends BaseThingHandlerFactory {
     protected void removeHandler(@NonNull ThingHandler thingHandler) {
         ServiceRegistration<DiscoveryService> serviceRegistration = discoveryServiceRegistrations
                 .get(thingHandler.getThing().getUID());
-
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
         }
+    }
+
+    @Reference
+    protected void setHttpClientFactory(HttpClientFactory httpClientFactory) {
+        this.httpClient = httpClientFactory.getCommonHttpClient();
+    }
+
+    @Override
+    public boolean supportsThingType(ThingTypeUID thingTypeUID) {
+        return SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
+    }
+
+    protected void unsetHttpClientFactory(HttpClientFactory httpClientFactory) {
+        this.httpClient = null;
     }
 
 }

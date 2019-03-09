@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.millheat.internal.handler;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DecimalType;
@@ -21,7 +22,6 @@ import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
-import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.millheat.internal.MillHeatBindingConstants;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * @author Arne Seime - Initial contribution
  */
 @NonNullByDefault
-public class MillHeatHeaterHandler extends BaseThingHandler {
+public class MillHeatHeaterHandler extends MillheatBaseThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(MillHeatHeaterHandler.class);
 
@@ -49,7 +49,6 @@ public class MillHeatHeaterHandler extends BaseThingHandler {
         super(thing);
     }
 
-    @SuppressWarnings("null")
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         Bridge bridge = getBridge();
@@ -60,35 +59,7 @@ public class MillHeatHeaterHandler extends BaseThingHandler {
 
                 MillheatModel model = handler.getModel();
 
-                Heater heater = model.findHeaterByMac(config.macAddress);
-                if (heater != null) {
-                    if (MillHeatBindingConstants.CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
-                        if (command instanceof RefreshType) {
-                            updateState(channelUID, new DecimalType(heater.currentTemp));
-                        }
-                    } else if (MillHeatBindingConstants.CHANNEL_HEATING_ACTIVE.equals(channelUID.getId())) {
-                        if (command instanceof RefreshType) {
-                            updateState(channelUID, heater.heatingActive ? OnOffType.ON : OnOffType.OFF);
-                        }
-                    } else if (MillHeatBindingConstants.CHANNEL_CURRENT_POWER.equals(channelUID.getId())) {
-                        if (command instanceof RefreshType) {
-                            if (config.power != null) {
-                                if (heater.heatingActive) {
-                                    updateState(channelUID, new DecimalType(config.power));
-                                } else {
-                                    updateState(channelUID, new DecimalType(0));
-                                }
-
-                            } else {
-                                logger.debug(
-                                        "Cannot update power for heater {} as the nominal power on the heater has not been configured",
-                                        config.macAddress);
-                            }
-                        }
-                    }
-                } else {
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.GONE);
-                }
+                handleCommand(channelUID, command, model);
 
             } else {
                 logger.error("BridgeHandler is null, cannot update data");
@@ -102,6 +73,42 @@ public class MillHeatHeaterHandler extends BaseThingHandler {
 
     }
 
+    @Override
+    @SuppressWarnings("null")
+    protected void handleCommand(ChannelUID channelUID, @NonNull Command command, @NonNull MillheatModel model) {
+
+        Heater heater = model.findHeaterByMac(config.macAddress);
+        if (heater != null) {
+            if (MillHeatBindingConstants.CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    updateState(channelUID, new DecimalType(heater.currentTemp));
+                }
+            } else if (MillHeatBindingConstants.CHANNEL_HEATING_ACTIVE.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    updateState(channelUID, heater.heatingActive ? OnOffType.ON : OnOffType.OFF);
+                }
+            } else if (MillHeatBindingConstants.CHANNEL_CURRENT_POWER.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    if (config.power != null) {
+                        if (heater.heatingActive) {
+                            updateState(channelUID, new DecimalType(config.power));
+                        } else {
+                            updateState(channelUID, new DecimalType(0));
+                        }
+
+                    } else {
+                        logger.warn(
+                                "Cannot update power for heater {} as the nominal power on the heater has not been configured",
+                                config.macAddress);
+                    }
+                }
+            }
+        } else {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.GONE);
+        }
+    }
+
+    @SuppressWarnings("null")
     @Override
     public void initialize() {
         logger.debug("Start initializing heater");
@@ -129,4 +136,5 @@ public class MillHeatHeaterHandler extends BaseThingHandler {
         }
 
     }
+
 }

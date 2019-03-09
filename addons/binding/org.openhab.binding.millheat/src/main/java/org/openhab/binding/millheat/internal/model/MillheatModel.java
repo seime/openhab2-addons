@@ -29,21 +29,6 @@ public class MillheatModel {
         return null;
     }
 
-    public Room findRoomById(String id) {
-        if (homes != null) {
-            for (Home home : homes) {
-
-                for (Room room : home.rooms) {
-                    if (id.equals(room.id)) {
-                        return room;
-                    }
-                }
-            }
-
-        }
-        return null;
-    }
-
     public Heater findHeaterByMac(String macAddress) {
         if (homes != null) {
             for (Home home : homes) {
@@ -60,6 +45,21 @@ public class MillheatModel {
                         }
                     }
 
+                }
+            }
+
+        }
+        return null;
+    }
+
+    public Room findRoomById(String id) {
+        if (homes != null) {
+            for (Home home : homes) {
+
+                for (Room room : home.rooms) {
+                    if (id.equals(room.id)) {
+                        return room;
+                    }
                 }
             }
 

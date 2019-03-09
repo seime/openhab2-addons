@@ -10,7 +10,7 @@ Bundle-Version: 2.5.0.qualifier
 Import-Package: 
  com.google.gson,
  com.google.gson.annotations,
- com.google.gson.stream;version="2.8.2",
+ com.google.gson.stream,
  org.apache.commons.codec.binary,
  org.apache.commons.codec.digest,
  org.apache.commons.io,
@@ -31,7 +31,7 @@ Import-Package:
  org.eclipse.smarthome.core.thing.type,
  org.eclipse.smarthome.core.types,
  org.eclipse.smarthome.io.net.http,
- org.osgi.framework;version="1.8.0",
+ org.osgi.framework,
  org.slf4j
 Service-Component: OSGI-INF/*.xml
 Bundle-ActivationPolicy: lazy
