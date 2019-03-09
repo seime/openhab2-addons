@@ -99,7 +99,7 @@ public class MillHeatRoomHandler extends MillheatBaseThingHandler {
     @SuppressWarnings("null")
     @Override
     public void initialize() {
-        logger.debug("Start initializing heater");
+        logger.debug("Start initializing room");
         config = getConfigAs(MillHeatRoomConfiguration.class);
 
         MillHeatBridgeHandler handler = (MillHeatBridgeHandler) getBridge().getHandler();

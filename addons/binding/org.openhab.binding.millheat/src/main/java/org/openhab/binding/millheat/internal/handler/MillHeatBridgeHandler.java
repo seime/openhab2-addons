@@ -30,8 +30,6 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
-import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.BufferingResponseListener;
 import org.eclipse.jetty.client.util.BytesContentProvider;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpMethod;
@@ -49,10 +47,9 @@ import org.openhab.binding.millheat.internal.MillHeatDiscoveryService;
 import org.openhab.binding.millheat.internal.client.BooleanSerializer;
 import org.openhab.binding.millheat.internal.client.RequestLogger;
 import org.openhab.binding.millheat.internal.dto.AbstractRequest;
+import org.openhab.binding.millheat.internal.dto.AbstractResponse;
 import org.openhab.binding.millheat.internal.dto.GetHomesRequest;
 import org.openhab.binding.millheat.internal.dto.GetHomesResponse;
-import org.openhab.binding.millheat.internal.dto.GetIndependentDevicesByHomeRequest;
-import org.openhab.binding.millheat.internal.dto.GetIndependentDevicesByHomeResponse;
 import org.openhab.binding.millheat.internal.dto.LoginRequest;
 import org.openhab.binding.millheat.internal.dto.LoginResponse;
 import org.openhab.binding.millheat.internal.dto.SelectDeviceByRoomRequest;
@@ -77,13 +74,6 @@ import com.google.gson.GsonBuilder;
  */
 @NonNullByDefault
 public class MillHeatBridgeHandler extends BaseBridgeHandler {
-
-    @Override
-    public void dispose() {
-        stopDiscovery();
-        stopPolling();
-        super.dispose();
-    }
 
     private static final int MIN_TIME_BETWEEEN_MODEL_UPDATES_MS = 30_000;
 
@@ -150,24 +140,6 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
         // @formatter:on
     }
 
-    private Request addStandardHeadersAndPayload(Request req, AbstractRequest payload)
-            throws UnsupportedEncodingException {
-        requestLogger.listenTo(req);
-
-     // @formatter:off
-        return
-         req.header("Connection", "Keep-Alive")
-            .header("X-Zc-Major-Domain", "seanywell")
-            .header("X-Zc-Msg-Name", "millService")
-            .header("X-Zc-Sub-Domain", "milltype")
-            .header("X-Zc-Seq-Id", "1")
-            .header("X-Zc-Version", "1")
-            .method(HttpMethod.POST)
-            .timeout(5, TimeUnit.SECONDS)
-            .content(new BytesContentProvider((gson.toJson(payload)).getBytes("UTF-8")), CONTENT_TYPE);
-     // @formatter:on
-    }
-
     private boolean allowModelUpdate() {
 
         long timeSinceLastUpdate = System.currentTimeMillis() - model.lastUpdated;
@@ -175,32 +147,6 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
             return true;
         }
         return false;
-    }
-
-    private Request buildLoggedInRequest(AbstractRequest req)
-            throws NoSuchAlgorithmException, UnsupportedEncodingException {
-
-        String nonce = getRandomString(NUM_NONCE_CHARS);
-        String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
-        String signatureBasis = REQUEST_TIMEOUT + timestamp + nonce + token;
-        String signature = DigestUtils.shaHex(signatureBasis);
-        String reqJson = gson.toJson(req);
-
-        // @formatter:off
-
-        Request request = httpClient
-                .newRequest(API_ENDPOINT_2 + req.getRequestUrl());
-
-
-        return addStandardHeadersAndPayload(request,req)
-            .header("X-Zc-Timestamp",timestamp)
-            .header("X-Zc-Timeout", REQUEST_TIMEOUT)
-            .header("X-Zc-Nonce", nonce)
-            .header("X-Zc-User-Id", userId)
-            .header("X-Zc-User-Signature", signature)
-            .header("X-Zc-Content-Length", ""+reqJson.length());
-        // @formatter:on
-
     }
 
     public MillheatModel getModel() {
@@ -223,6 +169,36 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
         }
     }
 
+    private boolean doLogin() {
+        try {
+            LoginResponse rsp = sendLoginRequest(new LoginRequest(config.username, config.password),
+                    LoginResponse.class);
+            int errorCode = rsp.errorCode;
+            if (0 != errorCode) {
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                        String.format("Error login in: code=%s, type=%s, message=%s", errorCode, rsp.errorName,
+                                rsp.errorDescription));
+            } else {
+                // No error provided on login, proceed to find token and userid
+                token = StringUtils.trimToNull(rsp.token);
+                userId = rsp.userId == null ? null : rsp.userId.toString();
+                if (token == null) {
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                            "error login in, no token provided");
+                } else if (userId == null) {
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                            "error login in, no userId provided");
+                } else {
+                    return true;
+                }
+            }
+        } catch (MillheatCommunicationException e) {
+            logger.error("Error login", e);
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Error login: " + e.getMessage());
+        }
+        return false;
+    }
+
     @Override
     public void initialize() {
         config = getConfigAs(MillHeatBridgeConfiguration.class);
@@ -235,66 +211,20 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
             scheduler.execute(() -> {
 
-                // Call API and obtain token
+                if (doLogin()) {
+                    try {
+                        model = refreshModel();
+                        updateStatus(ThingStatus.ONLINE);
+                        startDiscovery();
+                        initPolling();
 
-                try {
-                    LoginRequest req = new LoginRequest(config.username, config.password);
-                // @formatter:off
-                    Request request = httpClient.newRequest(API_ENDPOINT_1 + req.getRequestUrl())
+                    } catch (Exception e) {
+                        model = new MillheatModel(); // Empty model
+                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                                "error fetching initial data " + e.getMessage());
+                        logger.error("Error initializing Millheat data", e);
 
-                        ;
-                    // @formatter:on
-                    addStandardHeadersAndPayload(request, req);
-
-                    request.send(new BufferingResponseListener(1024) {
-                        @SuppressWarnings("null")
-                        @Override
-                        public void onComplete(@Nullable Result result) {
-                            if (!result.isFailed()) {
-                                String loginRspJson = getContentAsString();
-
-                                LoginResponse rsp = gson.fromJson(loginRspJson, LoginResponse.class);
-                                String errorCode = StringUtils.trimToNull(rsp.errorCode);
-                                if (null != errorCode) {
-                                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                                            String.format("Error login in: code=%s, type=%s, message=%s", errorCode,
-                                                    rsp.errorName, rsp.errorDescription));
-
-                                } else {
-                                    // No error provided on login, proceed to find token and userid
-                                    token = StringUtils.trimToNull(rsp.token);
-                                    userId = rsp.userId == null ? null : rsp.userId.toString();
-                                    if (token == null) {
-                                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                                                "error login in, no token provided");
-                                    } else if (userId == null) {
-                                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                                                "error login in, no userId provided");
-                                    } else {
-
-                                        try {
-                                            model = refreshModel();
-                                            updateStatus(ThingStatus.ONLINE);
-                                            startDiscovery();
-                                            initPolling();
-
-                                        } catch (Exception e) {
-                                            model = new MillheatModel(); // Empty model
-                                            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                                                    "error fetching initial data " + e.getMessage());
-                                            logger.error("Error initializing Millheat data", e);
-
-                                        }
-                                    }
-                                }
-
-                            }
-                        }
-
-                    });
-                } catch (Exception e) {
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                            "error fetching initial data " + e.getMessage());
+                    }
                 }
 
             });
@@ -302,6 +232,13 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
             logger.debug("Finished initializing!");
         }
 
+    }
+
+    @Override
+    public void dispose() {
+        stopDiscovery();
+        stopPolling();
+        super.dispose();
     }
 
     /**
@@ -312,7 +249,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
         statusFuture = scheduler.scheduleWithFixedDelay(() -> {
             try {
-                updateModelFromServer();
+                updateModelFromServerAndUpdateThingStatus();
 
             } catch (Exception e) {
                 logger.warn("Error refreshing model", e);
@@ -321,80 +258,98 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     }
 
-    protected MillheatModel refreshModel() throws NoSuchAlgorithmException, TimeoutException, ExecutionException,
-            InterruptedException, UnsupportedEncodingException {
+    private <T> T sendLoginRequest(AbstractRequest req, Class<T> responseType) throws MillheatCommunicationException {
+
+        try {
+            Request request = httpClient.newRequest(API_ENDPOINT_1 + req.getRequestUrl());
+
+            addStandardHeadersAndPayload(request, req);
+
+            return sendRequest(request, req, responseType);
+        } catch (UnsupportedEncodingException e) {
+            throw new MillheatCommunicationException("Error building Millheat request", e);
+        }
+
+    }
+
+    private <T> T sendLoggedInRequest(AbstractRequest req, Class<T> responseType)
+            throws MillheatCommunicationException {
+
+        try {
+            Request request = buildLoggedInRequest(req);
+
+            return sendRequest(request, req, responseType);
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+            throw new MillheatCommunicationException("Error building Millheat request", e);
+        }
+
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T sendRequest(Request request, AbstractRequest req, Class<T> responseType)
+            throws MillheatCommunicationException {
+        try {
+
+            ContentResponse contentResponse = request.send();
+            String responseJson = contentResponse.getContentAsString();
+            if (contentResponse.getStatus() == 200) {
+
+                AbstractResponse rsp = (AbstractResponse) gson.fromJson(responseJson, responseType);
+                if (rsp.errorCode == 0) {
+                    return (T) rsp;
+                } else {
+                    throw new MillheatCommunicationException(req, rsp);
+                }
+            } else {
+                throw new MillheatCommunicationException(
+                        "Error sending request to Millheat server. Server responded with " + contentResponse.getStatus()
+                                + " and payload " + responseJson);
+            }
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            throw new MillheatCommunicationException("Error sending request to Millheat server", e);
+        }
+
+    }
+
+    protected MillheatModel refreshModel() throws MillheatCommunicationException {
 
         MillheatModel model = new MillheatModel();
 
-        GetHomesRequest homesReq = new GetHomesRequest();
-        Request request = buildLoggedInRequest(homesReq);
+        GetHomesResponse homesRsp = sendLoggedInRequest(new GetHomesRequest(), GetHomesResponse.class);
+        model.homes = new Home[homesRsp.homes.length];
+        for (int i = 0; i < model.homes.length; i++) {
+            model.homes[i] = new Home(homesRsp.homes[i]);
+        }
 
-        ContentResponse contentResponse = request.send();
-        if (contentResponse.getStatus() == 200) {
-            String responseJson = contentResponse.getContentAsString();
-
-            GetHomesResponse homesRsp = gson.fromJson(responseJson, GetHomesResponse.class);
-
-            model.homes = new Home[homesRsp.homes.length];
-
-            for (int i = 0; i < model.homes.length; i++) {
-                model.homes[i] = new Home(homesRsp.homes[i]);
+        for (Home home : model.homes) {
+            SelectRoomByHomeResponse roomRsp = sendLoggedInRequest(
+                    new SelectRoomByHomeRequest(Long.parseLong(home.id), home.timezone),
+                    SelectRoomByHomeResponse.class);
+            home.rooms = new Room[roomRsp.rooms.length];
+            for (int i = 0; i < home.rooms.length; i++) {
+                home.rooms[i] = new Room(roomRsp.rooms[i]);
             }
 
-            for (Home home : model.homes) {
-                SelectRoomByHomeRequest roomReq = new SelectRoomByHomeRequest(Long.parseLong(home.id), home.timezone);
-                Request getRoomRequest = buildLoggedInRequest(roomReq);
-
-                ContentResponse roomResponse = getRoomRequest.send();
-                if (roomResponse.getStatus() == 200) {
-                    String roomJson = roomResponse.getContentAsString();
-                    SelectRoomByHomeResponse roomRsp = gson.fromJson(roomJson, SelectRoomByHomeResponse.class);
-
-                    home.rooms = new Room[roomRsp.rooms.length];
-                    for (int i = 0; i < home.rooms.length; i++) {
-                        home.rooms[i] = new Room(roomRsp.rooms[i]);
-                    }
-
-                    for (Room room : home.rooms) {
-                        SelectDeviceByRoomRequest deviceReq = new SelectDeviceByRoomRequest(Long.parseLong(room.id),
-                                home.timezone);
-                        Request getDeviceRequest = buildLoggedInRequest(deviceReq);
-
-                        ContentResponse deviceResponse = getDeviceRequest.send();
-                        if (deviceResponse.getStatus() == 200) {
-                            String deviceJson = deviceResponse.getContentAsString();
-
-                            SelectDeviceByRoomResponse deviceRsp = gson.fromJson(deviceJson,
-                                    SelectDeviceByRoomResponse.class);
-
-                            room.heaters = new Heater[deviceRsp.devices.length];
-                            for (int i = 0; i < room.heaters.length; i++) {
-                                room.heaters[i] = new Heater(deviceRsp.devices[i]);
-                            }
-
-                        }
-
-                    }
-
-                    GetIndependentDevicesByHomeRequest independentReq = new GetIndependentDevicesByHomeRequest(
-                            Long.parseLong(home.id));
-                    Request getIndependentRoomReq = buildLoggedInRequest(independentReq);
-
-                    ContentResponse independentRsp = getIndependentRoomReq.send();
-                    if (independentRsp.getStatus() == 200) {
-                        String independentJson = independentRsp.getContentAsString();
-                        GetIndependentDevicesByHomeResponse iRsp = gson.fromJson(independentJson,
-                                GetIndependentDevicesByHomeResponse.class);
-
-                        home.independentHeaters = new Heater[iRsp.devices.length];
-
-                        for (int i = 0; i < home.independentHeaters.length; i++) {
-                            home.independentHeaters[i] = new Heater(iRsp.devices[i]);
-                        }
-
-                    }
+            for (Room room : home.rooms) {
+                SelectDeviceByRoomResponse deviceRsp = sendLoggedInRequest(
+                        new SelectDeviceByRoomRequest(Long.parseLong(room.id), home.timezone),
+                        SelectDeviceByRoomResponse.class);
+                room.heaters = new Heater[deviceRsp.devices.length];
+                for (int i = 0; i < room.heaters.length; i++) {
+                    room.heaters[i] = new Heater(deviceRsp.devices[i]);
                 }
+
             }
+
+            /*
+             * GetIndependentDevicesByHomeResponse independentRsp = sendLoggedInRequest(
+             * new GetIndependentDevicesByHomeRequest(Long.parseLong(home.id), home.timezone),
+             * GetIndependentDevicesByHomeResponse.class);
+             * home.independentHeaters = new Heater[independentRsp.devices.length];
+             * for (int i = 0; i < home.independentHeaters.length; i++) {
+             * home.independentHeaters[i] = new Heater(independentRsp.devices[i]);
+             * }
+             */
         }
 
         model.lastUpdated = System.currentTimeMillis();
@@ -430,24 +385,83 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
         }
     }
 
-    public void updateModelFromServer() {
+    public void updateModelFromServerAndUpdateThingStatus() {
         if (allowModelUpdate()) {
 
-            try {
-                model = refreshModel();
-                List<Thing> subThings = getThing().getThings();
-                for (Thing thing : subThings) {
-                    ThingHandler handler = thing.getHandler();
-                    if (handler != null) {
-                        MillheatBaseThingHandler mHandler = (MillheatBaseThingHandler) handler;
-                        mHandler.updateState(model);
+            int retriesLeft = 2;
+            while (retriesLeft > 0) {
+                retriesLeft--;
+                try {
+                    model = refreshModel();
+                    updateThingStatuses();
+                } catch (MillheatCommunicationException e) {
+                    if (e.getErrorCode() == AbstractResponse.ERROR_CODE_ACCESS_TOKEN_EXPIRED) {
+                        doLogin();
                     }
                 }
-            } catch (NoSuchAlgorithmException | UnsupportedEncodingException | TimeoutException | ExecutionException
-                    | InterruptedException e) {
-                logger.error("Error refreshing Millheat model", e);
+            }
+
+            if (retriesLeft <= 0) {
+                logger.error("Error updating model from server, giving up");
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
+            }
+
+        }
+    }
+
+    private void updateThingStatuses() {
+        List<Thing> subThings = getThing().getThings();
+        for (Thing thing : subThings) {
+            ThingHandler handler = thing.getHandler();
+            if (handler != null) {
+                MillheatBaseThingHandler mHandler = (MillheatBaseThingHandler) handler;
+                mHandler.updateState(model);
             }
         }
+    }
+
+    private Request buildLoggedInRequest(AbstractRequest req)
+            throws NoSuchAlgorithmException, UnsupportedEncodingException {
+
+        String nonce = getRandomString(NUM_NONCE_CHARS);
+        String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
+        String signatureBasis = REQUEST_TIMEOUT + timestamp + nonce + token;
+        String signature = DigestUtils.shaHex(signatureBasis);
+        String reqJson = gson.toJson(req);
+
+        // @formatter:off
+
+        Request request = httpClient
+                .newRequest(API_ENDPOINT_2 + req.getRequestUrl());
+
+
+        return addStandardHeadersAndPayload(request,req)
+            .header("X-Zc-Timestamp",timestamp)
+            .header("X-Zc-Timeout", REQUEST_TIMEOUT)
+            .header("X-Zc-Nonce", nonce)
+            .header("X-Zc-User-Id", userId)
+            .header("X-Zc-User-Signature", signature)
+            .header("X-Zc-Content-Length", ""+reqJson.length());
+        // @formatter:on
+
+    }
+
+    private Request addStandardHeadersAndPayload(Request req, AbstractRequest payload)
+            throws UnsupportedEncodingException {
+        requestLogger.listenTo(req);
+
+     // @formatter:off
+        return
+         req.header("Connection", "Keep-Alive")
+            .header("X-Zc-Major-Domain", "seanywell")
+            .header("X-Zc-Msg-Name", "millService")
+            .header("X-Zc-Sub-Domain", "milltype")
+            .header("X-Zc-Seq-Id", "1")
+            .header("X-Zc-Version", "1")
+            .method(HttpMethod.POST)
+            .timeout(5, TimeUnit.SECONDS)
+            .content(new BytesContentProvider((gson.toJson(payload)).getBytes("UTF-8")), CONTENT_TYPE);
+     // @formatter:on
     }
 
 }

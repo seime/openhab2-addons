@@ -70,7 +70,7 @@ public class MillHeatDiscoveryService extends AbstractDiscoveryService {
         synchronized (this) {
             try {
                 ThingUID bridgeUID = bridgeHandler.getThing().getUID();
-                bridgeHandler.updateModelFromServer();
+                bridgeHandler.updateModelFromServerAndUpdateThingStatus();
                 MillheatModel model = bridgeHandler.getModel();
                 for (Home home : model.homes) {
                     for (Room room : home.rooms) {
