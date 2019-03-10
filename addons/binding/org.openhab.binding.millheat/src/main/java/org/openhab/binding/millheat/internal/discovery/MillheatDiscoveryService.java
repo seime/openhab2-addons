@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.millheat.internal;
+package org.openhab.binding.millheat.internal.discovery;
 
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
@@ -24,7 +24,8 @@ import org.eclipse.smarthome.config.discovery.DiscoveryResult;
 import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.ThingUID;
-import org.openhab.binding.millheat.internal.handler.MillHeatBridgeHandler;
+import org.openhab.binding.millheat.internal.MillheatBindingConstants;
+import org.openhab.binding.millheat.internal.handler.MillheatBridgeHandler;
 import org.openhab.binding.millheat.internal.model.Heater;
 import org.openhab.binding.millheat.internal.model.Home;
 import org.openhab.binding.millheat.internal.model.MillheatModel;
@@ -38,21 +39,21 @@ import org.slf4j.LoggerFactory;
  */
 
 @NonNullByDefault
-public class MillHeatDiscoveryService extends AbstractDiscoveryService {
+public class MillheatDiscoveryService extends AbstractDiscoveryService {
 
     private static final long REFRESH_INTERVAL_MINUTES = 60;
 
     public static final Set<ThingTypeUID> DISCOVERABLE_THING_TYPES_UIDS = Stream
-            .of(MillHeatBindingConstants.THING_TYPE_HEATER, MillHeatBindingConstants.THING_TYPE_ROOM)
+            .of(MillheatBindingConstants.THING_TYPE_HEATER, MillheatBindingConstants.THING_TYPE_ROOM)
             .collect(Collectors.toSet());
 
-    private final Logger logger = LoggerFactory.getLogger(MillHeatDiscoveryService.class);
+    private final Logger logger = LoggerFactory.getLogger(MillheatDiscoveryService.class);
 
     private @NonNullByDefault({}) ScheduledFuture<?> discoveryJob;
 
-    private MillHeatBridgeHandler bridgeHandler;
+    private MillheatBridgeHandler bridgeHandler;
 
-    public MillHeatDiscoveryService(MillHeatBridgeHandler bridgeHandler) {
+    public MillheatDiscoveryService(MillheatBridgeHandler bridgeHandler) {
         super(DISCOVERABLE_THING_TYPES_UIDS, 10);
         this.bridgeHandler = bridgeHandler;
 
@@ -74,7 +75,7 @@ public class MillHeatDiscoveryService extends AbstractDiscoveryService {
                 MillheatModel model = bridgeHandler.getModel();
                 for (Home home : model.homes) {
                     for (Room room : home.rooms) {
-                        ThingUID roomUID = new ThingUID(MillHeatBindingConstants.THING_TYPE_ROOM, bridgeUID,
+                        ThingUID roomUID = new ThingUID(MillheatBindingConstants.THING_TYPE_ROOM, bridgeUID,
                                 String.valueOf(room.id));
                         DiscoveryResult discoveryResultRoom = DiscoveryResultBuilder.create(roomUID)
                                 .withBridge(bridgeUID).withLabel(room.name).withProperty("roomId", room.id)
@@ -82,7 +83,7 @@ public class MillHeatDiscoveryService extends AbstractDiscoveryService {
                         thingDiscovered(discoveryResultRoom);
 
                         for (Heater heater : room.heaters) {
-                            ThingUID heaterUID = new ThingUID(MillHeatBindingConstants.THING_TYPE_HEATER, bridgeUID,
+                            ThingUID heaterUID = new ThingUID(MillheatBindingConstants.THING_TYPE_HEATER, bridgeUID,
                                     String.valueOf(heater.id));
                             DiscoveryResult discoveryResultHeater = DiscoveryResultBuilder.create(heaterUID)
                                     .withBridge(bridgeUID).withLabel(heater.name)
@@ -94,7 +95,7 @@ public class MillHeatDiscoveryService extends AbstractDiscoveryService {
                     }
 
                     for (Heater heater : home.independentHeaters) {
-                        ThingUID heaterUID = new ThingUID(MillHeatBindingConstants.THING_TYPE_HEATER, bridgeUID,
+                        ThingUID heaterUID = new ThingUID(MillheatBindingConstants.THING_TYPE_HEATER, bridgeUID,
                                 String.valueOf(heater.id));
                         DiscoveryResult discoveryResultHeater = DiscoveryResultBuilder.create(heaterUID)
                                 .withBridge(bridgeUID).withLabel(heater.name).withRepresentationProperty("macAddress")

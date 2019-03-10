@@ -24,28 +24,28 @@ import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
-import org.openhab.binding.millheat.internal.MillHeatBindingConstants;
-import org.openhab.binding.millheat.internal.MillHeatHeaterConfiguration;
+import org.openhab.binding.millheat.internal.MillheatBindingConstants;
+import org.openhab.binding.millheat.internal.config.MillheatHeaterConfiguration;
 import org.openhab.binding.millheat.internal.model.Heater;
 import org.openhab.binding.millheat.internal.model.MillheatModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link MillHeatHeaterHandler} is responsible for handling commands, which are
+ * The {@link MillheatHeaterHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
  * @author Arne Seime - Initial contribution
  */
 @NonNullByDefault
-public class MillHeatHeaterHandler extends MillheatBaseThingHandler {
+public class MillheatHeaterHandler extends MillheatBaseThingHandler {
 
-    private final Logger logger = LoggerFactory.getLogger(MillHeatHeaterHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(MillheatHeaterHandler.class);
 
     @Nullable
-    private MillHeatHeaterConfiguration config;
+    private MillheatHeaterConfiguration config;
 
-    public MillHeatHeaterHandler(Thing thing) {
+    public MillheatHeaterHandler(Thing thing) {
         super(thing);
     }
 
@@ -53,7 +53,7 @@ public class MillHeatHeaterHandler extends MillheatBaseThingHandler {
     public void handleCommand(ChannelUID channelUID, Command command) {
         Bridge bridge = getBridge();
         if (bridge != null) {
-            MillHeatBridgeHandler handler = (MillHeatBridgeHandler) bridge.getHandler();
+            MillheatBridgeHandler handler = (MillheatBridgeHandler) bridge.getHandler();
 
             if (handler != null) {
 
@@ -79,15 +79,15 @@ public class MillHeatHeaterHandler extends MillheatBaseThingHandler {
 
         Heater heater = model.findHeaterByMac(config.macAddress);
         if (heater != null) {
-            if (MillHeatBindingConstants.CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
+            if (MillheatBindingConstants.CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new DecimalType(heater.currentTemp));
                 }
-            } else if (MillHeatBindingConstants.CHANNEL_HEATING_ACTIVE.equals(channelUID.getId())) {
+            } else if (MillheatBindingConstants.CHANNEL_HEATING_ACTIVE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, heater.heatingActive ? OnOffType.ON : OnOffType.OFF);
                 }
-            } else if (MillHeatBindingConstants.CHANNEL_CURRENT_POWER.equals(channelUID.getId())) {
+            } else if (MillheatBindingConstants.CHANNEL_CURRENT_POWER.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     if (config.power != null) {
                         if (heater.heatingActive) {
@@ -112,9 +112,9 @@ public class MillHeatHeaterHandler extends MillheatBaseThingHandler {
     @Override
     public void initialize() {
         logger.debug("Start initializing heater");
-        config = getConfigAs(MillHeatHeaterConfiguration.class);
+        config = getConfigAs(MillheatHeaterConfiguration.class);
 
-        MillHeatBridgeHandler handler = (MillHeatBridgeHandler) getBridge().getHandler();
+        MillheatBridgeHandler handler = (MillheatBridgeHandler) getBridge().getHandler();
 
         boolean handled = false;
 

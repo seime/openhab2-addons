@@ -45,10 +45,11 @@ import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
-import org.openhab.binding.millheat.internal.MillHeatBridgeConfiguration;
-import org.openhab.binding.millheat.internal.MillHeatDiscoveryService;
+import org.openhab.binding.millheat.internal.MillheatCommunicationException;
 import org.openhab.binding.millheat.internal.client.BooleanSerializer;
 import org.openhab.binding.millheat.internal.client.RequestLogger;
+import org.openhab.binding.millheat.internal.config.MillheatBridgeConfiguration;
+import org.openhab.binding.millheat.internal.discovery.MillheatDiscoveryService;
 import org.openhab.binding.millheat.internal.dto.AbstractRequest;
 import org.openhab.binding.millheat.internal.dto.AbstractResponse;
 import org.openhab.binding.millheat.internal.dto.GetHomesRequest;
@@ -75,13 +76,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 /**
- * The {@link MillHeatBridgeHandler} is responsible for handling commands, which are
+ * The {@link MillheatBridgeHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
  * @author Arne Seime - Initial contribution
  */
 @NonNullByDefault
-public class MillHeatBridgeHandler extends BaseBridgeHandler {
+public class MillheatBridgeHandler extends BaseBridgeHandler {
 
     private static final int MIN_TIME_BETWEEEN_MODEL_UPDATES_MS = 30_000;
 
@@ -89,15 +90,15 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     private static final String CONTENT_TYPE = "application/x-zc-object";
 
-    public static final String API_ENDPOINT_1 = "https://eurouter.ablecloud.cn:9005/zc-account/v1/";
+    public static String API_ENDPOINT_1 = "https://eurouter.ablecloud.cn:9005/zc-account/v1/";
 
-    public static final String API_ENDPOINT_2 = "https://eurouter.ablecloud.cn:9005/millService/v1/";
+    public static String API_ENDPOINT_2 = "https://eurouter.ablecloud.cn:9005/millService/v1/";
 
     private static final String ALLOWED_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private static final String REQUEST_TIMEOUT = "300";
 
-    private final Logger logger = LoggerFactory.getLogger(MillHeatBridgeHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(MillheatBridgeHandler.class);
 
     private @Nullable String userId;
 
@@ -107,7 +108,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     private RequestLogger requestLogger = new RequestLogger();
 
-    private MillHeatDiscoveryService discoveryService;
+    private MillheatDiscoveryService discoveryService;
 
     private Gson gson;
 
@@ -115,7 +116,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     private @Nullable ScheduledFuture<?> statusFuture;
 
-    private MillHeatBridgeConfiguration config;
+    private MillheatBridgeConfiguration config;
 
     private Map<ThingUID, ServiceRegistration<DiscoveryService>> discoveryServiceRegistrations = new HashMap<>();
 
@@ -128,7 +129,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
         return sb.toString();
     }
 
-    public MillHeatBridgeHandler(Bridge bridge, HttpClient httpClient, BundleContext context) {
+    public MillheatBridgeHandler(Bridge bridge, HttpClient httpClient, BundleContext context) {
         super(bridge);
         this.httpClient = httpClient;
 
@@ -145,9 +146,9 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
                 .registerTypeAdapter(boolean.class, serializer)
                 .create();
         // @formatter:on
-        config = getConfigAs(MillHeatBridgeConfiguration.class);
+        config = getConfigAs(MillheatBridgeConfiguration.class);
 
-        discoveryService = new MillHeatDiscoveryService(this);
+        discoveryService = new MillheatDiscoveryService(this);
 
         ServiceRegistration<DiscoveryService> serviceRegistration = context.registerService(DiscoveryService.class,
                 discoveryService, null);
@@ -177,7 +178,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     private boolean doLogin() {
         try {
-            config = getConfigAs(MillHeatBridgeConfiguration.class);
+            config = getConfigAs(MillheatBridgeConfiguration.class);
 
             LoginResponse rsp = sendLoginRequest(new LoginRequest(config.username, config.password),
                     LoginResponse.class);
@@ -210,7 +211,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
     @Override
     public void initialize() {
 
-        config = getConfigAs(MillHeatBridgeConfiguration.class);
+        config = getConfigAs(MillheatBridgeConfiguration.class);
 
         if (StringUtils.trimToNull(config.username) == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "username not configured");

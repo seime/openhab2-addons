@@ -16,13 +16,13 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 
 /**
- * The {@link MillHeatBindingConstants} class defines common constants, which are
+ * The {@link MillheatBindingConstants} class defines common constants, which are
  * used across the whole binding.
  *
  * @author Arne Seime - Initial contribution
  */
 @NonNullByDefault
-public class MillHeatBindingConstants {
+public class MillheatBindingConstants {
 
     private static final String BINDING_ID = "millheat";
 

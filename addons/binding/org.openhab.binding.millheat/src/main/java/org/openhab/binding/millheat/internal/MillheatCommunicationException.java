@@ -1,4 +1,4 @@
-package org.openhab.binding.millheat.internal.handler;
+package org.openhab.binding.millheat.internal;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.openhab.binding.millheat.internal.dto.AbstractRequest;

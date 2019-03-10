@@ -10,14 +10,14 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.millheat.internal;
+package org.openhab.binding.millheat.internal.config;
 
 /**
- * The {@link MillHeatHeaterConfiguration} class contains fields mapping thing configuration parameters.
+ * The {@link MillheatHeaterConfiguration} class contains fields mapping thing configuration parameters.
  *
  * @author Arne Seime - Initial contribution
  */
-public class MillHeatHeaterConfiguration {
+public class MillheatHeaterConfiguration {
 
     /*
      * WIFI mac address

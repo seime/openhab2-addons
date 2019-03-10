@@ -10,14 +10,14 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.millheat.internal;
+package org.openhab.binding.millheat.internal.config;
 
 /**
- * The {@link MillHeatRoomConfiguration} class contains fields mapping thing configuration parameters.
+ * The {@link MillheatRoomConfiguration} class contains fields mapping thing configuration parameters.
  *
  * @author Arne Seime - Initial contribution
  */
-public class MillHeatRoomConfiguration {
+public class MillheatRoomConfiguration {
 
     /*
      * Room ID

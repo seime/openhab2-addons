@@ -10,14 +10,14 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.millheat.internal;
+package org.openhab.binding.millheat.internal.config;
 
 /**
- * The {@link MillHeatBridgeConfiguration} class contains fields mapping thing configuration parameters.
+ * The {@link MillheatBridgeConfiguration} class contains fields mapping thing configuration parameters.
  *
  * @author Arne Seime - Initial contribution
  */
-public class MillHeatBridgeConfiguration {
+public class MillheatBridgeConfiguration {
 
     /**
      * Username/email address used in app

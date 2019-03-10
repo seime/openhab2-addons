@@ -26,30 +26,30 @@ import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
 import org.eclipse.smarthome.io.net.http.HttpClientFactory;
-import org.openhab.binding.millheat.internal.handler.MillHeatBridgeHandler;
-import org.openhab.binding.millheat.internal.handler.MillHeatHeaterHandler;
-import org.openhab.binding.millheat.internal.handler.MillHeatRoomHandler;
+import org.openhab.binding.millheat.internal.handler.MillheatBridgeHandler;
+import org.openhab.binding.millheat.internal.handler.MillheatHeaterHandler;
+import org.openhab.binding.millheat.internal.handler.MillheatRoomHandler;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link MillHeatHandlerFactory} is responsible for creating things and thing
+ * The {@link MillheatHandlerFactory} is responsible for creating things and thing
  * handlers.
  *
  * @author Arne Seime - Initial contribution
  */
 @NonNullByDefault
 @Component(configurationPid = "binding.millheat", service = ThingHandlerFactory.class)
-public class MillHeatHandlerFactory extends BaseThingHandlerFactory {
+public class MillheatHandlerFactory extends BaseThingHandlerFactory {
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Stream
-            .of(MillHeatBindingConstants.THING_TYPE_BRIDGE, MillHeatBindingConstants.THING_TYPE_HEATER,
-                    MillHeatBindingConstants.THING_TYPE_ROOM)
+            .of(MillheatBindingConstants.THING_TYPE_BRIDGE, MillheatBindingConstants.THING_TYPE_HEATER,
+                    MillheatBindingConstants.THING_TYPE_ROOM)
             .collect(Collectors.toSet());
 
-    private final Logger logger = LoggerFactory.getLogger(MillHeatHandlerFactory.class);
+    private final Logger logger = LoggerFactory.getLogger(MillheatHandlerFactory.class);
 
     @Nullable
     private HttpClient httpClient = null;
@@ -59,13 +59,13 @@ public class MillHeatHandlerFactory extends BaseThingHandlerFactory {
 
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
-        if (MillHeatBindingConstants.THING_TYPE_HEATER.equals(thingTypeUID)) {
-            return new MillHeatHeaterHandler(thing);
-        } else if (MillHeatBindingConstants.THING_TYPE_ROOM.equals(thingTypeUID)) {
-            return new MillHeatRoomHandler(thing);
-        } else if (MillHeatBindingConstants.THING_TYPE_BRIDGE.equals(thingTypeUID)) {
+        if (MillheatBindingConstants.THING_TYPE_HEATER.equals(thingTypeUID)) {
+            return new MillheatHeaterHandler(thing);
+        } else if (MillheatBindingConstants.THING_TYPE_ROOM.equals(thingTypeUID)) {
+            return new MillheatRoomHandler(thing);
+        } else if (MillheatBindingConstants.THING_TYPE_BRIDGE.equals(thingTypeUID)) {
             if (httpClient != null) {
-                MillHeatBridgeHandler handler = new MillHeatBridgeHandler((Bridge) thing, httpClient, bundleContext);
+                MillheatBridgeHandler handler = new MillheatBridgeHandler((Bridge) thing, httpClient, bundleContext);
 
                 return handler;
 

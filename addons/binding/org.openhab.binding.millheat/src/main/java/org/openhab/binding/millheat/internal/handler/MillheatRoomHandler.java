@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.millheat.internal.handler;
 
-import static org.openhab.binding.millheat.internal.MillHeatBindingConstants.*;
+import static org.openhab.binding.millheat.internal.MillheatBindingConstants.*;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -25,8 +25,8 @@ import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
-import org.openhab.binding.millheat.internal.MillHeatBindingConstants;
-import org.openhab.binding.millheat.internal.MillHeatRoomConfiguration;
+import org.openhab.binding.millheat.internal.MillheatBindingConstants;
+import org.openhab.binding.millheat.internal.config.MillheatRoomConfiguration;
 import org.openhab.binding.millheat.internal.model.MillheatModel;
 import org.openhab.binding.millheat.internal.model.ModeType;
 import org.openhab.binding.millheat.internal.model.Room;
@@ -34,28 +34,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link MillHeatRoomHandler} is responsible for handling commands, which are
+ * The {@link MillheatRoomHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
  * @author Arne Seime - Initial contribution
  */
 @NonNullByDefault
-public class MillHeatRoomHandler extends MillheatBaseThingHandler {
+public class MillheatRoomHandler extends MillheatBaseThingHandler {
 
-    private final Logger logger = LoggerFactory.getLogger(MillHeatRoomHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(MillheatRoomHandler.class);
 
-    private MillHeatRoomConfiguration config;
+    private MillheatRoomConfiguration config;
 
-    public MillHeatRoomHandler(Thing thing) {
+    public MillheatRoomHandler(Thing thing) {
         super(thing);
-        config = getConfigAs(MillHeatRoomConfiguration.class);
+        config = getConfigAs(MillheatRoomConfiguration.class);
     }
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
         Bridge bridge = getBridge();
         if (bridge != null) {
-            MillHeatBridgeHandler handler = (MillHeatBridgeHandler) bridge.getHandler();
+            MillheatBridgeHandler handler = (MillheatBridgeHandler) bridge.getHandler();
 
             if (handler != null) {
                 MillheatModel model = handler.getModel();
@@ -73,7 +73,7 @@ public class MillHeatRoomHandler extends MillheatBaseThingHandler {
     private void updateRoomTemperature(String roomId, Command command, ModeType modeType) {
         Bridge bridge = getBridge();
         if (bridge != null) {
-            MillHeatBridgeHandler handler = (MillHeatBridgeHandler) bridge.getHandler();
+            MillheatBridgeHandler handler = (MillheatBridgeHandler) bridge.getHandler();
 
             if (handler != null) {
                 handler.updateRoomTemperature(config.roomId, command, modeType);
@@ -112,7 +112,7 @@ public class MillHeatRoomHandler extends MillheatBaseThingHandler {
                 } else {
                     updateRoomTemperature(config.roomId, command, ModeType.Away);
                 }
-            } else if (MillHeatBindingConstants.CHANNEL_HEATING_ACTIVE.equals(channelUID.getId())) {
+            } else if (MillheatBindingConstants.CHANNEL_HEATING_ACTIVE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, room.heatingActive ? OnOffType.ON : OnOffType.OFF);
                 }
@@ -126,9 +126,9 @@ public class MillHeatRoomHandler extends MillheatBaseThingHandler {
     @Override
     public void initialize() {
         logger.debug("Start initializing room");
-        config = getConfigAs(MillHeatRoomConfiguration.class);
+        config = getConfigAs(MillheatRoomConfiguration.class);
 
-        MillHeatBridgeHandler handler = (MillHeatBridgeHandler) getBridge().getHandler();
+        MillheatBridgeHandler handler = (MillheatBridgeHandler) getBridge().getHandler();
 
         boolean handled = false;
 

@@ -28,8 +28,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.openhab.binding.millheat.internal.MillHeatBridgeConfiguration;
-import org.openhab.binding.millheat.internal.handler.MillHeatBridgeHandler;
+import org.openhab.binding.millheat.internal.config.MillheatBridgeConfiguration;
+import org.openhab.binding.millheat.internal.handler.MillheatBridgeHandler;
+import org.osgi.framework.BundleContext;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
@@ -39,7 +40,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
  */
 public class MillHeatBridgeHandlerTest {
 
-    private MillHeatBridgeHandler subject;
+    private MillheatBridgeHandler subject;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(9999);
@@ -52,15 +53,18 @@ public class MillHeatBridgeHandlerTest {
     @Mock
     private Configuration configuration;
 
+    @Mock
+    private BundleContext bundleContext;
+
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
         httpClient = new HttpClient();
         httpClient.start();
-        subject = new MillHeatBridgeHandler(millheatThingMock, httpClient);
-        MillHeatBridgeHandler.API_ENDPOINT_1 = "http://localhost:9999/zc-account/v1/";
-        MillHeatBridgeHandler.API_ENDPOINT_2 = "http://localhost:9999/millService/v1/";
+        subject = new MillheatBridgeHandler(millheatThingMock, httpClient, bundleContext);
+        MillheatBridgeHandler.API_ENDPOINT_1 = "http://localhost:9999/zc-account/v1/";
+        MillheatBridgeHandler.API_ENDPOINT_2 = "http://localhost:9999/millService/v1/";
 
     }
 
@@ -78,8 +82,8 @@ public class MillHeatBridgeHandlerTest {
                 .willReturn(aResponse().withStatus(200).withBody(loginResponse)));
 
         when(millheatThingMock.getConfiguration()).thenReturn(configuration);
-        MillHeatBridgeConfiguration bridgeConfig = new MillHeatBridgeConfiguration();
-        when(configuration.as(eq(MillHeatBridgeConfiguration.class))).thenReturn(bridgeConfig);
+        MillheatBridgeConfiguration bridgeConfig = new MillheatBridgeConfiguration();
+        when(configuration.as(eq(MillheatBridgeConfiguration.class))).thenReturn(bridgeConfig);
         bridgeConfig.username = "username";
         bridgeConfig.password = "password";
 
