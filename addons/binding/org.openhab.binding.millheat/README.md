@@ -49,21 +49,23 @@ See full example below for how to configure using thing files.
 
 ### Room channels
 
-* currentTemperature - measured temperature in your room (if more than one heater then it is the average of all heaters)
-* comfortTemperature - comfort mode temperature 
-* awayTemperature - away mode temperature 
-* sleepTemperature - sleep mode temperature 
-* heatingActive - heating active
+| Channel        | Read/write           | Description  |
+| ------------- | ------------- | ----- |
+| currentTemperature      | R | measured temperature in your room (if more than one heater then it is the average of all heaters) |
+| comfortTemperature      | R/W | comfort mode temperature  |
+| awayTemperature      | R/W | away mode temperature  |
+| sleepTemperature      | R/W | sleep mode temperature  |
+| heatingActive      | R | whether the heaters in this room are active  |
+
 
 
 ### Heater channels
 
-All channels read only.
-
-* currentTemperature - measured temperature by this heater
-* heatingActive - heating element active
-* currentPower - watts being consumed at the moment. Value is taken from the power-attribute on the thing configuration for this heater
-
+| Channel        | Read/write           | Description  |
+| ------------- | ------------- | ----- |
+| currentTemperature      | R | measured temperature by this heater |
+| currentPower      | R | current power usage in watts. Note that the power attribute of the heater config must be set for this channel to be active  |
+| heatingActive      | R | whether the heater is active  |
 
 ## Full Example
 
