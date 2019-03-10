@@ -12,21 +12,16 @@
  */
 package org.openhab.binding.millheat.internal;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.smarthome.config.discovery.DiscoveryService;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
-import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
@@ -34,7 +29,6 @@ import org.eclipse.smarthome.io.net.http.HttpClientFactory;
 import org.openhab.binding.millheat.internal.handler.MillHeatBridgeHandler;
 import org.openhab.binding.millheat.internal.handler.MillHeatHeaterHandler;
 import org.openhab.binding.millheat.internal.handler.MillHeatRoomHandler;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
@@ -60,8 +54,6 @@ public class MillHeatHandlerFactory extends BaseThingHandlerFactory {
     @Nullable
     private HttpClient httpClient = null;
 
-    private Map<ThingUID, ServiceRegistration<DiscoveryService>> discoveryServiceRegistrations = new HashMap<>();
-
     @Override
     protected @Nullable ThingHandler createHandler(Thing thing) {
 
@@ -73,13 +65,7 @@ public class MillHeatHandlerFactory extends BaseThingHandlerFactory {
             return new MillHeatRoomHandler(thing);
         } else if (MillHeatBindingConstants.THING_TYPE_BRIDGE.equals(thingTypeUID)) {
             if (httpClient != null) {
-                MillHeatBridgeHandler handler = new MillHeatBridgeHandler((Bridge) thing, httpClient);
-                MillHeatDiscoveryService service = new MillHeatDiscoveryService(handler);
-                ServiceRegistration<DiscoveryService> serviceRegistration = this.bundleContext
-                        .registerService(DiscoveryService.class, service, null);
-
-                handler.setDiscoveryService(service);
-                discoveryServiceRegistrations.put(handler.getThing().getUID(), serviceRegistration);
+                MillHeatBridgeHandler handler = new MillHeatBridgeHandler((Bridge) thing, httpClient, bundleContext);
 
                 return handler;
 
@@ -91,27 +77,18 @@ public class MillHeatHandlerFactory extends BaseThingHandlerFactory {
         return null;
     }
 
-    @Override
-    protected void removeHandler(@NonNull ThingHandler thingHandler) {
-        ServiceRegistration<DiscoveryService> serviceRegistration = discoveryServiceRegistrations
-                .get(thingHandler.getThing().getUID());
-        if (serviceRegistration != null) {
-            serviceRegistration.unregister();
-        }
-    }
-
     @Reference
     protected void setHttpClientFactory(HttpClientFactory httpClientFactory) {
         this.httpClient = httpClientFactory.getCommonHttpClient();
     }
 
+    protected void unsetHttpClientFactory(HttpClientFactory httpClientFactory) {
+        this.httpClient = null;
+    }
+
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
         return SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
-    }
-
-    protected void unsetHttpClientFactory(HttpClientFactory httpClientFactory) {
-        this.httpClient = null;
     }
 
 }

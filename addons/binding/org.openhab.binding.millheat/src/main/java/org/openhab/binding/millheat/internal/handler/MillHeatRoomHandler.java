@@ -16,9 +16,9 @@ import static org.openhab.binding.millheat.internal.MillHeatBindingConstants.*;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.OnOffType;
+import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
@@ -44,26 +44,45 @@ public class MillHeatRoomHandler extends MillheatBaseThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(MillHeatRoomHandler.class);
 
-    @Nullable
     private MillHeatRoomConfiguration config;
 
     public MillHeatRoomHandler(Thing thing) {
         super(thing);
+        config = getConfigAs(MillHeatRoomConfiguration.class);
     }
 
-    @SuppressWarnings("null")
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        MillHeatBridgeHandler handler = (MillHeatBridgeHandler) getBridge().getHandler();
+        Bridge bridge = getBridge();
+        if (bridge != null) {
+            MillHeatBridgeHandler handler = (MillHeatBridgeHandler) bridge.getHandler();
 
-        if (handler != null) {
-            MillheatModel model = handler.getModel();
+            if (handler != null) {
+                MillheatModel model = handler.getModel();
 
-            handleCommand(channelUID, command, model);
+                handleCommand(channelUID, command, model);
+            } else {
+                logger.error("BridgeHandler is null, cannot update data");
+            }
         } else {
-            logger.error("BridgeHandler is null, cannot update data");
+            logger.error("Bridge is null, cannot update data");
         }
 
+    }
+
+    private void updateRoomTemperature(String roomId, Command command, ModeType modeType) {
+        Bridge bridge = getBridge();
+        if (bridge != null) {
+            MillHeatBridgeHandler handler = (MillHeatBridgeHandler) bridge.getHandler();
+
+            if (handler != null) {
+                handler.updateRoomTemperature(config.roomId, command, modeType);
+            } else {
+                logger.error("BridgeHandler is null, cannot update data");
+            }
+        } else {
+            logger.error("Bridge is null, cannot update data");
+        }
     }
 
     @Override
@@ -79,22 +98,19 @@ public class MillHeatRoomHandler extends MillheatBaseThingHandler {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new DecimalType(room.comfortTemp));
                 } else {
-                    MillHeatBridgeHandler handler = (MillHeatBridgeHandler) getBridge().getHandler();
-                    handler.updateRoomTemperature(config.roomId, command, ModeType.Comfort);
+                    updateRoomTemperature(config.roomId, command, ModeType.Comfort);
                 }
             } else if (CHANNEL_SLEEP_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new DecimalType(room.sleepTemp));
                 } else {
-                    MillHeatBridgeHandler handler = (MillHeatBridgeHandler) getBridge().getHandler();
-                    handler.updateRoomTemperature(config.roomId, command, ModeType.Sleep);
+                    updateRoomTemperature(config.roomId, command, ModeType.Sleep);
                 }
             } else if (CHANNEL_AWAY_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new DecimalType(room.awayTemp));
                 } else {
-                    MillHeatBridgeHandler handler = (MillHeatBridgeHandler) getBridge().getHandler();
-                    handler.updateRoomTemperature(config.roomId, command, ModeType.Away);
+                    updateRoomTemperature(config.roomId, command, ModeType.Away);
                 }
             } else if (MillHeatBindingConstants.CHANNEL_HEATING_ACTIVE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
@@ -124,6 +140,8 @@ public class MillHeatRoomHandler extends MillheatBaseThingHandler {
                 handled = true;
             }
 
+        } else {
+            logger.error("BridgeHandler is null, initialize room");
         }
 
         if (!handled) {

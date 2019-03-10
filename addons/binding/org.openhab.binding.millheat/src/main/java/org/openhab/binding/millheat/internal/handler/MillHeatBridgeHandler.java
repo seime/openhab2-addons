@@ -14,7 +14,9 @@ package org.openhab.binding.millheat.internal.handler;
 
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
@@ -32,12 +34,14 @@ import org.eclipse.jetty.client.util.BytesContentProvider;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.smarthome.config.discovery.DiscoveryService;
 import org.eclipse.smarthome.core.library.types.QuantityType;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
+import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
@@ -56,11 +60,14 @@ import org.openhab.binding.millheat.internal.dto.SelectDeviceByRoomResponse;
 import org.openhab.binding.millheat.internal.dto.SelectRoomByHomeRequest;
 import org.openhab.binding.millheat.internal.dto.SelectRoomByHomeResponse;
 import org.openhab.binding.millheat.internal.dto.SetRoomTempRequest;
+import org.openhab.binding.millheat.internal.dto.SetRoomTempResponse;
 import org.openhab.binding.millheat.internal.model.Heater;
 import org.openhab.binding.millheat.internal.model.Home;
 import org.openhab.binding.millheat.internal.model.MillheatModel;
 import org.openhab.binding.millheat.internal.model.ModeType;
 import org.openhab.binding.millheat.internal.model.Room;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,22 +89,13 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     private static final String CONTENT_TYPE = "application/x-zc-object";
 
-    public static String API_ENDPOINT_1 = "https://eurouter.ablecloud.cn:9005/zc-account/v1/";
+    public static final String API_ENDPOINT_1 = "https://eurouter.ablecloud.cn:9005/zc-account/v1/";
 
-    public static String API_ENDPOINT_2 = "https://eurouter.ablecloud.cn:9005/millService/v1/";
+    public static final String API_ENDPOINT_2 = "https://eurouter.ablecloud.cn:9005/millService/v1/";
 
     private static final String ALLOWED_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private static final String REQUEST_TIMEOUT = "300";
-
-    private static String getRandomString(final int sizeOfRandomString) {
-        final Random random = new Random();
-        final StringBuilder sb = new StringBuilder(sizeOfRandomString);
-        for (int i = 0; i < sizeOfRandomString; ++i) {
-            sb.append(ALLOWED_CHARACTERS.charAt(random.nextInt(ALLOWED_CHARACTERS.length())));
-        }
-        return sb.toString();
-    }
 
     private final Logger logger = LoggerFactory.getLogger(MillHeatBridgeHandler.class);
 
@@ -109,20 +107,28 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     private RequestLogger requestLogger = new RequestLogger();
 
-    private @Nullable MillHeatDiscoveryService discoveryService;
+    private MillHeatDiscoveryService discoveryService;
 
     private Gson gson;
 
     private MillheatModel model = new MillheatModel();
 
-    /**
-     * Future to poll for status
-     */
     private @Nullable ScheduledFuture<?> statusFuture;
 
-    private @Nullable MillHeatBridgeConfiguration config;
+    private MillHeatBridgeConfiguration config;
 
-    public MillHeatBridgeHandler(Bridge bridge, HttpClient httpClient) {
+    private Map<ThingUID, ServiceRegistration<DiscoveryService>> discoveryServiceRegistrations = new HashMap<>();
+
+    private static String getRandomString(final int sizeOfRandomString) {
+        final Random random = new Random();
+        final StringBuilder sb = new StringBuilder(sizeOfRandomString);
+        for (int i = 0; i < sizeOfRandomString; ++i) {
+            sb.append(ALLOWED_CHARACTERS.charAt(random.nextInt(ALLOWED_CHARACTERS.length())));
+        }
+        return sb.toString();
+    }
+
+    public MillHeatBridgeHandler(Bridge bridge, HttpClient httpClient, BundleContext context) {
         super(bridge);
         this.httpClient = httpClient;
 
@@ -139,6 +145,15 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
                 .registerTypeAdapter(boolean.class, serializer)
                 .create();
         // @formatter:on
+        config = getConfigAs(MillHeatBridgeConfiguration.class);
+
+        discoveryService = new MillHeatDiscoveryService(this);
+
+        ServiceRegistration<DiscoveryService> serviceRegistration = context.registerService(DiscoveryService.class,
+                discoveryService, null);
+
+        discoveryServiceRegistrations.put(this.getThing().getUID(), serviceRegistration);
+
     }
 
     private boolean allowModelUpdate() {
@@ -162,6 +177,8 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     private boolean doLogin() {
         try {
+            config = getConfigAs(MillHeatBridgeConfiguration.class);
+
             LoginResponse rsp = sendLoginRequest(new LoginRequest(config.username, config.password),
                     LoginResponse.class);
             int errorCode = rsp.errorCode;
@@ -192,6 +209,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void initialize() {
+
         config = getConfigAs(MillHeatBridgeConfiguration.class);
 
         if (StringUtils.trimToNull(config.username) == null) {
@@ -206,7 +224,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
                     try {
                         model = refreshModel();
                         updateStatus(ThingStatus.ONLINE);
-                        startDiscovery();
+                        discoveryService.startService();
                         initPolling();
 
                     } catch (Exception e) {
@@ -225,9 +243,20 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     }
 
+    @SuppressWarnings("null")
+    @Override
+    public void handleRemoval() {
+        ServiceRegistration<DiscoveryService> serviceRegistration = discoveryServiceRegistrations
+                .get(this.getThing().getUID());
+        if (serviceRegistration != null) {
+            serviceRegistration.unregister();
+        }
+        super.handleRemoval();
+    }
+
     @Override
     public void dispose() {
-        stopDiscovery();
+        discoveryService.stopService();
         stopPolling();
         super.dispose();
     }
@@ -350,26 +379,10 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
         return model;
     }
 
-    public void setDiscoveryService(MillHeatDiscoveryService discoveryService) {
-        this.discoveryService = discoveryService;
-    }
-
-    private void startDiscovery() {
-        if (discoveryService != null) {
-            discoveryService.startService();
-        }
-    }
-
-    public void stopDiscovery() {
-        if (discoveryService != null) {
-            discoveryService.stopService();
-        }
-
-    }
-
     /**
      * Stops this thing's polling future
      */
+    @SuppressWarnings("null")
     private void stopPolling() {
 
         if (statusFuture != null && !statusFuture.isCancelled()) {
@@ -423,6 +436,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
         String nonce = getRandomString(NUM_NONCE_CHARS);
         String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
         String signatureBasis = REQUEST_TIMEOUT + timestamp + nonce + token;
+        @SuppressWarnings("deprecation")
         String signature = DigestUtils.shaHex(signatureBasis);
         String reqJson = gson.toJson(req);
 
