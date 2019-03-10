@@ -12,8 +12,6 @@
  */
 package org.openhab.binding.millheat.internal.handler;
 
-import static org.openhab.binding.millheat.internal.MillHeatBindingConstants.CHANNEL_CURRENT_TEMPERATURE;
-
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -33,6 +31,8 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.BytesContentProvider;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.smarthome.core.library.types.QuantityType;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
@@ -41,7 +41,6 @@ import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
-import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.millheat.internal.MillHeatBridgeConfiguration;
 import org.openhab.binding.millheat.internal.MillHeatDiscoveryService;
 import org.openhab.binding.millheat.internal.client.BooleanSerializer;
@@ -56,9 +55,11 @@ import org.openhab.binding.millheat.internal.dto.SelectDeviceByRoomRequest;
 import org.openhab.binding.millheat.internal.dto.SelectDeviceByRoomResponse;
 import org.openhab.binding.millheat.internal.dto.SelectRoomByHomeRequest;
 import org.openhab.binding.millheat.internal.dto.SelectRoomByHomeResponse;
+import org.openhab.binding.millheat.internal.dto.SetRoomTempRequest;
 import org.openhab.binding.millheat.internal.model.Heater;
 import org.openhab.binding.millheat.internal.model.Home;
 import org.openhab.binding.millheat.internal.model.MillheatModel;
+import org.openhab.binding.millheat.internal.model.ModeType;
 import org.openhab.binding.millheat.internal.model.Room;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,18 +156,8 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        if (CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
-            if (command instanceof RefreshType) {
-                // TODO: handle data refresh
-            }
-
-            // TODO: handle command
-
-            // Note: if communication with thing fails for some reason,
-            // indicate that by setting the status with detail information:
-            // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-            // "Could not control device at IP address x.x.x.x");
-        }
+        logger.warn("Bridge does not support any commands, but received command " + command + " for channelUID "
+                + channelUID);
     }
 
     private boolean doLogin() {
@@ -292,10 +283,12 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
             ContentResponse contentResponse = request.send();
             String responseJson = contentResponse.getContentAsString();
-            if (contentResponse.getStatus() == 200) {
+            if (contentResponse.getStatus() == HttpStatus.OK_200) {
 
                 AbstractResponse rsp = (AbstractResponse) gson.fromJson(responseJson, responseType);
-                if (rsp.errorCode == 0) {
+                if (rsp == null) {
+                    return null;
+                } else if (rsp.errorCode == 0) {
                     return (T) rsp;
                 } else {
                     throw new MillheatCommunicationException(req, rsp);
@@ -388,20 +381,24 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
     public void updateModelFromServerAndUpdateThingStatus() {
         if (allowModelUpdate()) {
 
+            boolean success = false;
+
             int retriesLeft = 2;
             while (retriesLeft > 0) {
                 retriesLeft--;
                 try {
                     model = refreshModel();
                     updateThingStatuses();
+                    success = true;
                 } catch (MillheatCommunicationException e) {
-                    if (e.getErrorCode() == AbstractResponse.ERROR_CODE_ACCESS_TOKEN_EXPIRED) {
+                    if (AbstractResponse.ERROR_CODE_ACCESS_TOKEN_EXPIRED == e.getErrorCode()
+                            || AbstractResponse.ERROR_CODE_INVALID_SIGNATURE == e.getErrorCode()) {
                         doLogin();
                     }
                 }
             }
 
-            if (retriesLeft <= 0) {
+            if (!success) {
                 logger.error("Error updating model from server, giving up");
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR);
             }
@@ -462,6 +459,38 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
             .timeout(5, TimeUnit.SECONDS)
             .content(new BytesContentProvider((gson.toJson(payload)).getBytes("UTF-8")), CONTENT_TYPE);
      // @formatter:on
+    }
+
+    public void updateRoomTemperature(String roomId, Command command, ModeType mode) {
+        Home home = model.findHomeByRoomId(roomId);
+        Room room = model.findRoomById(roomId);
+
+        if (home != null && room != null) {
+            SetRoomTempRequest req = new SetRoomTempRequest(home, room);
+
+            int newTemp = (int) ((QuantityType<?>) command).longValue();
+            switch (mode) {
+                case Sleep:
+                    req.sleepTemp = newTemp;
+                    break;
+                case Away:
+                    req.awayTemp = newTemp;
+                    break;
+                case Comfort:
+                    req.comfortTemp = newTemp;
+                    break;
+                default:
+                    logger.error("Cannot set room temp for mode " + mode);
+            }
+
+            try {
+                sendLoggedInRequest(req, SetRoomTempResponse.class);
+            } catch (MillheatCommunicationException e) {
+                logger.error("Error updating temperature for room " + roomId, e);
+            }
+
+        }
+
     }
 
 }

@@ -21,7 +21,7 @@ public class RoomDTO {
 
     public long roomId;
     @SerializedName("roomName")
-    public String name = "Victoria";
+    public String name;
 
     public int comfortTemp;
     public int sleepTemp;
@@ -32,15 +32,15 @@ public class RoomDTO {
 
     public String roomProgram;
 
-    public int currentMode = 2;
+    public int currentMode = 0;
     public boolean heatStatus = false;
 
     @SerializedName("onLineDeviceNum")
-    public int onlineDeviceCount = 1;
+    public int onlineDeviceCount = 0;
     @SerializedName("offLineDeviceNum")
     public int offLineDeviceCount = 0;
     @SerializedName("total")
-    public int totalCount = 1;
+    public int totalCount = 0;
     public int independentCount = 0;
 
     @SerializedName("isOffline")

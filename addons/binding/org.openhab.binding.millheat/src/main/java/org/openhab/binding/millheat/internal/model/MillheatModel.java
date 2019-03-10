@@ -1,5 +1,7 @@
 package org.openhab.binding.millheat.internal.model;
 
+import org.eclipse.jdt.annotation.NonNull;
+
 public class MillheatModel {
 
     public long lastUpdated;
@@ -59,6 +61,21 @@ public class MillheatModel {
                 for (Room room : home.rooms) {
                     if (id.equals(room.id)) {
                         return room;
+                    }
+                }
+            }
+
+        }
+        return null;
+    }
+
+    public Home findHomeByRoomId(@NonNull String id) {
+        if (homes != null) {
+            for (Home home : homes) {
+
+                for (Room room : home.rooms) {
+                    if (id.equals(room.id)) {
+                        return home;
                     }
                 }
             }

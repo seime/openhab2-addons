@@ -6,6 +6,8 @@ public abstract class AbstractResponse {
 
     public static final int ERROR_CODE_ACCESS_TOKEN_EXPIRED = 3515;
 
+    public static final int ERROR_CODE_INVALID_SIGNATURE = 3015;
+
     public int errorCode;
 
     @SerializedName("error")

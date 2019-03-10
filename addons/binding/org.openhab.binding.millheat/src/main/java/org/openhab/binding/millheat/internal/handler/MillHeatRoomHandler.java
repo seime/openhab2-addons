@@ -28,6 +28,7 @@ import org.eclipse.smarthome.core.types.RefreshType;
 import org.openhab.binding.millheat.internal.MillHeatBindingConstants;
 import org.openhab.binding.millheat.internal.MillHeatRoomConfiguration;
 import org.openhab.binding.millheat.internal.model.MillheatModel;
+import org.openhab.binding.millheat.internal.model.ModeType;
 import org.openhab.binding.millheat.internal.model.Room;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,14 +78,23 @@ public class MillHeatRoomHandler extends MillheatBaseThingHandler {
             } else if (CHANNEL_COMFORT_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new DecimalType(room.comfortTemp));
+                } else {
+                    MillHeatBridgeHandler handler = (MillHeatBridgeHandler) getBridge().getHandler();
+                    handler.updateRoomTemperature(config.roomId, command, ModeType.Comfort);
                 }
             } else if (CHANNEL_SLEEP_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new DecimalType(room.sleepTemp));
+                } else {
+                    MillHeatBridgeHandler handler = (MillHeatBridgeHandler) getBridge().getHandler();
+                    handler.updateRoomTemperature(config.roomId, command, ModeType.Sleep);
                 }
             } else if (CHANNEL_AWAY_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new DecimalType(room.awayTemp));
+                } else {
+                    MillHeatBridgeHandler handler = (MillHeatBridgeHandler) getBridge().getHandler();
+                    handler.updateRoomTemperature(config.roomId, command, ModeType.Away);
                 }
             } else if (MillHeatBindingConstants.CHANNEL_HEATING_ACTIVE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
