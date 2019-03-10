@@ -5,3 +5,5 @@
 - Automatisk retry ved feil mot server
 -X Mer logging - binding slutter tilsynelatende å virke etter en stund uten spor
 - Støtte for independent heaters
+- Open window
+- Fan support

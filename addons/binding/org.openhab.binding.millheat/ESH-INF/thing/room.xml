@@ -22,6 +22,8 @@
             <channel id="sleepTemperature" typeId="sleepTemperature" />
             <channel id="awayTemperature" typeId="awayTemperature" />
             <channel id="heatingActive" typeId="heatingActive" />
+            <channel id="currentMode" typeId="currentMode" />
+            <channel id="program" typeId="program" />
 
 
 			<!-- name = None device_id = None current_temp = None set_temp = None fan_status = None power_status = None independent_device 

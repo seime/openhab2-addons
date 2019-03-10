@@ -39,4 +39,6 @@ public class MillheatBindingConstants {
     public static final String CHANNEL_HEATING_ACTIVE = "heatingActive";
     public static final String CHANNEL_TARGET_TEMPERATURE = "targetTemperature";
     public static final String CHANNEL_CURRENT_POWER = "currentPower";
+    public static final String CHANNEL_CURRENT_MODE = "currentMode";
+    public static final String CHANNEL_PROGRAM = "program";
 }

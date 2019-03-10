@@ -18,6 +18,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.OnOffType;
+import org.eclipse.smarthome.core.library.types.StringType;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
@@ -93,6 +94,14 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
             if (CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new DecimalType(room.currentTemp));
+                }
+            } else if (CHANNEL_CURRENT_MODE.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    updateState(channelUID, new StringType(room.mode.toString()));
+                }
+            } else if (CHANNEL_PROGRAM.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    updateState(channelUID, new StringType(room.roomProgram.name));
                 }
             } else if (CHANNEL_COMFORT_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {

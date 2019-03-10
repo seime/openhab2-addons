@@ -33,5 +33,7 @@ public class Room {
         heatingActive = dto.heatStatus;
         mode = ModeType.valueOf(dto.currentMode);
 
+        roomProgram = new Program(dto.roomProgram);
+
     }
 }

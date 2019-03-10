@@ -52,6 +52,18 @@
         <category>Energy</category>
         <state readOnly="true" pattern="%d W"></state>
     </channel-type>
+    <channel-type id="currentMode">
+        <item-type>String</item-type>
+        <label>Current mode</label>
+        <description>Mode (Comfort, Sleep, Away, Off) which is active</description>
+        <state readOnly="true" pattern="%s"></state>
+    </channel-type>
+    <channel-type id="program">
+        <item-type>String</item-type>
+        <label>Program</label>
+        <description>Program associated with room</description>
+        <state readOnly="true" pattern="%s"></state>
+    </channel-type>
 
 
 </thing:thing-descriptions>
