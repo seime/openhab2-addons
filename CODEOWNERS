@@ -10,12 +10,8 @@
 /addons/binding/org.openhab.binding.allplay/ @dominicdesu
 /addons/binding/org.openhab.binding.amazondashbutton/ @OLibutzki
 /addons/binding/org.openhab.binding.amazonechocontrol/ @mgeramb
-/addons/binding/org.openhab.binding.astro/ @gerrieg
-/addons/binding/org.openhab.binding.astro.test/ @gerrieg
 /addons/binding/org.openhab.binding.atlona/ @tmrobert8
 /addons/binding/org.openhab.binding.autelis/ @digitaldan
-/addons/binding/org.openhab.binding.avmfritz/ @cweitkamp
-/addons/binding/org.openhab.binding.avmfritz.test/ @cweitkamp
 /addons/binding/org.openhab.binding.bigassfan/ @mhilbush
 /addons/binding/org.openhab.binding.bluetooth/ @cdjackson @kaikreuzer
 /addons/binding/org.openhab.binding.bluetooth.bluegiga/ @cdjackson @kaikreuzer
@@ -101,6 +97,7 @@
 /addons/binding/org.openhab.binding.mqtt.generic/ @davidgraeff
 /addons/binding/org.openhab.binding.mqtt.generic.test/ @davidgraeff
 /addons/binding/org.openhab.binding.mqtt.test/ @davidgraeff
+/addons/binding/org.openhab.binding.nanoleaf/ @raepple
 /addons/binding/org.openhab.binding.neato/ @jjlauterbach
 /addons/binding/org.openhab.binding.neeo/ @tmrobert8
 /addons/binding/org.openhab.binding.nest/ @wborn
@@ -155,6 +152,7 @@
 /addons/binding/org.openhab.binding.somfytahoma/ @octa22
 /addons/binding/org.openhab.binding.sonos/ @kgoderis @lolodomo
 /addons/binding/org.openhab.binding.sonyaudio/ @freke
+/addons/binding/org.openhab.binding.spotify/ @Hilbrand
 /addons/binding/org.openhab.binding.squeezebox/ @digitaldan @mhilbush
 /addons/binding/org.openhab.binding.synopanalyzer/ @clinique
 /addons/binding/org.openhab.binding.systeminfo/ @svilenvul
@@ -206,6 +204,8 @@
 /addons/persistence/org.openhab.persistence.mapdb.test/ @mkhl
 /addons/transform/org.openhab.transform.exec/ @openhab/2-x-add-ons-maintainers
 /addons/transform/org.openhab.transform.javascript/ @openhab/2-x-add-ons-maintainers
+/addons/transform/org.openhab.transform.jinja/ @jochen314 
+/addons/transform/org.openhab.transform.jinja.test/ @jochen314
 /addons/transform/org.openhab.transform.jsonpath/ @clinique
 /addons/transform/org.openhab.transform.jsonpath.test/ @clinique
 /addons/transform/org.openhab.transform.map/ @openhab/2-x-add-ons-maintainers
@@ -224,6 +224,11 @@
 /addons/voice/org.openhab.voice.mactts.test/ @kaikreuzer
 /addons/voice/org.openhab.voice.marytts/ @kaikreuzer
 /addons/voice/org.openhab.voice.picotts/ @FlorianSW
+/addons/voice/org.openhab.voice.pollytts/ @hillmanr
 /addons/voice/org.openhab.voice.voicerss/ @JochenHiller
+/bundles/org.openhab.binding.astro/ @gerrieg
+/bundles/org.openhab.binding.avmfritz/ @cweitkamp
+/itests/org.openhab.binding.astro.tests/ @gerrieg
+/itests/org.openhab.binding.avmfritz.tests/ @cweitkamp
 
 # PLEASE HELP ADDING FURTHER LINES HERE!
