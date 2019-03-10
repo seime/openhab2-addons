@@ -84,7 +84,7 @@ public class MillHeatBridgeHandler extends BaseBridgeHandler {
 
     public static String API_ENDPOINT_1 = "https://eurouter.ablecloud.cn:9005/zc-account/v1/";
 
-    public static String API_ENDPOINT_2 = "http://eurouter.ablecloud.cn:5000/millService/v1/";
+    public static String API_ENDPOINT_2 = "https://eurouter.ablecloud.cn:9005/millService/v1/";
 
     private static final String ALLOWED_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
