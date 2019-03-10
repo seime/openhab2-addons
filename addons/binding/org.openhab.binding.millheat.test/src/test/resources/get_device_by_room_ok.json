@@ -13,11 +13,11 @@
 	"deviceInfo": [
 		{
 			"heaterFlag": 0,
-			"subDomainId": 539916,
+			"subDomainId": 242424,
 			"controlType": 0,
 			"currentTemp": 15.0,
 			"canChangeTemp": 0,
-			"deviceId": 990898,
+			"deviceId": 12334,
 			"deviceName": "Kontor",
 			"mac": "F0XXXXXXXXX",
 			"deviceStatus": 0

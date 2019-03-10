@@ -3,4 +3,5 @@
 -X JSON-parser for formattering må gjøres lenient
 - Uttrekk av kall mot serveren trekkes ut som egen klasse/client
 - Automatisk retry ved feil mot server
-- Mer logging - binding slutter tilsynelatende å virke etter en stund uten spor
+-X Mer logging - binding slutter tilsynelatende å virke etter en stund uten spor
+- Støtte for independent heaters
