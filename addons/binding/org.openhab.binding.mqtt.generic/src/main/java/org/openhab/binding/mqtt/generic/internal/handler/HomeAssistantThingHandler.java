@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.Channel;
@@ -29,21 +30,25 @@ import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
+import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.io.transport.mqtt.MqttBrokerConnection;
 import org.openhab.binding.mqtt.generic.internal.convention.homeassistant.AbstractComponent;
 import org.openhab.binding.mqtt.generic.internal.convention.homeassistant.CChannel;
 import org.openhab.binding.mqtt.generic.internal.convention.homeassistant.CFactory;
+import org.openhab.binding.mqtt.generic.internal.convention.homeassistant.ChannelConfigurationTypeAdapterFactory;
 import org.openhab.binding.mqtt.generic.internal.convention.homeassistant.DiscoverComponents;
 import org.openhab.binding.mqtt.generic.internal.convention.homeassistant.DiscoverComponents.ComponentDiscovered;
 import org.openhab.binding.mqtt.generic.internal.convention.homeassistant.HaID;
 import org.openhab.binding.mqtt.generic.internal.convention.homeassistant.HandlerConfiguration;
 import org.openhab.binding.mqtt.generic.internal.generic.ChannelState;
 import org.openhab.binding.mqtt.generic.internal.generic.MqttChannelTypeProvider;
+import org.openhab.binding.mqtt.generic.internal.generic.TransformationServiceProvider;
 import org.openhab.binding.mqtt.generic.internal.tools.DelayedBatchProcessing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /**
  * Handles HomeAssistant MQTT object things. Such an HA Object can have multiple HA Components with different instances
@@ -71,11 +76,13 @@ public class HomeAssistantThingHandler extends AbstractMQTTThingHandler
     protected final DelayedBatchProcessing<AbstractComponent<?>> delayedProcessing;
     protected final DiscoverComponents discoverComponents;
 
-    private final Gson gson = new Gson();
+    private final Gson gson;
     protected final Map<String, AbstractComponent<?>> haComponents = new HashMap<>();
 
     protected HandlerConfiguration config = new HandlerConfiguration();
-    private HaID discoveryHomeAssistantID = new HaID("", "", "", "");
+    private HaID discoveryHomeAssistantID = new HaID();
+
+    protected final TransformationServiceProvider transformationServiceProvider;
 
     /**
      * Create a new thing handler for HomeAssistant MQTT components.
@@ -86,24 +93,28 @@ public class HomeAssistantThingHandler extends AbstractMQTTThingHandler
      * @param subscribeTimeout Timeout for the entire tree parsing and subscription. In milliseconds.
      * @param attributeReceiveTimeout The timeout per attribute field subscription. In milliseconds.
      */
-    public HomeAssistantThingHandler(Thing thing, MqttChannelTypeProvider channelTypeProvider, int subscribeTimeout,
+    public HomeAssistantThingHandler(Thing thing, MqttChannelTypeProvider channelTypeProvider,
+            TransformationServiceProvider transformationServiceProvider, int subscribeTimeout,
             int attributeReceiveTimeout) {
         super(thing, subscribeTimeout);
+        this.gson = new GsonBuilder().registerTypeAdapterFactory(new ChannelConfigurationTypeAdapterFactory()).create();
         this.channelTypeProvider = channelTypeProvider;
+        this.transformationServiceProvider = transformationServiceProvider;
         this.attributeReceiveTimeout = attributeReceiveTimeout;
         this.delayedProcessing = new DelayedBatchProcessing<>(attributeReceiveTimeout, this, scheduler);
-        this.discoverComponents = new DiscoverComponents(thing.getUID(), scheduler, this, gson);
+        this.discoverComponents = new DiscoverComponents(thing.getUID(), scheduler, this, gson,
+                this.transformationServiceProvider);
     }
 
     @SuppressWarnings({ "null", "unused" })
     @Override
     public void initialize() {
         config = getConfigAs(HandlerConfiguration.class);
-        if (config.objectid.isEmpty()) {
+        if (StringUtils.isEmpty(config.objectid)) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Device ID unknown");
             return;
         }
-        discoveryHomeAssistantID = new HaID(config.basetopic, config.objectid, "", "");
+        discoveryHomeAssistantID = HaID.fromConfig(config);
 
         for (Channel channel : thing.getChannels()) {
             final String groupID = channel.getUID().getGroupId();
@@ -116,9 +127,18 @@ public class HomeAssistantThingHandler extends AbstractMQTTThingHandler
             AbstractComponent<?> component = haComponents.get(groupID);
             if (component != null) {
                 continue;
-            } else {
-                component = CFactory.createComponent(config.basetopic, channel, this, gson);
             }
+
+            HaID haID = HaID.fromConfig(config.basetopic, channel.getConfiguration());
+            ThingUID thingUID = channel.getUID().getThingUID();
+            String channelConfigurationJSON = (String) channel.getConfiguration().get("config");
+            if (channelConfigurationJSON == null) {
+                logger.warn("Provided channel does not have a 'config' configuration key!");
+            } else {
+                component = CFactory.createComponent(thingUID, haID, channelConfigurationJSON, this, gson,
+                        transformationServiceProvider);
+            }
+
             if (component != null) {
                 haComponents.put(component.uid().getId(), component);
                 component.addChannelTypes(channelTypeProvider);
@@ -199,7 +219,7 @@ public class HomeAssistantThingHandler extends AbstractMQTTThingHandler
         if (componentChannel == null) {
             return null;
         }
-        return componentChannel.channelState;
+        return componentChannel.getState();
     }
 
     /**
@@ -252,7 +272,7 @@ public class HomeAssistantThingHandler extends AbstractMQTTThingHandler
             // Add channels to Thing
             for (AbstractComponent<?> e : haComponents.values()) {
                 for (CChannel entry : e.channelTypes().values()) {
-                    channels.add(entry.channel);
+                    channels.add(entry.getChannel());
                 }
             }
         }

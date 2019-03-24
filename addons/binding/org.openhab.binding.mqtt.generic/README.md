@@ -23,6 +23,7 @@ Find the next table to understand the topology mapping from Homie to the Framewo
 | Property | Channel       | homie/super-car/engine/temperature |
 
 System trigger channels are supported using non-retained properties, with *enum* data type and with the following formats:
+
 * Format: "PRESSED,RELEASED" -> system.rawbutton
 * Format: "SHORT\_PRESSED,DOUBLE\_PRESSED,LONG\_PRESSED" -> system.button
 * Format: "DIR1\_PRESSED,DIR1\_RELEASED,DIR2\_PRESSED,DIR2\_RELEASED" -> system.rawrocker
@@ -124,6 +125,7 @@ You can connect this channel to a Contact or Switch item.
 * __on__: An optional string (like "BRIGHT") that is recognized as on state. (ON will always be recognized.)
 * __off__: An optional string (like "DARK") that is recognized as off state. (OFF will always be recognized.)
 * __onBrightness__: If you connect this channel to a Switch item and turn it on,
+
 color and saturation are preserved from the last state, but
 the brightness will be set to this configured initial brightness (default: 10%).
 
@@ -234,9 +236,9 @@ Here are a few examples:
 ## Troubleshooting
 
 * If you get the error "No MQTT client": Please update your installation.
-* If you use the Mosquitto broker: Please be aware that there is a relatively low setting
-  for retained messages. At some point messages will just not being delivered
-  anymore: Change the setting 
+* If you use the Mosquitto broker: Please be aware that there is a relatively low setting 
+for retained messages. At some point messages will just not being delivered anymore: 
+Change the setting 
 
 ## Examples
 
@@ -323,12 +325,14 @@ The trigger channel will trigger for each received message on the MQTT topic "al
 Now push those changes to your items in a `rules` file:
 
 ```xtend
-rule "Publish all"
+rule "Receive all"
 when 
       Channel "mqtt:broker:myUnsecureBroker:myTriggerChannel" triggered
-then
-    val parts = receivedEvent.split("#")
-    sendCommand(parts.get(0), parts.get(1))
+then 
+    //The receivedEvent String contains unneeded elements like the mqtt topic, we only need everything after the "/" as this is were item name and state are
+    val parts1 = receivedEvent.toString.split("/").get(1)
+    val parts2 = parts1.split("#")
+    sendCommand(parts2.get(0), parts2.get(1))
 end
 ```
 
@@ -341,7 +345,7 @@ when
       Member of myGroupOfItems changed
 then
    val actions = getActions("mqtt","mqtt:broker:myUnsecureBroker")
-   actions.publishMQTT("allItems/"+triggeringItem.name,triggeringItem.state)
+   actions.publishMQTT("allItems/"+triggeringItem.name,triggeringItem.state.toString)
 end
 ```
 

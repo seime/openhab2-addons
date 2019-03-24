@@ -20,14 +20,11 @@ import java.util.stream.Stream;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.ChannelUID;
-import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.State;
 import org.eclipse.smarthome.io.transport.mqtt.MqttBrokerConnection;
 import org.openhab.binding.mqtt.generic.internal.generic.ChannelStateUpdateListener;
 import org.openhab.binding.mqtt.generic.internal.values.ColorValue;
-
-import com.google.gson.Gson;
 
 /**
  * A MQTT light, following the https://www.home-assistant.io/components/light.mqtt/ specification.
@@ -38,7 +35,8 @@ import com.google.gson.Gson;
  * @author David Graeff - Initial contribution
  */
 @NonNullByDefault
-public class ComponentLight extends AbstractComponent<ComponentLight.Config> implements ChannelStateUpdateListener {
+public class ComponentLight extends AbstractComponent<ComponentLight.ChannelConfiguration>
+        implements ChannelStateUpdateListener {
     public static final String switchChannelID = "light"; // Randomly chosen channel "ID"
     public static final String brightnessChannelID = "brightness"; // Randomly chosen channel "ID"
     public static final String colorChannelID = "color"; // Randomly chosen channel "ID"
@@ -46,8 +44,8 @@ public class ComponentLight extends AbstractComponent<ComponentLight.Config> imp
     /**
      * Configuration class for MQTT component
      */
-    static class Config extends HAConfiguration {
-        Config() {
+    static class ChannelConfiguration extends BaseChannelConfiguration {
+        ChannelConfiguration() {
             super("MQTT Light");
         }
 
@@ -99,19 +97,26 @@ public class ComponentLight extends AbstractComponent<ComponentLight.Config> imp
     protected CChannel brightnessChannel;
     private final @Nullable ChannelStateUpdateListener channelStateUpdateListener;
 
-    public ComponentLight(ThingUID thing, HaID haID, String configJSON,
-            @Nullable ChannelStateUpdateListener channelStateUpdateListener, Gson gson) {
-        super(thing, haID, configJSON, gson, Config.class);
-        this.channelStateUpdateListener = channelStateUpdateListener;
-        ColorValue value = new ColorValue(true, config.payload_on, config.payload_off, 100);
+    public ComponentLight(CFactory.ComponentConfiguration builder) {
+        super(builder, ChannelConfiguration.class);
+        this.channelStateUpdateListener = builder.getUpdateListener();
+        ColorValue value = new ColorValue(true, channelConfiguration.payload_on, channelConfiguration.payload_off, 100);
 
         // Create three MQTT subscriptions and use this class object as update listener
-        switchChannel = new CChannel(this, switchChannelID, value, //
-                config.state_topic, config.command_topic, config.name, "", this);
-        colorChannel = new CChannel(this, colorChannelID, value, //
-                config.rgb_state_topic, config.rgb_command_topic, config.name, "", this);
-        brightnessChannel = new CChannel(this, brightnessChannelID, value, //
-                config.brightness_state_topic, config.brightness_command_topic, config.name, "", this);
+        switchChannel = buildChannel(switchChannelID, value, channelConfiguration.name).listener(this)//
+                .stateTopic(channelConfiguration.state_topic, channelConfiguration.state_value_template)//
+                .commandTopic(channelConfiguration.command_topic, channelConfiguration.retain)//
+                .build(false);
+
+        colorChannel = buildChannel(colorChannelID, value, channelConfiguration.name).listener(this)//
+                .stateTopic(channelConfiguration.rgb_state_topic, channelConfiguration.rgb_value_template)//
+                .commandTopic(channelConfiguration.rgb_command_topic, channelConfiguration.retain)//
+                .build(false);
+
+        brightnessChannel = buildChannel(brightnessChannelID, value, channelConfiguration.name).listener(this)//
+                .stateTopic(channelConfiguration.brightness_state_topic, channelConfiguration.brightness_value_template)//
+                .commandTopic(channelConfiguration.brightness_command_topic, channelConfiguration.retain)//
+                .build(false);
 
         channels.put(switchChannelID, colorChannel);
     }
@@ -120,20 +125,15 @@ public class ComponentLight extends AbstractComponent<ComponentLight.Config> imp
     public CompletableFuture<@Nullable Void> start(MqttBrokerConnection connection, ScheduledExecutorService scheduler,
             int timeout) {
         return Stream.of(switchChannel, brightnessChannel, colorChannel) //
-                .map(v -> v.channelState.start(connection, scheduler, timeout)) //
+                .map(v -> v.start(connection, scheduler, timeout)) //
                 .reduce(CompletableFuture.completedFuture(null), (f, v) -> f.thenCompose(b -> v));
     }
 
     @Override
     public CompletableFuture<@Nullable Void> stop() {
         return Stream.of(switchChannel, brightnessChannel, colorChannel) //
-                .map(v -> v.channelState.stop()) //
+                .map(v -> v.stop()) //
                 .reduce(CompletableFuture.completedFuture(null), (f, v) -> f.thenCompose(b -> v));
-    }
-
-    @Override
-    public String name() {
-        return config.name;
     }
 
     /**
@@ -143,7 +143,7 @@ public class ComponentLight extends AbstractComponent<ComponentLight.Config> imp
     public void updateChannelState(ChannelUID channelUID, State value) {
         ChannelStateUpdateListener listener = channelStateUpdateListener;
         if (listener != null) {
-            listener.updateChannelState(colorChannel.channelUID, value);
+            listener.updateChannelState(colorChannel.getChannelUID(), value);
         }
     }
 
@@ -154,7 +154,7 @@ public class ComponentLight extends AbstractComponent<ComponentLight.Config> imp
     public void postChannelCommand(ChannelUID channelUID, Command value) {
         ChannelStateUpdateListener listener = channelStateUpdateListener;
         if (listener != null) {
-            listener.postChannelCommand(colorChannel.channelUID, value);
+            listener.postChannelCommand(colorChannel.getChannelUID(), value);
         }
     }
 
@@ -165,7 +165,7 @@ public class ComponentLight extends AbstractComponent<ComponentLight.Config> imp
     public void triggerChannel(ChannelUID channelUID, String eventPayload) {
         ChannelStateUpdateListener listener = channelStateUpdateListener;
         if (listener != null) {
-            listener.triggerChannel(colorChannel.channelUID, eventPayload);
+            listener.triggerChannel(colorChannel.getChannelUID(), eventPayload);
         }
     }
 }

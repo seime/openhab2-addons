@@ -14,9 +14,9 @@ package org.openhab.binding.mqtt.generic.internal.convention.homeassistant;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.openhab.binding.mqtt.generic.internal.generic.ChannelStateUpdateListener;
+import org.openhab.binding.mqtt.generic.internal.generic.TransformationServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,30 +43,34 @@ public class CFactory {
      * @param updateListener A channel state update listener
      * @return A HA MQTT Component
      */
-    public static @Nullable AbstractComponent<?> createComponent(ThingUID thingUID, HaID haID, String configJSON,
-            @Nullable ChannelStateUpdateListener updateListener, Gson gson) {
+    public static @Nullable AbstractComponent<?> createComponent(ThingUID thingUID, HaID haID,
+            String channelConfigurationJSON, @Nullable ChannelStateUpdateListener updateListener, Gson gson,
+            TransformationServiceProvider transformationServiceProvider) {
+        ComponentConfiguration componentConfiguration = new ComponentConfiguration(thingUID, haID,
+                channelConfigurationJSON, gson).listener(updateListener)
+                        .transformationProvider(transformationServiceProvider);
         try {
             switch (haID.component) {
                 case "alarm_control_panel":
-                    return new ComponentAlarmControlPanel(thingUID, haID, configJSON, updateListener, gson);
+                    return new ComponentAlarmControlPanel(componentConfiguration);
                 case "binary_sensor":
-                    return new ComponentBinarySensor(thingUID, haID, configJSON, updateListener, gson);
+                    return new ComponentBinarySensor(componentConfiguration);
                 case "camera":
-                    return new ComponentCamera(thingUID, haID, configJSON, updateListener, gson);
+                    return new ComponentCamera(componentConfiguration);
                 case "cover":
-                    return new ComponentCover(thingUID, haID, configJSON, updateListener, gson);
+                    return new ComponentCover(componentConfiguration);
                 case "fan":
-                    return new ComponentFan(thingUID, haID, configJSON, updateListener, gson);
+                    return new ComponentFan(componentConfiguration);
                 case "climate":
-                    return new ComponentClimate(thingUID, haID, configJSON, updateListener, gson);
+                    return new ComponentClimate(componentConfiguration);
                 case "light":
-                    return new ComponentLight(thingUID, haID, configJSON, updateListener, gson);
+                    return new ComponentLight(componentConfiguration);
                 case "lock":
-                    return new ComponentLock(thingUID, haID, configJSON, updateListener, gson);
+                    return new ComponentLock(componentConfiguration);
                 case "sensor":
-                    return new ComponentSensor(thingUID, haID, configJSON, updateListener, gson);
+                    return new ComponentSensor(componentConfiguration);
                 case "switch":
-                    return new ComponentSwitch(thingUID, haID, configJSON, updateListener, gson);
+                    return new ComponentSwitch(componentConfiguration);
             }
         } catch (UnsupportedOperationException e) {
             logger.warn("Not supported", e);
@@ -74,23 +78,60 @@ public class CFactory {
         return null;
     }
 
-    /**
-     * Create a HA MQTT component by a given channel configuration.
-     *
-     * @param basetopic The MQTT base topic, usually "homeassistant"
-     * @param channel A channel with the JSON configuration embedded as configuration (key: 'config')
-     * @param updateListener A channel state update listener
-     * @return A HA MQTT Component
-     */
-    public static @Nullable AbstractComponent<?> createComponent(String basetopic, Channel channel,
-            @Nullable ChannelStateUpdateListener updateListener, Gson gson) {
-        HaID haID = new HaID(basetopic, channel.getUID());
-        ThingUID thingUID = channel.getUID().getThingUID();
-        String configJSON = (String) channel.getConfiguration().get("config");
-        if (configJSON == null) {
-            logger.warn("Provided channel does not have a 'config' configuration key!");
-            return null;
+    protected static class ComponentConfiguration {
+        private ThingUID thingUID;
+        private HaID haID;
+        private String configJSON;
+        private @Nullable TransformationServiceProvider transformationServiceProvider;
+        private @Nullable ChannelStateUpdateListener updateListener;
+        private Gson gson;
+
+        protected ComponentConfiguration(ThingUID thingUID, HaID haID, String configJSON, Gson gson) {
+            this.thingUID = thingUID;
+            this.haID = haID;
+            this.configJSON = configJSON;
+            this.gson = gson;
         }
-        return createComponent(thingUID, haID, configJSON, updateListener, gson);
+
+        public ComponentConfiguration listener(@Nullable ChannelStateUpdateListener updateListener) {
+            this.updateListener = updateListener;
+            return this;
+        }
+
+        public ComponentConfiguration transformationProvider(
+                TransformationServiceProvider transformationServiceProvider) {
+            this.transformationServiceProvider = transformationServiceProvider;
+            return this;
+        }
+
+        public ThingUID getThingUID() {
+            return thingUID;
+        }
+
+        public HaID getHaID() {
+            return haID;
+        }
+
+        public String getConfigJSON() {
+            return configJSON;
+        }
+
+        @Nullable
+        public ChannelStateUpdateListener getUpdateListener() {
+            return updateListener;
+        }
+
+        @Nullable
+        public TransformationServiceProvider getTransformationServiceProvider() {
+            return transformationServiceProvider;
+        }
+
+        public Gson getGson() {
+            return gson;
+        }
+
+        public <C extends BaseChannelConfiguration> C getConfig(Class<C> clazz) {
+            return BaseChannelConfiguration.fromString(configJSON, gson, clazz);
+        }
     }
 }
