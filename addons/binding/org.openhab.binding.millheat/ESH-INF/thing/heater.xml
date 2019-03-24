@@ -4,27 +4,24 @@
 	xmlns:thing="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
 
-
-
 	<thing-type id="heater">
-
 		<supported-bridge-type-refs>
 			<bridge-type-ref id="bridge" />
 		</supported-bridge-type-refs>
 
 		<label>WIFI enabled heater</label>
 
+        <category>HVAC</category>
+
 		<channels>
             <channel id="currentTemperature" typeId="currentTemperature" />
             <channel id="heatingActive" typeId="heatingActive" />
-            <channel id="targetTemperature" typeId="targetTemperature" /> <!--  Only for independent heaters -->
-            <channel id="currentPower" typeId="currentPower" />
-            
-
-			<!-- name = None device_id = None current_temp = None set_temp = None fan_status = None power_status = None independent_device 
-				= True room = None open_window = None is_heating = None tibber_control = None sub_domain = 5332 available = False is_holiday 
-				= None can_change_temp = 1 -->
-		</channels>
+            <channel id="fanActive" typeId="fanActive" />
+            <channel id="targetTemperature" typeId="targetTemperatureHeater" /> 
+            <channel id="currentEnergy" typeId="currentEnergy" />
+            <channel id="independent" typeId="independent" />
+            <channel id="window" typeId="window" />
+    	</channels>
 
 		<properties>
 			<property name="vendor">Mill</property>

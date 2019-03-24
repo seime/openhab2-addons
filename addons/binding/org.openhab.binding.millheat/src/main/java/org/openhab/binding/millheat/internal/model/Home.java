@@ -2,16 +2,25 @@ package org.openhab.binding.millheat.internal.model;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 
 import org.openhab.binding.millheat.internal.dto.HomeDTO;
 
 public class Home {
+    @Override
+    public String toString() {
+        return "Home [id=" + id + ", name=" + name + ", type=" + type + ", timezone=" + timezone + ", holidayTemp="
+                + holidayTemp + ", mode=" + mode + ", rooms=" + Arrays.toString(rooms) + ", independentHeaters="
+                + Arrays.toString(independentHeaters) + ", program=" + program + "]";
+    }
+
     public String id;
 
     public String name;
     public int type;
     public String timezone;
 
+    public int holidayTemp;
     public Mode mode;
 
     public Room[] rooms = new Room[0];
@@ -25,7 +34,7 @@ public class Home {
         name = dto.name;
         type = dto.homeType;
         timezone = dto.timeZone;
-
+        holidayTemp = dto.holidayTemp;
         if (dto.holiday) {
             LocalDateTime modeStart = LocalDateTime.ofEpochSecond(dto.holidayStartTime, 0, ZoneOffset.of(timezone));
             LocalDateTime modeEnd = LocalDateTime.ofEpochSecond(dto.holidayEndTime, 0, ZoneOffset.of(timezone));

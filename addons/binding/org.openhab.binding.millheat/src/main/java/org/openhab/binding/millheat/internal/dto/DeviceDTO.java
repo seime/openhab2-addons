@@ -14,4 +14,9 @@ public class DeviceDTO {
     @SerializedName("mac")
     public String macAddress;
     public int deviceStatus;
+    public int holidayTemp = 0;
+    public boolean fanStatus;
+    @SerializedName("open_window")
+    public String openWindow;
+    public boolean powerStatus = false;
 }

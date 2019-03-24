@@ -5,8 +5,6 @@
 	xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
 
 
-
-
 	<thing-type id="room">
 
 		<supported-bridge-type-refs>
@@ -15,20 +13,17 @@
 
 		<label>Room with one or more WIFI enabled heaters</label>
 
+        <category>HVAC</category>
+
 		<channels>
-		
-            <channel id="currentTemperature" typeId="currentTemperature" />
-            <channel id="comfortTemperature" typeId="comfortTemperature" />
-            <channel id="sleepTemperature" typeId="sleepTemperature" />
-            <channel id="awayTemperature" typeId="awayTemperature" />
-            <channel id="heatingActive" typeId="heatingActive" />
-            <channel id="currentMode" typeId="currentMode" />
-            <channel id="program" typeId="program" />
-
-
-			<!-- name = None device_id = None current_temp = None set_temp = None fan_status = None power_status = None independent_device 
-				= True room = None open_window = None is_heating = None tibber_control = None sub_domain = 5332 available = False is_holiday 
-				= None can_change_temp = 1 -->
+			<channel id="currentTemperature" typeId="currentTemperature" />
+			<channel id="targetTemperature" typeId="targetTemperatureRoom" />
+			<channel id="comfortTemperature" typeId="comfortTemperature" />
+			<channel id="sleepTemperature" typeId="sleepTemperature" />
+			<channel id="awayTemperature" typeId="awayTemperature" />
+			<channel id="heatingActive" typeId="heatingActive" />
+			<channel id="currentMode" typeId="currentMode" />
+			<channel id="program" typeId="program" />
 		</channels>
 
 		<properties>

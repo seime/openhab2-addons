@@ -8,6 +8,7 @@ public class Mode {
 
     public LocalDateTime start;
     public LocalDateTime end;
+
     public Mode(ModeType mode, LocalDateTime start, LocalDateTime end) {
         super();
         this.mode = mode;

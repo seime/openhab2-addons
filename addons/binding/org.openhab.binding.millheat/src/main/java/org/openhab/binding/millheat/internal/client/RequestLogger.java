@@ -35,15 +35,20 @@ public final class RequestLogger {
     @NonNull
     private Gson gson;
 
-    public RequestLogger() {
+    @NonNull
+    private String prefix;
+
+    public RequestLogger(String prefix) {
         parser = new JsonParser();
         gson = new GsonBuilder().setPrettyPrinting().setLenient().create();
+        this.prefix = prefix;
     }
 
     private void dump(Request request) {
 
-        long id = nextId.getAndIncrement();
+        long idV = nextId.getAndIncrement();
         if (log.isDebugEnabled()) {
+            String id = prefix + "-" + idV;
             StringBuilder group = new StringBuilder();
             request.onRequestBegin(theRequest -> group.append(
                     "Request " + id + "\n" + id + " > " + theRequest.getMethod() + " " + theRequest.getURI() + "\n"));

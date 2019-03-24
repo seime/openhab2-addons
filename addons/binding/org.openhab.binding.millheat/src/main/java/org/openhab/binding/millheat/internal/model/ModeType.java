@@ -5,11 +5,11 @@ import java.util.Map;
 
 public enum ModeType {
     AlwaysHome(-1),
-    Sleep(2),
     Comfort(1),
+    Sleep(2),
     Away(3),
-    Off(5),
-    AdvancedAway(-4);
+    AdvancedAway(4),
+    Off(5);
 
     private static Map<Integer, ModeType> map = new HashMap<>();
     static {

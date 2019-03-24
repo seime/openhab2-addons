@@ -17,6 +17,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.OnOffType;
+import org.eclipse.smarthome.core.library.types.OpenClosedType;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
@@ -65,9 +66,7 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
                 logger.error("BridgeHandler is null, cannot update data");
             }
 
-        } else
-
-        {
+        } else {
             logger.error("Bridge is null");
         }
 
@@ -87,6 +86,18 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, heater.heatingActive ? OnOffType.ON : OnOffType.OFF);
                 }
+            } else if (MillheatBindingConstants.CHANNEL_FAN_ACTIVE.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    updateState(channelUID, heater.fanActive ? OnOffType.ON : OnOffType.OFF);
+                }
+            } else if (MillheatBindingConstants.CHANNEL_WINDOW_STATE.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    updateState(channelUID, heater.windowOpen ? OpenClosedType.OPEN : OpenClosedType.CLOSED);
+                }
+            } else if (MillheatBindingConstants.CHANNEL_INDEPENDENT.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    updateState(channelUID, heater.room == null ? OnOffType.ON : OnOffType.OFF);
+                }
             } else if (MillheatBindingConstants.CHANNEL_CURRENT_POWER.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     if (config.power != null) {
@@ -95,16 +106,57 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
                         } else {
                             updateState(channelUID, new DecimalType(0));
                         }
-
                     } else {
                         logger.warn(
-                                "Cannot update power for heater {} as the nominal power on the heater has not been configured",
-                                config.macAddress);
+                                "Cannot update power for heater as the nominal power has not been configured for thing {}",
+                                getThing().getUID());
                     }
                 }
+            } else if (MillheatBindingConstants.CHANNEL_TARGET_TEMPERATURE.equals(channelUID.getId())) {
+                if (command instanceof RefreshType) {
+                    if (heater.canChangeTemp && heater.targetTemp != null) {
+                        updateState(channelUID, new DecimalType(heater.targetTemp));
+                    } else if (heater.room != null) {
+                        updateState(channelUID, new DecimalType(heater.room.getTargetTemperature()));
+                    } else {
+                        logger.warn(
+                                "Heater {} is neither connected to a room or marked as standalone. Someting is wrong, heater data: {}",
+                                getThing().getUID(), heater);
+                    }
+                } else {
+                    if (heater.canChangeTemp) {
+                        updateHeaterTargetTemperature(heater.macAddress, command);
+                    } else {
+                        // Just overwrite with old state
+                        updateState(channelUID, new DecimalType(heater.room.getTargetTemperature()));
+
+                        logger.warn(
+                                "Heater {} is belonging to a room and cannot be controlled independently. Therefore must set the corresponding room mode temperature",
+                                getThing().getUID());
+                    }
+
+                }
+            } else {
+                logger.warn("Received command {} on channel {}, but this channel is not handled or supported by {}",
+                        channelUID.getId(), command.toString(), this.getThing().getUID());
             }
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.GONE);
+        }
+    }
+
+    private void updateHeaterTargetTemperature(String macAddress, Command command) {
+        Bridge bridge = getBridge();
+        if (bridge != null) {
+            MillheatBridgeHandler handler = (MillheatBridgeHandler) bridge.getHandler();
+
+            if (handler != null) {
+                handler.updateHeaterTargetTemperature(config.macAddress, command);
+            } else {
+                logger.error("BridgeHandler is null, cannot update data");
+            }
+        } else {
+            logger.error("Bridge is null, cannot update data");
         }
     }
 

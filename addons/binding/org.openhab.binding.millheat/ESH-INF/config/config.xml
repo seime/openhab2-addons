@@ -22,7 +22,7 @@
 		<parameter name="refreshInterval" type="integer" required="false" min="30">
 			<label>Refresh interval</label>
 			<description>Specifies the refresh time in seconds for polling temperature updates from Millheat service</description>
-			<default>60</default>
+			<default>120</default>
 		</parameter>
 
 	</config-description>

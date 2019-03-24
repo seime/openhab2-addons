@@ -5,65 +5,119 @@
 	xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
 
 
-    <channel-type id="currentTemperature">
-        <item-type>Number:Temperature</item-type>
-        <label>Current temperature</label>
-        <description>Current temperature</description>
-        <category>Temperature</category>
-        <state readOnly="true" pattern="%d %unit%" />
-    </channel-type>
-    <channel-type id="comfortTemperature">
-        <item-type>Number:Temperature</item-type>
-        <label>Comfort temperature</label>
-        <description>Set temperature comfort mode</description>
-        <category>Temperature</category>
-        <state readOnly="false" pattern="%d %unit%" />
-    </channel-type>
-    <channel-type id="sleepTemperature">
-        <item-type>Number:Temperature</item-type>
-        <label>Sleep temperature</label>
-        <description>Set temperature sleep mode</description>
-        <category>Temperature</category>
-        <state readOnly="false" pattern="%d %unit%" />
-    </channel-type>
-    <channel-type id="awayTemperature">
-        <item-type>Number:Temperature</item-type>
-        <label>Away temperature</label>
-        <description>Set temperature away mode</description>
-        <category>Temperature</category>
-        <state readOnly="false" pattern="%d %unit%" />
-    </channel-type>
-    <channel-type id="targetTemperature">
-        <item-type>Number:Temperature</item-type>
-        <label>Target Temperature</label>
-        <description>Target temperature of the heater</description>
-        <state pattern="%d %unit%"/>
-    </channel-type>
-    <channel-type id="heatingActive">
-        <item-type>Switch</item-type>
-        <label>Heating active</label>
-        <description>Current state of the heater or heaters in room</description>
-        <state readOnly="true"/>
-    </channel-type>
-    <channel-type id="currentPower">
-        <item-type>Number</item-type>
-        <label>Power</label>
-        <description>Actual power usage</description>
-        <category>Energy</category>
-        <state readOnly="true" pattern="%d W"></state>
-    </channel-type>
-    <channel-type id="currentMode">
-        <item-type>String</item-type>
-        <label>Current mode</label>
-        <description>Mode (Comfort, Sleep, Away, Off) which is active</description>
-        <state readOnly="true" pattern="%s"></state>
-    </channel-type>
-    <channel-type id="program">
-        <item-type>String</item-type>
-        <label>Program</label>
-        <description>Program associated with room</description>
-        <state readOnly="true" pattern="%s"></state>
-    </channel-type>
+	<channel-type id="currentTemperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Current temperature</label>
+		<description>Current temperature</description>
+		<category>Temperature</category>
+		<tags>
+			<tag>CurrentTemperature</tag>
+		</tags>
+		<state readOnly="true" pattern="%d %unit%" />
+	</channel-type>
+	<channel-type id="comfortTemperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Comfort temperature</label>
+		<description>Set temperature comfort mode</description>
+		<category>Heating</category>
+		<tags>
+			<tag>TargetTemperature</tag>
+		</tags>
+		<state readOnly="false" pattern="%d %unit%" />
+	</channel-type>
+	<channel-type id="sleepTemperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Sleep temperature</label>
+		<description>Set temperature sleep mode</description>
+		<category>Heating</category>
+		<tags>
+			<tag>TargetTemperature</tag>
+		</tags>
+		<state readOnly="false" pattern="%d %unit%" />
+	</channel-type>
+	<channel-type id="awayTemperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Away temperature</label>
+		<description>Set temperature away mode</description>
+		<category>Heating</category>
+		<tags>
+			<tag>TargetTemperature</tag>
+		</tags>
+		<state readOnly="false" pattern="%d %unit%" />
+	</channel-type>
+	<channel-type id="targetTemperatureHeater">
+		<item-type>Number:Temperature</item-type>
+		<label>Target temperature</label>
+		<description>Target temperature of the heater</description>
+		<category>Heating</category>
+		<tags>
+			<tag>TargetTemperature</tag>
+		</tags>
+		<state pattern="%d %unit%" step="1" />
+	</channel-type>
+	<channel-type id="targetTemperatureRoom">
+		<item-type>Number:Temperature</item-type>
+		<label>Target temperature</label>
+		<description>Target temperature of the room</description>
+		<category>Heating</category>
+		<tags>
+			<tag>TargetTemperature</tag>
+		</tags>
+		<state pattern="%d %unit%" step="1" readOnly="true" />
+	</channel-type>
+	<channel-type id="heatingActive">
+		<item-type>Switch</item-type>
+		<label>Heating active</label>
+		<description>Current state of the heater or heaters in room</description>
+		<category>Energy</category>
+		<state readOnly="true" />
+	</channel-type>
+	<channel-type id="independent">
+		<item-type>Switch</item-type>
+		<label>Independent heater</label>
+		<description>ON if heater is independent and not connected to a room</description>
+		<state readOnly="true" />
+	</channel-type>
+	<channel-type id="fanActive">
+		<item-type>Switch</item-type>
+		<label>Fan active</label>
+		<description>Current state of heater fan (if available, OFF if not found)</description>
+		<category>Flow</category>
+		<state readOnly="true" />
+	</channel-type>
+	<channel-type id="window">
+		<item-type>Contact</item-type>
+		<label>Window state</label>
+		<description>Open window/cold air flow detection</description>
+		<state readOnly="true" />
+	</channel-type>
+	<channel-type id="currentEnergy">
+		<item-type>Number</item-type>
+		<label>Energy usage</label>
+		<description>Actual energy usage in watts</description>
+		<category>Energy</category>
+		<state readOnly="true" pattern="%d W"></state>
+	</channel-type>
+	<channel-type id="currentMode">
+		<item-type>String</item-type>
+		<label>Current room mode</label>
+		<description>Program mode which is active</description>
+		<state readOnly="true">
+			<options>
+				<option value="Comfort">Comfort</option>
+				<option value="Sleep">Sleep</option>
+                <option value="Away">Away</option>
+                <option value="Off">Off</option>
+                <option value="AdvancedAway">Advanced away</option>
+			</options>
+		</state>
+	</channel-type>
+	<channel-type id="program">
+		<item-type>String</item-type>
+		<label>Program</label>
+		<description>Program associated with room</description>
+		<state readOnly="true" pattern="%s"></state>
+	</channel-type>
 
 
 </thing:thing-descriptions>

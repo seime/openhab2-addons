@@ -54,12 +54,15 @@ import org.openhab.binding.millheat.internal.dto.AbstractRequest;
 import org.openhab.binding.millheat.internal.dto.AbstractResponse;
 import org.openhab.binding.millheat.internal.dto.GetHomesRequest;
 import org.openhab.binding.millheat.internal.dto.GetHomesResponse;
+import org.openhab.binding.millheat.internal.dto.GetIndependentDevicesByHomeRequest;
+import org.openhab.binding.millheat.internal.dto.GetIndependentDevicesByHomeResponse;
 import org.openhab.binding.millheat.internal.dto.LoginRequest;
 import org.openhab.binding.millheat.internal.dto.LoginResponse;
 import org.openhab.binding.millheat.internal.dto.SelectDeviceByRoomRequest;
 import org.openhab.binding.millheat.internal.dto.SelectDeviceByRoomResponse;
 import org.openhab.binding.millheat.internal.dto.SelectRoomByHomeRequest;
 import org.openhab.binding.millheat.internal.dto.SelectRoomByHomeResponse;
+import org.openhab.binding.millheat.internal.dto.SetDeviceTempRequest;
 import org.openhab.binding.millheat.internal.dto.SetRoomTempRequest;
 import org.openhab.binding.millheat.internal.dto.SetRoomTempResponse;
 import org.openhab.binding.millheat.internal.model.Heater;
@@ -94,7 +97,7 @@ public class MillheatBridgeHandler extends BaseBridgeHandler {
 
     public static String API_ENDPOINT_2 = "https://eurouter.ablecloud.cn:9005/millService/v1/";
 
-    private static final String ALLOWED_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final String ALLOWED_NONCE_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     private static final String REQUEST_TIMEOUT = "300";
 
@@ -106,7 +109,7 @@ public class MillheatBridgeHandler extends BaseBridgeHandler {
 
     private HttpClient httpClient;
 
-    private RequestLogger requestLogger = new RequestLogger();
+    private RequestLogger requestLogger;
 
     private MillheatDiscoveryService discoveryService;
 
@@ -124,7 +127,7 @@ public class MillheatBridgeHandler extends BaseBridgeHandler {
         final Random random = new Random();
         final StringBuilder sb = new StringBuilder(sizeOfRandomString);
         for (int i = 0; i < sizeOfRandomString; ++i) {
-            sb.append(ALLOWED_CHARACTERS.charAt(random.nextInt(ALLOWED_CHARACTERS.length())));
+            sb.append(ALLOWED_NONCE_CHARACTERS.charAt(random.nextInt(ALLOWED_NONCE_CHARACTERS.length())));
         }
         return sb.toString();
     }
@@ -154,6 +157,8 @@ public class MillheatBridgeHandler extends BaseBridgeHandler {
                 discoveryService, null);
 
         discoveryServiceRegistrations.put(this.getThing().getUID(), serviceRegistration);
+
+        requestLogger = new RequestLogger(bridge.getUID().getId());
 
     }
 
@@ -350,7 +355,7 @@ public class MillheatBridgeHandler extends BaseBridgeHandler {
                     SelectRoomByHomeResponse.class);
             home.rooms = new Room[roomRsp.rooms.length];
             for (int i = 0; i < home.rooms.length; i++) {
-                home.rooms[i] = new Room(roomRsp.rooms[i]);
+                home.rooms[i] = new Room(roomRsp.rooms[i], home);
             }
 
             for (Room room : home.rooms) {
@@ -359,20 +364,19 @@ public class MillheatBridgeHandler extends BaseBridgeHandler {
                         SelectDeviceByRoomResponse.class);
                 room.heaters = new Heater[deviceRsp.devices.length];
                 for (int i = 0; i < room.heaters.length; i++) {
-                    room.heaters[i] = new Heater(deviceRsp.devices[i]);
+                    room.heaters[i] = new Heater(deviceRsp.devices[i], room);
                 }
 
             }
 
-            /*
-             * GetIndependentDevicesByHomeResponse independentRsp = sendLoggedInRequest(
-             * new GetIndependentDevicesByHomeRequest(Long.parseLong(home.id), home.timezone),
-             * GetIndependentDevicesByHomeResponse.class);
-             * home.independentHeaters = new Heater[independentRsp.devices.length];
-             * for (int i = 0; i < home.independentHeaters.length; i++) {
-             * home.independentHeaters[i] = new Heater(independentRsp.devices[i]);
-             * }
-             */
+            GetIndependentDevicesByHomeResponse independentRsp = sendLoggedInRequest(
+                    new GetIndependentDevicesByHomeRequest(Long.parseLong(home.id), home.timezone),
+                    GetIndependentDevicesByHomeResponse.class);
+            home.independentHeaters = new Heater[independentRsp.devices.length];
+            for (int i = 0; i < home.independentHeaters.length; i++) {
+                home.independentHeaters[i] = new Heater(independentRsp.devices[i]);
+            }
+
         }
 
         model.lastUpdated = System.currentTimeMillis();
@@ -506,6 +510,19 @@ public class MillheatBridgeHandler extends BaseBridgeHandler {
 
         }
 
+    }
+
+    public void updateHeaterTargetTemperature(String macAddress, Command command) {
+        Heater heater = model.findHeaterByMac(macAddress);
+        if (heater != null) {
+            int newTemp = (int) ((QuantityType<?>) command).longValue();
+            SetDeviceTempRequest req = new SetDeviceTempRequest(heater, newTemp);
+            try {
+                sendLoggedInRequest(req, SetRoomTempResponse.class);
+            } catch (MillheatCommunicationException e) {
+                logger.error("Error updating temperature for heater " + macAddress, e);
+            }
+        }
     }
 
 }

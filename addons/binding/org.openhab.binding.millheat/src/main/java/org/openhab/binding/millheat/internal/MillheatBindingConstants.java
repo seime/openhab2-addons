@@ -37,8 +37,11 @@ public class MillheatBindingConstants {
     public static final String CHANNEL_SLEEP_TEMPERATURE = "sleepTemperature";
     public static final String CHANNEL_AWAY_TEMPERATURE = "awayTemperature";
     public static final String CHANNEL_HEATING_ACTIVE = "heatingActive";
+    public static final String CHANNEL_FAN_ACTIVE = "fanActive";
     public static final String CHANNEL_TARGET_TEMPERATURE = "targetTemperature";
-    public static final String CHANNEL_CURRENT_POWER = "currentPower";
+    public static final String CHANNEL_CURRENT_POWER = "currentEnergy";
     public static final String CHANNEL_CURRENT_MODE = "currentMode";
     public static final String CHANNEL_PROGRAM = "program";
+    public static final String CHANNEL_INDEPENDENT = "independent";
+    public static final String CHANNEL_WINDOW_STATE = "window";
 }
