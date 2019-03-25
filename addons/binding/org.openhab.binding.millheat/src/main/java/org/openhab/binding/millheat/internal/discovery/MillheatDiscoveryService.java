@@ -98,8 +98,8 @@ public class MillheatDiscoveryService extends AbstractDiscoveryService {
                         ThingUID heaterUID = new ThingUID(MillheatBindingConstants.THING_TYPE_HEATER, bridgeUID,
                                 String.valueOf(heater.id));
                         DiscoveryResult discoveryResultHeater = DiscoveryResultBuilder.create(heaterUID)
-                                .withBridge(bridgeUID).withLabel(heater.name).withRepresentationProperty("macAddress")
-                                .withProperty("macAddress", heater.macAddress).build();
+                                .withBridge(bridgeUID).withLabel(heater.name).withRepresentationProperty("heaterId")
+                                .withProperty("heaterId", heater.id).build();
                         thingDiscovered(discoveryResultHeater);
                     }
                 }

@@ -41,7 +41,7 @@ public class Room {
 
     }
 
-    public int getTargetTemperature() {
+    public Integer getTargetTemperature() {
         switch (mode) {
             case AdvancedAway:
                 return home.holidayTemp;
@@ -51,8 +51,9 @@ public class Room {
                 return comfortTemp;
             case Away:
                 return awayTemp;
-            case AlwaysHome:
             case Off:
+                return null;
+            case AlwaysHome:
             default:
                 return 0; // TODO
 

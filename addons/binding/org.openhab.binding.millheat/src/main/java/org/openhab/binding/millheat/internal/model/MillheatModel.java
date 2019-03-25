@@ -31,6 +31,19 @@ public class MillheatModel {
         return null;
     }
 
+    public Heater findHeaterByMacOrId(String macAddress, String id) {
+        Heater h = null;
+        if (macAddress != null) {
+            h = findHeaterByMac(macAddress);
+        }
+
+        if (h == null && id != null) {
+            h = findHeaterById(id);
+        }
+
+        return h;
+    }
+
     public Heater findHeaterByMac(String macAddress) {
         if (homes != null) {
             for (Home home : homes) {

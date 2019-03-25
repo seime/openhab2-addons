@@ -23,7 +23,7 @@
 		<tags>
 			<tag>TargetTemperature</tag>
 		</tags>
-		<state readOnly="false" pattern="%d %unit%" />
+		<state readOnly="false" pattern="%d %unit%" min="5" max="35" step="1"/>
 	</channel-type>
 	<channel-type id="sleepTemperature">
 		<item-type>Number:Temperature</item-type>
@@ -33,7 +33,7 @@
 		<tags>
 			<tag>TargetTemperature</tag>
 		</tags>
-		<state readOnly="false" pattern="%d %unit%" />
+		<state readOnly="false" pattern="%d %unit%" min="5" max="35" step="1"/>
 	</channel-type>
 	<channel-type id="awayTemperature">
 		<item-type>Number:Temperature</item-type>
@@ -43,7 +43,7 @@
 		<tags>
 			<tag>TargetTemperature</tag>
 		</tags>
-		<state readOnly="false" pattern="%d %unit%" />
+		<state readOnly="false" pattern="%d %unit%" min="5" max="35" step="1"/>
 	</channel-type>
 	<channel-type id="targetTemperatureHeater">
 		<item-type>Number:Temperature</item-type>
@@ -53,7 +53,7 @@
 		<tags>
 			<tag>TargetTemperature</tag>
 		</tags>
-		<state pattern="%d %unit%" step="1" />
+		<state readOnly="false" pattern="%d %unit%" min="5" max="35" step="1"/>
 	</channel-type>
 	<channel-type id="targetTemperatureRoom">
 		<item-type>Number:Temperature</item-type>
@@ -63,7 +63,7 @@
 		<tags>
 			<tag>TargetTemperature</tag>
 		</tags>
-		<state pattern="%d %unit%" step="1" readOnly="true" />
+		<state pattern="%d %unit%" readOnly="true" min="5" max="35" step="1"/>
 	</channel-type>
 	<channel-type id="heatingActive">
 		<item-type>Switch</item-type>
@@ -72,18 +72,24 @@
 		<category>Energy</category>
 		<state readOnly="true" />
 	</channel-type>
-	<channel-type id="independent">
-		<item-type>Switch</item-type>
-		<label>Independent heater</label>
-		<description>ON if heater is independent and not connected to a room</description>
-		<state readOnly="true" />
-	</channel-type>
+    <channel-type id="independent">
+        <item-type>Switch</item-type>
+        <label>Independent heater</label>
+        <description>ON if heater is an independent heater and not connected to a room</description>
+        <state readOnly="true" />
+    </channel-type>
+    <channel-type id="masterSwitch">
+        <item-type>Switch</item-type>
+        <label>Master switch</label>
+        <description>Master ON/OFF switch for independent heater</description>
+        <state readOnly="false"/>
+    </channel-type>
 	<channel-type id="fanActive">
 		<item-type>Switch</item-type>
 		<label>Fan active</label>
 		<description>Current state of heater fan (if available, OFF if not found)</description>
 		<category>Flow</category>
-		<state readOnly="true" />
+		<state readOnly="false" />
 	</channel-type>
 	<channel-type id="window">
 		<item-type>Contact</item-type>

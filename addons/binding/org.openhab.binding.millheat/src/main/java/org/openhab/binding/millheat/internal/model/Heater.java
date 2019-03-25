@@ -6,7 +6,7 @@ public class Heater {
 
     @Override
     public String toString() {
-        return "Heater [room=" + room.id + ", id=" + id + ", name=" + name + ", macAddress=" + macAddress
+        return "Heater [room=" + room + ", id=" + id + ", name=" + name + ", macAddress=" + macAddress
                 + ", heatingActive=" + heatingActive + ", canChangeTemp=" + canChangeTemp + ", subDomain=" + subDomain
                 + ", currentTemp=" + currentTemp + ", targetTemp=" + targetTemp + ", fanActive=" + fanActive
                 + ", powerStatus=" + powerStatus + ", windowOpen=" + windowOpen + "]";
@@ -31,13 +31,13 @@ public class Heater {
         name = dto.deviceName;
         macAddress = dto.macAddress;
         heatingActive = dto.heaterFlag;
-        canChangeTemp = true;
+        canChangeTemp = dto.holiday;
         subDomain = dto.subDomainId;
         currentTemp = (int) dto.currentTemp;
         targetTemp = dto.holidayTemp;
         fanActive = dto.fanStatus;
         powerStatus = dto.powerStatus;
-        windowOpen = "open".equals(dto.openWindow);
+        windowOpen = dto.openWindow;
 
     }
 
@@ -47,7 +47,7 @@ public class Heater {
         name = dto.deviceName;
         macAddress = dto.macAddress;
         heatingActive = dto.heaterFlag;
-        canChangeTemp = false;
+        canChangeTemp = dto.canChangeTemp;
         subDomain = dto.subDomainId;
         currentTemp = (int) dto.currentTemp;
 
@@ -61,12 +61,14 @@ public class Heater {
             case Away:
                 targetTemp = room.awayTemp;
                 break;
+            case Off:
+                targetTemp = null;
             default:
                 // TODO
         }
         fanActive = dto.fanStatus;
         powerStatus = dto.powerStatus;
-        windowOpen = "open".equals(dto.openWindow);
+        windowOpen = dto.openWindow;
 
     }
 }

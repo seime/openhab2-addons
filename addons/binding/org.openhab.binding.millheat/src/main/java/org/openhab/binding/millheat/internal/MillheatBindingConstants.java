@@ -44,4 +44,5 @@ public class MillheatBindingConstants {
     public static final String CHANNEL_PROGRAM = "program";
     public static final String CHANNEL_INDEPENDENT = "independent";
     public static final String CHANNEL_WINDOW_STATE = "window";
+    public static final String CHANNEL_MASTER_SWITCH = "masterSwitch";
 }

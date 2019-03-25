@@ -19,6 +19,6 @@ public class BooleanSerializer implements JsonSerializer<Boolean>, JsonDeseriali
 
     @Override
     public JsonElement serialize(Boolean arg0, Type arg1, JsonSerializationContext arg2) {
-        return new JsonPrimitive(Boolean.TRUE.equals(arg0));
+        return new JsonPrimitive(Boolean.TRUE.equals(arg0) ? 1 : 0);
     }
 }

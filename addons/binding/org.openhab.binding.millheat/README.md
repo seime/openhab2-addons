@@ -41,9 +41,21 @@ In order to do discovery, add a thing of type Mill Heating API and add username 
 
 See full example below for how to configure using thing files.
 
+### Bridge
+
 * username = email address used in app
 * password = password used in app
 * refreshInterval = number of seconds between refresh calls to the server 
+
+### Room
+
+* roomId = id of room. Use auto discovery to find this value
+
+### Heater
+
+* macAddress = network mac address of device. Can be found in the app by viewing devices. Or you can find it during discovery. Used for heaters connected to a room
+* heaterId = id of device/heater. Use auto discovery to find this value. Used to identify independent heaters or heaters connected to a room
+* power = number of watts this heater is consuming when active. Used to provide data for the currentPower channel.
 
 ## Channels
 
@@ -72,6 +84,7 @@ See full example below for how to configure using thing files.
 | fanActive      | R | Switch | Whether the fan (if available) is active  |
 | independent      | R | Switch | Whether this heater is controlled independently or part of a room setup |
 | window      | R | Contact | Whether this heater has detected that a window nearby is open/detection of cold air |
+| masterSwitch      | R/W | Switch | If controlled independently, turn heater ON/OFF (but still controlled by the targetTemperature) |
 
 
 ## Full Example
@@ -81,7 +94,7 @@ millheat.things:
 ```
 Bridge millheat:bridge:home "Millheat account/bridge" [username="email@address.com",password="topsecret"] {
     Thing room office "Office room" [ roomId="200000000000000" ]
-    Thing heater office "Office panel heater" [ macAddress="F0XXXXXXXXX", power=900 ]
+    Thing heater office "Office panel heater" [ macAddress="F0XXXXXXXXX", power=900, deviceId=12345 ]
 } 
 ```
 
@@ -99,12 +112,13 @@ String Heating_Office_Room_Mode "Office current mode [%s]" {channel="millheat:ro
 String Heating_Office_Room_Program "Office program [%s]" {channel="millheat:room:home:office:program"}
 
 // Items connected to HEATER channels
-Number Heating_Office_Heater_Current_Wattage "Watts consuming [%d W]" <temperature>  {channel="millheat:heater:home:office:currentPower"}
+Number Heating_Office_Heater_Current_Energy "Energy usage [%d W]" <temperature>  {channel="millheat:heater:home:office:currentEnergy"}
 Number Heating_Office_Heater_Current_Temperature "Heater current [%d °C]" <temperature>  {channel="millheat:heater:home:office:currentTemperature"}
 Number Heating_Office_Heater_Target_Temperature "Heater target [%d °C]" <temperature>  {channel="millheat:heater:home:office:targetTemperature"}
 Switch Heating_Office_Heater_Heater_Active "Heater active [%s]" <fire>  {channel="millheat:heater:home:office:heatingActive"}
 Switch Heating_Office_Heater_Fan_Active "Fan active [%s]" <fire>  {channel="millheat:heater:home:office:fanActive"}
 Contact Heating_Office_Heater_Window "Window status [%s]" <window>  {channel="millheat:heater:home:office:window"}
 Switch Heating_Office_Heater_Independent "Heater independent [%s]" <fire>  {channel="millheat:heater:home:office:independent"}
+Switch Heating_Office_Heater_MasterSwitch "Heater masterswitch [%s]" <fire>  {channel="millheat:heater:home:office:masterSwitch"}
 ```
 

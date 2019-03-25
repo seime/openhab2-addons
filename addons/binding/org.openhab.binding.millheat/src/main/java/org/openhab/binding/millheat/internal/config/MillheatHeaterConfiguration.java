@@ -25,6 +25,11 @@ public class MillheatHeaterConfiguration {
     public String macAddress;
 
     /*
+     * WIFI heater id - found in logs
+     */
+    public String heaterId;
+
+    /*
      * Nominal heater panel power
      */
     public Integer power;

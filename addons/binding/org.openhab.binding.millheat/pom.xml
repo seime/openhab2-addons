@@ -12,6 +12,6 @@
   <artifactId>org.openhab.binding.millheat</artifactId>
   <packaging>eclipse-plugin</packaging>
 
-  <name>MillHeat Binding</name>
+  <name>Millheat Binding</name>
 
 </project>

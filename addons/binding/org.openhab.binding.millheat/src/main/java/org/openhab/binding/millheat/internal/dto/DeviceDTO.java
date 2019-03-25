@@ -16,7 +16,9 @@ public class DeviceDTO {
     public int deviceStatus;
     public int holidayTemp = 0;
     public boolean fanStatus;
-    @SerializedName("open_window")
-    public String openWindow;
-    public boolean powerStatus = false;
+    @SerializedName("open")
+    public boolean openWindow;
+    public boolean powerStatus;
+    @SerializedName("isHoliday")
+    public boolean holiday;
 }

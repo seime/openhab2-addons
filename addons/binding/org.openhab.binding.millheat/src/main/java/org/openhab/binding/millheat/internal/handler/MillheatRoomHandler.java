@@ -26,6 +26,7 @@ import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
+import org.eclipse.smarthome.core.types.UnDefType;
 import org.openhab.binding.millheat.internal.config.MillheatRoomConfiguration;
 import org.openhab.binding.millheat.internal.model.MillheatModel;
 import org.openhab.binding.millheat.internal.model.ModeType;
@@ -125,7 +126,12 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
                 }
             } else if (CHANNEL_TARGET_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
-                    updateState(channelUID, new DecimalType(room.getTargetTemperature()));
+                    Integer targetTemperature = room.getTargetTemperature();
+                    if (targetTemperature != null) {
+                        updateState(channelUID, new DecimalType(targetTemperature));
+                    } else {
+                        updateState(channelUID, UnDefType.UNDEF);
+                    }
                 }
             } else if (CHANNEL_HEATING_ACTIVE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {

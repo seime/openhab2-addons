@@ -35,6 +35,7 @@ import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.smarthome.config.discovery.DiscoveryService;
+import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.QuantityType;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
@@ -512,15 +513,35 @@ public class MillheatBridgeHandler extends BaseBridgeHandler {
 
     }
 
-    public void updateHeaterTargetTemperature(String macAddress, Command command) {
-        Heater heater = model.findHeaterByMac(macAddress);
+    public void updateIndependentHeaterProperties(@Nullable String macAddress, @Nullable String heaterId,
+            @Nullable Command temperatureCommand, @Nullable Command masterOnOffCommand, @Nullable Command fanCommand) {
+        Heater heater = model.findHeaterByMacOrId(macAddress, heaterId);
         if (heater != null) {
-            int newTemp = (int) ((QuantityType<?>) command).longValue();
-            SetDeviceTempRequest req = new SetDeviceTempRequest(heater, newTemp);
+
+            int setTemp = heater.targetTemp;
+            if (temperatureCommand != null) {
+                setTemp = (int) ((QuantityType<?>) temperatureCommand).longValue();
+            }
+
+            boolean masterOnOff = heater.powerStatus;
+            if (masterOnOffCommand != null) {
+                masterOnOff = masterOnOffCommand == OnOffType.ON ? true : false;
+            }
+
+            boolean fanActive = heater.fanActive;
+            if (fanCommand != null) {
+                fanActive = fanCommand == OnOffType.ON ? true : false;
+            }
+
+            SetDeviceTempRequest req = new SetDeviceTempRequest(heater, setTemp, masterOnOff, fanActive);
             try {
                 sendLoggedInRequest(req, SetRoomTempResponse.class);
+                heater.targetTemp = setTemp;
+                heater.powerStatus = masterOnOff;
+                heater.fanActive = fanActive;
+
             } catch (MillheatCommunicationException e) {
-                logger.error("Error updating temperature for heater " + macAddress, e);
+                logger.error("Error updating temperature for heater {}", macAddress, e);
             }
         }
     }
