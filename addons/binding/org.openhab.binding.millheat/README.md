@@ -62,7 +62,7 @@ See full example below for how to configure using thing files.
 ### Room channels
 
 | Channel        | Read/write           | Item type | Description  |
-| ------------- | ------------- | ----- |
+| ------------- | ------------- | ----- | ---------- |
 | currentTemperature      | R | Number | Measured temperature in your room (if more than one heater then it is the average of all heaters) |
 | currentMode      | R | String | Current mode (comfort, away, sleep etc) being active  |
 | targetTemperature      | R | Number | Current target temperature for this room (managed by the room program and set by comfort- away- and sleepTemperature)  |
@@ -76,7 +76,7 @@ See full example below for how to configure using thing files.
 ### Heater channels
 
 | Channel        | Read/write           | Item type |  Description  |
-| ------------- | ------------- | ----- |
+| ------------- | ------------- | ----- | ---- |
 | currentTemperature      | R | Number | Measured temperature by this heater |
 | targetTemperature      | R/W | Number | Target temperature for this heater. NOTE: Actual changing of temperature is only available if this heater is independent/not connected to a room |
 | currentPower      | R | Number | Current power usage in watts. Note that the power attribute of the heater thing config must be set for this channel to be active  |
