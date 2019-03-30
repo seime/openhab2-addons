@@ -24,8 +24,6 @@ OR
 
 This binding should support all WIFI enabled heaters as well as the WIFI socket.
 
-NOTE: Currently only room heaters work. Might be other missing functionality as I only have a single type installed.
-
 * Mill Heating API - the account bridge
 * Heater
 * Room
@@ -81,9 +79,9 @@ See full example below for how to configure using thing files.
 | targetTemperature      | R/W | Number | Target temperature for this heater. NOTE: Actual changing of temperature is only available if this heater is independent/not connected to a room |
 | currentPower      | R | Number | Current power usage in watts. Note that the power attribute of the heater thing config must be set for this channel to be active  |
 | heatingActive      | R | Switch | Whether the heater is active/heating  |
-| fanActive      | R | Switch | Whether the fan (if available) is active  |
+| fanActive      | R/W | Switch | Whether the fan (if available) is active (UNTESTED) |
 | independent      | R | Switch | Whether this heater is controlled independently or part of a room setup |
-| window      | R | Contact | Whether this heater has detected that a window nearby is open/detection of cold air |
+| window      | R | Contact | Whether this heater has detected that a window nearby is open/detection of cold air (UNTESTED) |
 | masterSwitch      | R/W | Switch | If controlled independently, turn heater ON/OFF (but still controlled by the targetTemperature) |
 
 
