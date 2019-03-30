@@ -1,9 +1,1 @@
--X Discovery finner fremdeles Things som er mappet opp manuelt
--X Logging av requester må pakkes inn i isDebugEnabled
--X JSON-parser for formattering må gjøres lenient
-- Uttrekk av kall mot serveren trekkes ut som egen klasse/client
-- Automatisk retry ved feil mot server
--X Mer logging - binding slutter tilsynelatende å virke etter en stund uten spor
--X Støtte for independent heaters
--X Open window
--X Fan support
+- Automatic retry of requests in case of error
