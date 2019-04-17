@@ -1,0 +1,126 @@
+/**
+ * Copyright (c) 2010-2019 Contributors to the openHAB project
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+package org.openhab.binding.millheat.internal.discovery;
+
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.eclipse.smarthome.config.discovery.AbstractDiscoveryService;
+import org.eclipse.smarthome.config.discovery.DiscoveryResult;
+import org.eclipse.smarthome.config.discovery.DiscoveryResultBuilder;
+import org.eclipse.smarthome.core.thing.ThingTypeUID;
+import org.eclipse.smarthome.core.thing.ThingUID;
+import org.openhab.binding.millheat.internal.MillheatBindingConstants;
+import org.openhab.binding.millheat.internal.handler.MillheatAccountHandler;
+import org.openhab.binding.millheat.internal.model.Heater;
+import org.openhab.binding.millheat.internal.model.Home;
+import org.openhab.binding.millheat.internal.model.MillheatModel;
+import org.openhab.binding.millheat.internal.model.Room;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ *
+ * @author Arne Seime - Initial contribution
+ */
+public class MillheatDiscoveryService extends AbstractDiscoveryService {
+    private static final long REFRESH_INTERVAL_MINUTES = 60;
+    public static final Set<ThingTypeUID> DISCOVERABLE_THING_TYPES_UIDS = Collections.unmodifiableSet(
+            Stream.of(MillheatBindingConstants.THING_TYPE_HEATER, MillheatBindingConstants.THING_TYPE_ROOM)
+                    .collect(Collectors.toSet()));
+    private final Logger logger = LoggerFactory.getLogger(MillheatDiscoveryService.class);
+    private ScheduledFuture<?> discoveryJob;
+    private MillheatAccountHandler accountHandler;
+
+    public MillheatDiscoveryService(MillheatAccountHandler accountHandler) {
+        super(DISCOVERABLE_THING_TYPES_UIDS, 10);
+        this.accountHandler = accountHandler;
+    }
+
+    @Override
+    protected void startBackgroundDiscovery() {
+        discoveryJob = scheduler.scheduleWithFixedDelay(this::startScan, 0, REFRESH_INTERVAL_MINUTES, TimeUnit.MINUTES);
+    }
+
+    @Override
+    protected void startScan() {
+        logger.debug("Start scan for Millheat devices.");
+        synchronized (this) {
+            try {
+                ThingUID accountUID = accountHandler.getThing().getUID();
+                accountHandler.updateModelFromServerAndUpdateThingStatus();
+                MillheatModel model = accountHandler.getModel();
+                for (Home home : model.getHomes()) {
+                    for (Room room : home.getRooms()) {
+                        ThingUID roomUID = new ThingUID(MillheatBindingConstants.THING_TYPE_ROOM, accountUID,
+                                String.valueOf(room.getId()));
+                        DiscoveryResult discoveryResultRoom = DiscoveryResultBuilder.create(roomUID)
+                                .withBridge(accountUID).withLabel(room.getName()).withProperty("roomId", room.getId())
+                                .withRepresentationProperty("roomId").build();
+                        thingDiscovered(discoveryResultRoom);
+                        for (Heater heater : room.getHeaters()) {
+                            ThingUID heaterUID = new ThingUID(MillheatBindingConstants.THING_TYPE_HEATER, accountUID,
+                                    String.valueOf(heater.getId()));
+                            DiscoveryResult discoveryResultHeater = DiscoveryResultBuilder.create(heaterUID)
+                                    .withBridge(accountUID).withLabel(heater.getName())
+                                    .withProperty("heaterId", heater.getId()).withRepresentationProperty("macAddress")
+                                    .withProperty("macAddress", heater.getMacAddress()).build();
+                            thingDiscovered(discoveryResultHeater);
+                        }
+                    }
+                    for (Heater heater : home.getIndependentHeaters()) {
+                        ThingUID heaterUID = new ThingUID(MillheatBindingConstants.THING_TYPE_HEATER, accountUID,
+                                String.valueOf(heater.getId()));
+                        DiscoveryResult discoveryResultHeater = DiscoveryResultBuilder.create(heaterUID)
+                                .withBridge(accountUID).withLabel(heater.getName())
+                                .withRepresentationProperty("heaterId").withProperty("heaterId", heater.getId())
+                                .build();
+                        thingDiscovered(discoveryResultHeater);
+                    }
+                }
+            } catch (Exception e) {
+                logger.debug("Error during discovery: {}", e.getMessage());
+            } finally {
+                removeOlderResults(getTimestampOfLastScan());
+            }
+        }
+    }
+
+    public void startService() {
+        super.activate(null);
+    }
+
+    @Override
+    protected void stopBackgroundDiscovery() {
+        stopScan();
+        if (discoveryJob != null && !discoveryJob.isCancelled()) {
+            discoveryJob.cancel(true);
+            discoveryJob = null;
+        }
+    }
+
+    @Override
+    protected void stopScan() {
+        logger.debug("Stop scan for Millheat devices.");
+        super.stopScan();
+    }
+
+    public void stopService() {
+        super.abortScan();
+        super.stopScan();
+    }
+}

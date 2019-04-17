@@ -535,6 +535,11 @@
         <bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.milight/${project.version}</bundle>
     </feature>
 
+    <feature name="openhab-binding-millheat" description="Millheat Binding" version="${project.version}">
+        <feature>openhab-runtime-base</feature>
+        <bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.millheat/${project.version}</bundle>
+    </feature>
+
     <feature name="openhab-binding-minecraft" description="Minecraft Binding" version="${project.version}">
         <feature>openhab-runtime-base</feature>
         <feature>openhab-transport-mdns</feature>
