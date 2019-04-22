@@ -3,10 +3,6 @@
 This binding integrates the Mill Wi-Fi enabled panel heaters. 
 See https://www.millheat.com/mill-wifi/
 
-## Getting started
-
-Nothing special.
-
 ## Supported Things
 
 This binding supports all Wi-Fi enabled heaters as well as the Wi-Fi socket.
@@ -20,7 +16,6 @@ This binding supports all Wi-Fi enabled heaters as well as the Wi-Fi socket.
 The binding will discover both rooms and heaters. 
 
 In order to do discovery, add a thing of type Mill Heating API and add username and password.
-
 
 ## Thing Configuration
 
