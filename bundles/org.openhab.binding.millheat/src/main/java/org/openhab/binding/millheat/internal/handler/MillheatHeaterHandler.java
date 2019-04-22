@@ -22,7 +22,6 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.OpenClosedType;
 import org.eclipse.smarthome.core.library.types.QuantityType;
-import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
@@ -51,17 +50,14 @@ import tec.uom.se.unit.Units;
 public class MillheatHeaterHandler extends MillheatBaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(MillheatHeaterHandler.class);
     private @NonNullByDefault({}) MillheatHeaterConfiguration config;
-    private @NonNullByDefault({}) MillheatAccountHandler accountHandler;
 
     public MillheatHeaterHandler(Thing thing) {
         super(thing);
-        accountHandler = (MillheatAccountHandler) getBridge();
     }
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        MillheatModel model = accountHandler.getModel();
-        handleCommand(channelUID, command, model);
+        handleCommand(channelUID, command, getMillheatModel());
     }
 
     @Override
@@ -141,7 +137,7 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
                     }
                 }
             } else {
-                logger.info("Received command {} on channel {}, but this channel is not handled or supported by {}",
+                logger.debug("Received command {} on channel {}, but this channel is not handled or supported by {}",
                         channelUID.getId(), command.toString(), this.getThing().getUID());
             }
         } else {
@@ -151,31 +147,27 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
 
     private void updateIndependentHeaterProperties(@Nullable Command temperatureCommand,
             @Nullable Command masterOnOffCommand, @Nullable Command fanCommand) {
-        accountHandler.updateIndependentHeaterProperties(config.macAddress, config.heaterId, temperatureCommand,
-                masterOnOffCommand, fanCommand);
+        MillheatAccountHandler accountHandler = getAccountHandler();
+        if (accountHandler != null) {
+            accountHandler.updateIndependentHeaterProperties(config.macAddress, config.heaterId, temperatureCommand,
+                    masterOnOffCommand, fanCommand);
+        }
     }
 
     @Override
     public void initialize() {
         config = getConfigAs(MillheatHeaterConfiguration.class);
         logger.debug("Initializing Millheat heater using config {}", config);
-        Bridge bridge = getBridge();
-        if (bridge != null) {
-            accountHandler = (MillheatAccountHandler) bridge.getHandler();
-            if (config.heaterId == null && config.macAddress == null) {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR);
-            } else {
-                MillheatModel model = accountHandler.getModel();
-                Optional<Heater> heater = model.findHeaterByMacOrId(config.macAddress, config.heaterId);
-                if (heater.isPresent()) {
-                    addOptionalChannels(heater.get());
-                    updateStatus(ThingStatus.ONLINE);
-                } else {
-                    updateStatus(ThingStatus.OFFLINE);
-                }
-            }
+        if (config.heaterId == null && config.macAddress == null) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR);
         } else {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.HANDLER_INITIALIZING_ERROR);
+            Optional<Heater> heater = getMillheatModel().findHeaterByMacOrId(config.macAddress, config.heaterId);
+            if (heater.isPresent()) {
+                addOptionalChannels(heater.get());
+                updateStatus(ThingStatus.ONLINE);
+            } else {
+                updateStatus(ThingStatus.OFFLINE);
+            }
         }
     }
 

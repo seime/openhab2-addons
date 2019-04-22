@@ -21,7 +21,6 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.QuantityType;
 import org.eclipse.smarthome.core.library.types.StringType;
-import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
@@ -48,7 +47,6 @@ import tec.uom.se.unit.Units;
 public class MillheatRoomHandler extends MillheatBaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(MillheatRoomHandler.class);
     private @NonNullByDefault({}) MillheatRoomConfiguration config;
-    private @NonNullByDefault({}) MillheatAccountHandler accountHandler;
 
     public MillheatRoomHandler(Thing thing) {
         super(thing);
@@ -56,12 +54,14 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        MillheatModel model = accountHandler.getModel();
-        handleCommand(channelUID, command, model);
+        handleCommand(channelUID, command, getMillheatModel());
     }
 
     private void updateRoomTemperature(String roomId, Command command, ModeType modeType) {
-        accountHandler.updateRoomTemperature(config.roomId, command, modeType);
+        MillheatAccountHandler accountHandler = getAccountHandler();
+        if (accountHandler != null) {
+            accountHandler.updateRoomTemperature(config.roomId, command, modeType);
+        }
     }
 
     @Override
@@ -114,7 +114,7 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
                     updateState(channelUID, room.isHeatingActive() ? OnOffType.ON : OnOffType.OFF);
                 }
             } else {
-                logger.info("Received command {} on channel {}, but this channel is not handled or supported by {}",
+                logger.debug("Received command {} on channel {}, but this channel is not handled or supported by {}",
                         channelUID.getId(), command.toString(), this.getThing().getUID());
             }
         } else {
@@ -126,22 +126,11 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
     public void initialize() {
         config = getConfigAs(MillheatRoomConfiguration.class);
         logger.debug("Initializing Millheat heater using config {}", config);
-        Bridge bridge = getBridge();
-        if (bridge != null) {
-            accountHandler = (MillheatAccountHandler) bridge.getHandler();
-            boolean handled = false;
-            MillheatModel model = accountHandler.getModel();
-            Optional<Room> room = model.findRoomById(config.roomId);
-            if (room.isPresent()) {
-                updateStatus(ThingStatus.ONLINE);
-                handled = true;
-            }
-
-            if (!handled) {
-                updateStatus(ThingStatus.OFFLINE);
-            }
+        Optional<Room> room = getMillheatModel().findRoomById(config.roomId);
+        if (room.isPresent()) {
+            updateStatus(ThingStatus.ONLINE);
         } else {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.HANDLER_INITIALIZING_ERROR);
+            updateStatus(ThingStatus.OFFLINE);
         }
     }
 }

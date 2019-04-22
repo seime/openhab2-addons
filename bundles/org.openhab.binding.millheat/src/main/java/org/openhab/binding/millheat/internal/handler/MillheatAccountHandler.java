@@ -26,6 +26,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
@@ -143,6 +144,7 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
         return false;
     }
 
+    @NonNull
     public MillheatModel getModel() {
         return model;
     }
