@@ -25,7 +25,6 @@ public class Mode {
     private LocalDateTime end;
 
     public Mode(ModeType mode, LocalDateTime start, LocalDateTime end) {
-        super();
         this.mode = mode;
         this.start = start;
         this.end = end;

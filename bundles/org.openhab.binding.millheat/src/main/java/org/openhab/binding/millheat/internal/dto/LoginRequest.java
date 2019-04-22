@@ -20,7 +20,6 @@ public class LoginRequest extends AbstractRequest {
     public String password;
 
     public LoginRequest(String username, String password) {
-        super();
         this.account = username;
         this.password = password;
     }

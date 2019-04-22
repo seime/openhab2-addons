@@ -30,7 +30,6 @@ public class MillheatModel {
     private List<Home> homes = new ArrayList<>();
 
     public MillheatModel(long lastUpdated) {
-        super();
         this.lastUpdated = lastUpdated;
     }
 

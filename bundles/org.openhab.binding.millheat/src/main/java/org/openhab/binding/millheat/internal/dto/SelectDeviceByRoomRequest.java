@@ -23,7 +23,6 @@ public class SelectDeviceByRoomRequest extends AbstractRequest {
     public String timeZone;
 
     public SelectDeviceByRoomRequest(Long roomId, String timeZone) {
-        super();
         this.roomId = roomId;
         this.timeZone = timeZone;
     }

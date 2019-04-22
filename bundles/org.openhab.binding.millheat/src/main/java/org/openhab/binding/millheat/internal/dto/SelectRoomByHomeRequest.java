@@ -23,7 +23,6 @@ public class SelectRoomByHomeRequest extends AbstractRequest {
     public String timeZone;
 
     public SelectRoomByHomeRequest(Long homeId, String timeZone) {
-        super();
         this.homeId = homeId;
         this.timeZone = timeZone;
     }

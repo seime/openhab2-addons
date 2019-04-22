@@ -67,10 +67,9 @@ public class Room {
             case Away:
                 return awayTemp;
             case Off:
-                return null;
             case AlwaysHome:
             default:
-                return 0; // TODO
+                return null;
         }
     }
 
