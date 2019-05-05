@@ -98,12 +98,12 @@ String Heating_Office_Room_Mode "Office current mode [%s]" {channel="millheat:ro
 String Heating_Office_Room_Program "Office program [%s]" {channel="millheat:room:home:office:program"}
 
 // Items connected to HEATER channels
-Number Heating_Office_Heater_Current_Energy "Energy usage [%d W]" <temperature>  {channel="millheat:heater:home:office:currentEnergy"}
+Number Heating_Office_Heater_Current_Energy "Energy usage [%d W]" <energy>  {channel="millheat:heater:home:office:currentEnergy"}
 Number Heating_Office_Heater_Current_Temperature "Heater current [%d °C]" <temperature>  {channel="millheat:heater:home:office:currentTemperature"}
 Number Heating_Office_Heater_Target_Temperature "Heater target [%d °C]" <temperature>  {channel="millheat:heater:home:office:targetTemperature"}
 Switch Heating_Office_Heater_Heater_Active "Heater active [%s]" <fire>  {channel="millheat:heater:home:office:heatingActive"}
-Switch Heating_Office_Heater_Fan_Active "Fan active [%s]" <fire>  {channel="millheat:heater:home:office:fanActive"}
+Switch Heating_Office_Heater_Fan_Active "Fan active [%s]" <fan>  {channel="millheat:heater:home:office:fanActive"}
 Contact Heating_Office_Heater_Window "Window status [%s]" <window>  {channel="millheat:heater:home:office:window"}
-Switch Heating_Office_Heater_Independent "Heater independent [%s]" <fire>  {channel="millheat:heater:home:office:independent"}
-Switch Heating_Office_Heater_MasterSwitch "Heater masterswitch [%s]" <fire>  {channel="millheat:heater:home:office:masterSwitch"}
+Switch Heating_Office_Heater_Independent "Heater independent [%s]" <switch>  {channel="millheat:heater:home:office:independent"}
+Switch Heating_Office_Heater_MasterSwitch "Heater masterswitch [%s]" <switch>  {channel="millheat:heater:home:office:masterSwitch"}
 ```
