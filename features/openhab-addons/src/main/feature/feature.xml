@@ -282,7 +282,7 @@
         <bundle dependency="true">wrap:mvn:org.apache.mina/mina-core/2.0.16</bundle>
         <bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.ftpupload/${project.version}</bundle>
     </feature>
-    
+
     <feature name="openhab-binding-gardena" description="Gardena Binding" version="${project.version}">
         <feature>openhab-runtime-base</feature>
         <bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.gardena/${project.version}</bundle>
@@ -316,7 +316,7 @@
         <bundle dependency="true">mvn:com.github.digitaldan/harmony-client/1.1.4</bundle>
         <bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.harmonyhub/${project.version}</bundle>
     </feature>
-    
+
     <feature name="openhab-binding-helios" description="Helios Binding" version="${project.version}">
         <feature>openhab-runtime-base</feature>
         <bundle dependency="true">mvn:org.apache.ws.xmlschema/xmlschema-core/2.2.4</bundle>
@@ -584,7 +584,7 @@
 
     <feature name="openhab-binding-nanoleaf" description="Nanoleaf Binding" version="${project.version}">
         <feature>openhab-runtime-base</feature>
-        <feature>openhab-transport-mdns</feature>        
+        <feature>openhab-transport-mdns</feature>
         <bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.nanoleaf/${project.version}</bundle>
     </feature>
 
@@ -758,7 +758,7 @@
         <feature>openhab-runtime-base</feature>
         <bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.robonect/${project.version}</bundle>
     </feature>
-    
+
     <feature name="openhab-binding-rotelra1x" description="RotelRa1x Binding" version="${project.version}">
         <feature>openhab-runtime-base</feature>
         <feature>openhab-transport-serial</feature>
@@ -796,6 +796,11 @@
     <feature name="openhab-binding-seneye" description="Seneye Binding" version="${project.version}">
         <feature>openhab-runtime-base</feature>
         <bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.seneye/${project.version}</bundle>
+    </feature>
+
+    <feature name="openhab-binding-sensibo" description="Sensibo Binding" version="${project.version}">
+        <feature>openhab-runtime-base</feature>
+        <bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.sensibo/${project.version}</bundle>
     </feature>
 
     <feature name="openhab-binding-serialbutton" description="Serial Button Binding" version="${project.version}">
@@ -978,7 +983,7 @@
         <feature>openhab-runtime-base</feature>
         <bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.windcentrale/${project.version}</bundle>
     </feature>
-    
+
     <feature name="openhab-binding-xmppclient" description="XMPP Client Binding" version="${project.version}">
         <feature>openhab-runtime-base</feature>
         <feature prerequisite="true">wrap</feature>
@@ -1072,7 +1077,7 @@
         <feature>openhab-runtime-base</feature>
         <bundle dependency="true">mvn:org.json/json/20180813</bundle>
         <bundle dependency="true">wrap:mvn:com.squareup.okhttp3/okhttp/3.12.1$Bundle-Name=OkHttp&amp;Bundle-SymbolicName=com.squareup.okhttp&amp;Bundle-Version=3.12.1</bundle>
-        <bundle dependency="true">wrap:mvn:com.squareup.okio/okio/1.15.0$Bundle-Name=Okio&amp;Bundle-SymbolicName=com.squareup.okio&amp;Bundle-Version=1.15.0</bundle>   
+        <bundle dependency="true">wrap:mvn:com.squareup.okio/okio/1.15.0$Bundle-Name=Okio&amp;Bundle-SymbolicName=com.squareup.okio&amp;Bundle-Version=1.15.0</bundle>
         <bundle dependency="true">wrap:mvn:io.socket/socket.io-client/1.0.0$Bundle-Name=Socket.IO%20Client&amp;Bundle-SymbolicName=io.socket.socket.io-client&amp;Bundle-Version=1.0.0</bundle>
         <bundle dependency="true">wrap:mvn:io.socket/engine.io-client/1.0.0$Bundle-Name=Engine.IO%20Client&amp;Bundle-SymbolicName=io.socket.engine.io-client&amp;Bundle-Version=1.0.0</bundle>
         <bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.io.openhabcloud/${project.version}</bundle>
@@ -1256,7 +1261,7 @@
         <bundle dependency="true">wrap:mvn:com.amazonaws/aws-java-sdk-core/1.11.490</bundle>
         <bundle dependency="true">wrap:mvn:com.amazonaws/aws-java-sdk-polly/1.11.490</bundle>
         <bundle dependency="true">mvn:commons-logging/commons-logging/1.2</bundle>
-        <bundle dependency="true">mvn:joda-time/joda-time/2.8.1</bundle> 
+        <bundle dependency="true">mvn:joda-time/joda-time/2.8.1</bundle>
         <bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.voice.pollytts/${project.version}</bundle>
     </feature>
 

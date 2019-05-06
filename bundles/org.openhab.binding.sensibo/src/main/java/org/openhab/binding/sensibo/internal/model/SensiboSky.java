@@ -1,0 +1,145 @@
+/**
+ * Copyright (c) 2010-2019 Contributors to the openHAB project
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+package org.openhab.binding.sensibo.internal.model;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.measure.Unit;
+import javax.measure.quantity.Temperature;
+
+import org.apache.commons.lang.StringUtils;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.smarthome.core.library.unit.ImperialUnits;
+import org.eclipse.smarthome.core.library.unit.SIUnits;
+import org.openhab.binding.sensibo.internal.dto.poddetails.Measurement;
+import org.openhab.binding.sensibo.internal.dto.poddetails.ModeCapability;
+import org.openhab.binding.sensibo.internal.dto.poddetails.PodDetails;
+
+/**
+ * The {@link SensiboSky} represents a Sensibo unit
+ *
+ * @author Arne Seime - Initial contribution
+ */
+public class SensiboSky extends Pod {
+
+    private String macAddress;
+    private String firmwareVersion;
+    private String firmwareType;
+    private String serialNumber;
+    private @NonNull Unit<@NonNull Temperature> temperatureUnit;
+    private String originalTemperatureUnit;
+    private String productModel;
+    private Boolean smartMode;
+    private AcState acState;
+    private Double temperature;
+    private Double humidity;
+    private boolean alive;
+    private Map<String, ModeCapability> remoteCapabilities;
+
+    public SensiboSky(PodDetails dto) {
+        this.id = dto.getId();
+        this.macAddress = StringUtils.remove(dto.getMacAddress(), ':');
+        this.firmwareVersion = dto.getFirmwareVersion();
+        this.firmwareType = dto.getFirmwareType();
+        this.serialNumber = dto.getSerialNumber();
+        this.originalTemperatureUnit = dto.getTemperatureUnit();
+        switch (originalTemperatureUnit) {
+            case "C":
+                this.temperatureUnit = SIUnits.CELSIUS;
+                break;
+            case "F":
+                this.temperatureUnit = ImperialUnits.FAHRENHEIT;
+                break;
+            default:
+                throw new IllegalArgumentException("Do not understand temperature unit " + temperatureUnit);
+
+        }
+        this.productModel = dto.getProductModel();
+        this.acState = new AcState(dto.getAcState());
+
+        Measurement lastMeasurement = dto.getLastMeasurement();
+        this.temperature = lastMeasurement.getTemperature();
+        this.humidity = lastMeasurement.getHumidity();
+
+        this.alive = dto.isAlive();
+        this.remoteCapabilities = dto.getRemoteCapabilities();
+
+    }
+
+    public String getMacAddress() {
+        return macAddress;
+    }
+
+    public String getFirmwareVersion() {
+        return firmwareVersion;
+    }
+
+    public String getFirmwareType() {
+        return firmwareType;
+    }
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public Unit<Temperature> getTemperatureUnit() {
+        return temperatureUnit;
+    }
+
+    public String getProductModel() {
+        return productModel;
+    }
+
+    public Boolean getSmartMode() {
+        return smartMode;
+    }
+
+    public AcState getAcState() {
+        return acState;
+    }
+
+    public String getProductName() {
+        switch (productModel) {
+            case "skyv2":
+                return "Sensibo Sky v2"; // TODO ad location
+            default:
+                return productModel; // TODO add location
+        }
+    }
+
+    public Double getTemperature() {
+        return temperature;
+    }
+
+    public Double getHumidity() {
+        return humidity;
+    }
+
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public Map<String, ModeCapability> getRemoteCapabilities() {
+        return remoteCapabilities;
+    }
+
+    public ModeCapability getModeCapabilities() {
+        return remoteCapabilities.get(acState.getMode());
+
+    }
+
+    public List<Integer> getTargetTemperatures() {
+        return getModeCapabilities().getTemperatures().get(originalTemperatureUnit).getValidValues();
+    }
+}
