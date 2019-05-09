@@ -59,7 +59,6 @@ public class AcState {
         } else {
             throw new IllegalArgumentException("Unexpected temperature unit " + unit);
         }
-
     }
 
     public boolean isOn() {

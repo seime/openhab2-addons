@@ -189,8 +189,6 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
     }
 
     private void addDynamicChannelsAndProperties(final SensiboSky sensiboSky) {
-
-        // Dynamic channels
         final List<Channel> newChannels = new ArrayList<>();
         for (final Channel channel : getThing().getChannels()) {
             final ChannelTypeUID channelTypeUID = channel.getChannelTypeUID();
@@ -259,7 +257,6 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
         generatedChannelTypes.put(channelTypeUID, channelType);
 
         return channelTypeUID;
-
     }
 
     private static String beautify(final String camelCaseWording) {

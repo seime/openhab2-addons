@@ -208,7 +208,6 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
         }
 
         return model;
-
     }
 
     private <T> T sendRequest(final Request request, final AbstractRequest req, final Type responseType)
@@ -301,7 +300,6 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
     private Request buildRequest(final AbstractRequest req)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
-
         Request request = httpClient.newRequest(API_ENDPOINT + req.getRequestUrl()).param("apiKey", config.apiKey)
                 .method(req.getMethod());
 
@@ -313,16 +311,13 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
         requestLogger.listenTo(request);
 
         return request;
-
     }
 
     public void updateSensiboSkyAcState(@Nullable final String macAddress, final AcState newStateInternalModel,
             SensiboBaseThingHandler handler) {
-
         Optional<SensiboSky> optionalHeater = model.findSensiboSkyByMacAddress(macAddress);
         if (optionalHeater.isPresent()) {
             SensiboSky sensiboSky = optionalHeater.get();
-
             try {
                 org.openhab.binding.sensibo.internal.dto.poddetails.AcState acStateDto = new org.openhab.binding.sensibo.internal.dto.poddetails.AcState(
                         newStateInternalModel);
@@ -334,11 +329,9 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
                 model.updateAcState(macAddress, new AcState(response.getAcState()));
                 handler.updateState(model);
-
             } catch (UnsupportedEncodingException | SensiboCommunicationException | NoSuchAlgorithmException e) {
                 logger.info("Error setting ac state for {}", macAddress, e);
             }
         }
     }
-
 }

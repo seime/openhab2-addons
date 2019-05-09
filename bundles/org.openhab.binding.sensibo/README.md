@@ -40,7 +40,7 @@ Or you can find it during discovery.
 | currentHumidity     | R             | Number:Dimensionless  | Measured relative humidity, reported in percent |
 | targetTemperature   | R/W           | Number:Temperature    | Current target temperature for this room |
 | masterSwitch        | R/W           | Switch                | Switch AC ON or OFF |
-| currentMode         | R/W           | String                | Current mode (cool, heat, etc, actual modes provided provided by the API) being active |
+| mode                | R/W           | String                | Current mode (cool, heat, etc, actual modes provided provided by the API) being active |
 | fanLevel            | R/W           | String                | Current fan level (low, auto etc, actual levels provided provided by the API |
 | swingMode           | R/W           | String                | Current swing mode (actual modes provided provided by the API |
 
