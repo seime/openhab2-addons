@@ -34,15 +34,15 @@ Or you can find it during discovery.
 
 ### Sensibo Sky
 
-| Channel             | Read/write    | Item type | Description |
-| ------------------- | ------------- | --------- | ----------- |
+| Channel             | Read/write    | Item type             | Description |
+| ------------------- | ------------- | --------------------- | ----------- |
 | currentTemperature  | R             | Number:Temperature    | Measured temperature  |
-| currentHumidity     | R             | Number    | Measured relative humidity, reported in percent |
+| currentHumidity     | R             | Number:Dimensionless  | Measured relative humidity, reported in percent |
 | targetTemperature   | R/W           | Number:Temperature    | Current target temperature for this room |
-| masterSwitch        | R/W           | Switch    | Switch AC ON or OFF |
-| currentMode         | R/W           | String    | Current mode (cool, heat, etc, actual modes provided provided by the API) being active |
-| fanLevel            | R/W           | String    | Current fan level (low, auto etc, actual levels provided provided by the API |
-| swingMode           | R/W           | String    | Current swing mode (actual modes provided provided by the API |
+| masterSwitch        | R/W           | Switch                | Switch AC ON or OFF |
+| currentMode         | R/W           | String                | Current mode (cool, heat, etc, actual modes provided provided by the API) being active |
+| fanLevel            | R/W           | String                | Current fan level (low, auto etc, actual levels provided provided by the API |
+| swingMode           | R/W           | String                | Current swing mode (actual modes provided provided by the API |
 
 ## Full Example
 
@@ -50,12 +50,19 @@ sensibo.things:
 
 ```
 Bridge sensibo:account:home "Sensibo account" [apiKey="XYZASDASDAD", refreshInterval=120] {
-    Thing sensibosky basement "Sensibo Sky Basement" [ podId="1234566" ]
+    Thing sensibosky office "Sensibo Sky Office" [ macAddress="00:11:22:33:44:55" ]
 }
 ```
 
 sensibo.items:
 
 ```
-TBD
+Number:Temperature AC_Office_Room_Current_Temperature "Temperature [%.1f °C]" <temperature>  {channel="sensibo:sensibosky:home:office:currentTemperature"}
+Number:Dimensionless AC_Office_Room_Current_Humidity "Relative humidity [%.1f %%]" <humidity  >  {channel="sensibo:sensibosky:home:office:currentHumidity"}
+Number:Temperature AC_Office_Room_Target_Temperature "Target temperature [%d °C]" <temperature>  {channel="sensibo:sensibosky:home:office:targetTemperature"}
+String AC_Office_Room_Mode "AC mode [%s]" {channel="sensibo:sensibosky:home:office:mode"}
+String AC_Office_Room_Swing_Mode "AC swing mode [%s]" {channel="sensibo:sensibosky:home:office:swingMode"}
+Switch AC_Office_Heater_MasterSwitch "AC power [%s]" <switch>  {channel="sensibo:sensibosky:home:office:masterSwitch"}
+String AC_Office_Heater_Fan_Level "Fan level [%s]" <fan>  {channel="sensibo:sensibosky:home:office:fanLevel"}
+
 ```

@@ -84,7 +84,7 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
     private void updateAcState(final AcState newState) {
         final SensiboAccountHandler accountHandler = getAccountHandler();
         if (accountHandler != null) {
-            accountHandler.updateSensiboSkyAcState(config.macAddress, newState);
+            accountHandler.updateSensiboSkyAcState(config.macAddress, newState, this);
         }
     }
 
@@ -106,12 +106,17 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
                 } else if (CHANNEL_MASTER_SWITCH.equals(channelUID.getId())) {
                     if (command instanceof RefreshType) {
                         updateState(channelUID, unit.getAcState().isOn() ? OnOffType.ON : OnOffType.OFF);
+                    } else if (command instanceof OnOffType) {
+                        final OnOffType newValue = (OnOffType) command;
+                        final AcState newAcState = unit.getAcState().clone();
+                        newAcState.setOn(newValue == OnOffType.ON ? true : false);
+                        updateAcState(newAcState);
                     }
                 } else if (CHANNEL_TARGET_TEMPERATURE.equals(channelUID.getId())) {
                     if (command instanceof RefreshType) {
                         updateState(channelUID, new QuantityType<>(unit.getAcState().getTargetTemperature(),
                                 unit.getTemperatureUnit()));
-                    } else {
+                    } else if (command instanceof QuantityType<?>) {
                         final QuantityType<?> newValue = (QuantityType<?>) command;
                         final AcState newAcState = unit.getAcState().clone();
                         newAcState.setTargetTemperature(newValue.intValue());
@@ -121,14 +126,29 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
                 } else if (CHANNEL_MODE.equals(channelUID.getId())) {
                     if (command instanceof RefreshType) {
                         updateState(channelUID, new StringType(unit.getAcState().getMode()));
+                    } else if (command instanceof StringType) {
+                        final StringType newValue = (StringType) command;
+                        final AcState newAcState = unit.getAcState().clone();
+                        newAcState.setMode(newValue.toString());
+                        updateAcState(newAcState);
                     }
                 } else if (CHANNEL_SWING_MODE.equals(channelUID.getId())) {
                     if (command instanceof RefreshType) {
                         updateState(channelUID, new StringType(unit.getAcState().getSwing()));
+                    } else if (command instanceof StringType) {
+                        final StringType newValue = (StringType) command;
+                        final AcState newAcState = unit.getAcState().clone();
+                        newAcState.setSwing(newValue.toString());
+                        updateAcState(newAcState);
                     }
                 } else if (CHANNEL_FAN_LEVEL.equals(channelUID.getId())) {
                     if (command instanceof RefreshType) {
                         updateState(channelUID, new StringType(unit.getAcState().getFanLevel()));
+                    } else if (command instanceof StringType) {
+                        final StringType newValue = (StringType) command;
+                        final AcState newAcState = unit.getAcState().clone();
+                        newAcState.setFanLevel(newValue.toString());
+                        updateAcState(newAcState);
                     }
                 }
             } else {

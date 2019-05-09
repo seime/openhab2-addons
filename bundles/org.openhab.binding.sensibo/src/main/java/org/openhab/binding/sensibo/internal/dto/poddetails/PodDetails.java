@@ -34,6 +34,7 @@ public class PodDetails {
     private Measurement lastMeasurement;
     private ModeCapabilityWrapper remoteCapabilities;
     private ConnectionStatus connectionStatus;
+    private Room room;
 
     public String getMacAddress() {
         return macAddress;
@@ -81,5 +82,9 @@ public class PodDetails {
 
     public String getId() {
         return id;
+    }
+
+    public String getRoomName() {
+        return room.getName();
     }
 }

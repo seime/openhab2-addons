@@ -25,11 +25,14 @@ import org.openhab.binding.sensibo.internal.dto.poddetails.ModeCapability;
 import org.openhab.binding.sensibo.internal.dto.poddetails.PodDetails;
 import org.openhab.binding.sensibo.internal.dto.poddetails.Temperature;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class GetPodDetailsResponseTest extends AbstractSerializationDeserializationTest {
 
     @Test
     public void testDeserialize() throws IOException {
-        final PodDetails rsp = deSerialize("/get_pod_details_response.json", PodDetails.class);
+        final PodDetails rsp = deSerializeResponse("/get_pod_details_response.json", PodDetails.class);
 
         assertEquals("MA:C:AD:DR:ES:S0", rsp.getMacAddress());
         assertEquals("IN010056", rsp.getFirmwareVersion());

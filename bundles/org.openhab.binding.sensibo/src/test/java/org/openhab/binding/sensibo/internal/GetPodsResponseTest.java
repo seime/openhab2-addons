@@ -24,6 +24,9 @@ import org.openhab.binding.sensibo.internal.dto.pods.Pod;
 
 import com.google.gson.reflect.TypeToken;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class GetPodsResponseTest extends AbstractSerializationDeserializationTest {
 
     @Test
@@ -32,7 +35,7 @@ public class GetPodsResponseTest extends AbstractSerializationDeserializationTes
         final Type type = new TypeToken<ArrayList<Pod>>() {
         }.getType();
 
-        final List<Pod> rsp = deSerialize("/get_pods_response.json", type);
+        final List<Pod> rsp = deSerializeResponse("/get_pods_response.json", type);
 
         assertEquals(1, rsp.size());
         assertEquals("PODID", rsp.get(0).getId());

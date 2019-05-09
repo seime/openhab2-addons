@@ -19,6 +19,7 @@ import java.lang.reflect.Type;
 import java.time.ZonedDateTime;
 
 import org.apache.commons.io.IOUtils;
+import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -28,6 +29,9 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public abstract class AbstractSerializationDeserializationTest {
 
     private Gson gson;
@@ -48,7 +52,7 @@ public abstract class AbstractSerializationDeserializationTest {
         }).setPrettyPrinting().create();
     }
 
-    protected <T> T deSerialize(final String jsonClasspathName, final Type type) throws IOException {
+    protected <T> T deSerializeResponse(final String jsonClasspathName, final Type type) throws IOException {
         final String json = IOUtils
                 .toString(AbstractSerializationDeserializationTest.class.getResourceAsStream(jsonClasspathName));
 
@@ -58,5 +62,20 @@ public abstract class AbstractSerializationDeserializationTest {
 
         return gson.fromJson(o.get("result"), type);
 
+    }
+
+    protected <T> T deSerializeFromClasspathResource(final String jsonClasspathName, final Type type)
+            throws IOException {
+        final String json = IOUtils
+                .toString(AbstractSerializationDeserializationTest.class.getResourceAsStream(jsonClasspathName));
+        return deSerializeFromString(json, type);
+    }
+
+    protected <T> T deSerializeFromString(final String json, final Type type) throws IOException {
+        return gson.fromJson(json, type);
+    }
+
+    protected <T> String serialize(final AbstractRequest req) throws IOException {
+        return gson.toJson(req);
     }
 }

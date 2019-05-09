@@ -39,7 +39,6 @@ import org.osgi.framework.BundleContext;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 /**
- *
  * @author Arne Seime - Initial contribution
  */
 public class SensiboAccountHandlerTest {

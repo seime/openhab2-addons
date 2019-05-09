@@ -10,18 +10,15 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.sensibo.internal.model;
+package org.openhab.binding.sensibo.internal.dto.poddetails;
 
 /**
- * Represents a generic Sensibo controllable thing
- *
  * @author Arne Seime - Initial contribution
  */
-public abstract class Pod {
-    protected String id;
+public class Room {
+    private String name;
 
-    public String getId() {
-        return id;
+    public String getName() {
+        return name;
     }
-
 }

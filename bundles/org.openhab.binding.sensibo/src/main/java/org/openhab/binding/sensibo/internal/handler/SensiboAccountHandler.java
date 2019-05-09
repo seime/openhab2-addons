@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -50,6 +51,8 @@ import org.openhab.binding.sensibo.internal.client.RequestLogger;
 import org.openhab.binding.sensibo.internal.config.SensiboAccountConfiguration;
 import org.openhab.binding.sensibo.internal.discovery.SensiboDiscoveryService;
 import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
+import org.openhab.binding.sensibo.internal.dto.SetAcStateReponse;
+import org.openhab.binding.sensibo.internal.dto.SetAcStateRequest;
 import org.openhab.binding.sensibo.internal.dto.poddetails.GetPodsDetailsRequest;
 import org.openhab.binding.sensibo.internal.dto.poddetails.PodDetails;
 import org.openhab.binding.sensibo.internal.dto.pods.GetPodsRequest;
@@ -107,9 +110,8 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
                 return ZonedDateTime.parse(in.nextString());
             }
 
-        }).setPrettyPrinting().create();
+        }).create();
 
-        config = getConfigAs(SensiboAccountConfiguration.class);
         discoveryService = new SensiboDiscoveryService(this);
         final ServiceRegistration<DiscoveryService> serviceRegistration = context
                 .registerService(DiscoveryService.class, discoveryService, null);
@@ -277,29 +279,35 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
     private Request buildGetPodsRequest(final GetPodsRequest req)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        final Request request = buildRequest(req, null);
+        final Request request = buildRequest(req);
 
         return request;
     }
 
     private Request buildGetPodDetailsRequest(final GetPodsDetailsRequest getPodsDetailsRequest)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        final Request req = buildRequest(getPodsDetailsRequest, null);
+        final Request req = buildRequest(getPodsDetailsRequest);
         req.param("fields", "*");
 
         return req;
     }
 
-    private Request buildRequest(final AbstractRequest req, final Type type)
+    private Request buildSetAcStateRequest(SetAcStateRequest setAcStateRequest)
+            throws UnsupportedEncodingException, NoSuchAlgorithmException {
+        final Request req = buildRequest(setAcStateRequest);
+
+        return req;
+    }
+
+    private Request buildRequest(final AbstractRequest req)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
         Request request = httpClient.newRequest(API_ENDPOINT + req.getRequestUrl()).param("apiKey", config.apiKey)
                 .method(req.getMethod());
 
         if (req.getMethod() == HttpMethod.POST) {
-            final String reqJson = gson.toJson(req, type);
-
-            request = request.content(new BytesContentProvider((gson.toJson(reqJson)).getBytes("UTF-8")));
+            final String reqJson = gson.toJson(req);
+            request = request.content(new BytesContentProvider(reqJson.getBytes("UTF-8")), "application/json");
         }
 
         requestLogger.listenTo(request);
@@ -308,35 +316,29 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
     }
 
-    public void updateSensiboSkyAcState(@Nullable final String macAddress, final AcState newState) {
-        /*
-         * Optional<Heater> optionalHeater = model.findHeaterByMacOrId(macAddress, heaterId);
-         * if (optionalHeater.isPresent()) {
-         * Heater heater = optionalHeater.get();
-         * int setTemp = heater.getTargetTemp();
-         * if (temperatureCommand != null && temperatureCommand instanceof QuantityType<?>) {
-         * setTemp = (int) ((QuantityType<?>) temperatureCommand).longValue();
-         * }
-         * boolean masterOnOff = heater.isPowerStatus();
-         * if (masterOnOffCommand != null) {
-         * masterOnOff = masterOnOffCommand == OnOffType.ON ? true : false;
-         * }
-         * boolean fanActive = heater.isFanActive();
-         * if (fanCommand != null) {
-         * fanActive = fanCommand == OnOffType.ON ? true : false;
-         * }
-         * SetDeviceTempRequest req = new SetDeviceTempRequest(heater, setTemp, masterOnOff, fanActive);
-         * try {
-         * sendLoggedInRequest(req, SetRoomTempResponse.class);
-         * heater.setTargetTemp(setTemp);
-         * heater.setPowerStatus(masterOnOff);
-         * heater.setFanActive(fanActive);
-         * } catch (SensiboCommunicationException e) {
-         * logger.info("Error updating temperature for heater {}", macAddress, e);
-         * }
-         * }
-         * }
-         */
+    public void updateSensiboSkyAcState(@Nullable final String macAddress, final AcState newStateInternalModel,
+            SensiboBaseThingHandler handler) {
+
+        Optional<SensiboSky> optionalHeater = model.findSensiboSkyByMacAddress(macAddress);
+        if (optionalHeater.isPresent()) {
+            SensiboSky sensiboSky = optionalHeater.get();
+
+            try {
+                org.openhab.binding.sensibo.internal.dto.poddetails.AcState acStateDto = new org.openhab.binding.sensibo.internal.dto.poddetails.AcState(
+                        newStateInternalModel);
+                SetAcStateRequest setAcStateRequest = new SetAcStateRequest(sensiboSky.getId(), acStateDto);
+                Request request = buildSetAcStateRequest(setAcStateRequest);
+                SetAcStateReponse response = sendRequest(request, setAcStateRequest,
+                        new TypeToken<SetAcStateReponse>() {
+                        }.getType());
+
+                model.updateAcState(macAddress, new AcState(response.getAcState()));
+                handler.updateState(model);
+
+            } catch (UnsupportedEncodingException | SensiboCommunicationException | NoSuchAlgorithmException e) {
+                logger.info("Error setting ac state for {}", macAddress, e);
+            }
+        }
     }
 
 }

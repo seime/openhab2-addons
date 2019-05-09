@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * The {@link SensiboModel} represents the home structure as designed by the user in the Sensibo app.
@@ -47,6 +48,18 @@ public class SensiboModel {
     public Optional<@NonNull SensiboSky> findSensiboSkyByMacAddress(final String macAddress) {
         final String macAddressWithoutColons = StringUtils.remove(macAddress, ':');
         return pods.stream().filter(pod -> macAddressWithoutColons.equals(pod.getMacAddress())).findFirst();
+    }
+
+    /**
+     * @param macAddress
+     * @param acState
+     */
+    public void updateAcState(@Nullable String macAddress, AcState acState) {
+        Optional<@NonNull SensiboSky> sensiboSky = findSensiboSkyByMacAddress(macAddress);
+        if (sensiboSky.isPresent()) {
+            sensiboSky.get().updateAcState(acState);
+        }
+
     }
 
 }

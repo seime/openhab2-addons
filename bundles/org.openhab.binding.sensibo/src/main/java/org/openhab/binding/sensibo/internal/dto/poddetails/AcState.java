@@ -12,6 +12,13 @@
  */
 package org.openhab.binding.sensibo.internal.dto.poddetails;
 
+import javax.measure.Unit;
+import javax.measure.quantity.Temperature;
+
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.smarthome.core.library.unit.ImperialUnits;
+import org.eclipse.smarthome.core.library.unit.SIUnits;
+
 /**
  * @author Arne Seime - Initial contribution
  */
@@ -22,6 +29,38 @@ public class AcState {
     private int targetTemperature;
     private String mode;
     private String swing;
+
+    public AcState(boolean on, String fanLevel, String temperatureUnit, int targetTemperature, String mode,
+            String swing) {
+        this.on = on;
+        this.fanLevel = fanLevel;
+        this.temperatureUnit = temperatureUnit;
+        this.targetTemperature = targetTemperature;
+        this.mode = mode;
+        this.swing = swing;
+    }
+
+    public AcState() {
+    }
+
+    public AcState(org.openhab.binding.sensibo.internal.model.AcState acState) {
+        this.on = acState.isOn();
+        this.fanLevel = acState.getFanLevel();
+        this.targetTemperature = acState.getTargetTemperature();
+        this.mode = acState.getMode();
+        this.swing = acState.getSwing();
+
+        Unit<@NonNull Temperature> unit = acState.getTemperatureUnit();
+
+        if (unit.equals(SIUnits.CELSIUS)) {
+            this.temperatureUnit = "C";
+        } else if (unit.equals(ImperialUnits.FAHRENHEIT)) {
+            this.temperatureUnit = "F";
+        } else {
+            throw new IllegalArgumentException("Unexpected temperature unit " + unit);
+        }
+
+    }
 
     public boolean isOn() {
         return on;

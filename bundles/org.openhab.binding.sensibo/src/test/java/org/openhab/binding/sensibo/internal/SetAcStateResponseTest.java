@@ -19,16 +19,17 @@ import java.io.IOException;
 import org.junit.Test;
 import org.openhab.binding.sensibo.internal.dto.SetAcStateReponse;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class SetAcStateResponseTest extends AbstractSerializationDeserializationTest {
 
     @Test
     public void testDeserialize() throws IOException {
 
-        final SetAcStateReponse rsp = deSerialize("/set_acstate_response.json", SetAcStateReponse.class);
+        final SetAcStateReponse rsp = deSerializeResponse("/set_acstate_response.json", SetAcStateReponse.class);
 
         assertNotNull(rsp.getAcState());
-
         assertTrue(rsp.getAcState().isOn());
     }
-
 }

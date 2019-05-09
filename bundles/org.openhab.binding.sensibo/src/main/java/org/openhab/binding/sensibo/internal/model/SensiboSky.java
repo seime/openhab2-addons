@@ -41,10 +41,11 @@ public class SensiboSky extends Pod {
     private final String originalTemperatureUnit;
     private final String productModel;
     private Boolean smartMode;
-    private final AcState acState;
+    private AcState acState;
     private final Double temperature;
     private final Double humidity;
     private final boolean alive;
+    private final String roomName;
     private final Map<String, ModeCapability> remoteCapabilities;
 
     public SensiboSky(final PodDetails dto) {
@@ -74,6 +75,7 @@ public class SensiboSky extends Pod {
 
         this.alive = dto.isAlive();
         this.remoteCapabilities = dto.getRemoteCapabilities();
+        this.roomName = dto.getRoomName();
 
     }
 
@@ -112,9 +114,9 @@ public class SensiboSky extends Pod {
     public String getProductName() {
         switch (productModel) {
             case "skyv2":
-                return "Sensibo Sky v2"; // TODO ad location
+                return String.format("Sensibo Sky %s", roomName);
             default:
-                return productModel; // TODO add location
+                return String.format("%s %s", productModel, roomName);
         }
     }
 
@@ -141,5 +143,12 @@ public class SensiboSky extends Pod {
 
     public List<Integer> getTargetTemperatures() {
         return getModeCapabilities().getTemperatures().get(originalTemperatureUnit).getValidValues();
+    }
+
+    /**
+     * @param newAcState an updated ac state
+     */
+    public void updateAcState(AcState newAcState) {
+        this.acState = newAcState;
     }
 }
