@@ -26,6 +26,7 @@ See full example below for how to configure using thing files.
 ### Sensibo Sky
 
 * `macAddress` = network mac address of device.
+
 Can be found printed on the back of the device
 Or you can find it during discovery.
 
@@ -35,9 +36,9 @@ Or you can find it during discovery.
 
 | Channel             | Read/write    | Item type | Description |
 | ------------------- | ------------- | --------- | ----------- |
-| currentTemperature  | R             | Number    | Measured temperature  |
+| currentTemperature  | R             | Number:Temperature    | Measured temperature  |
 | currentHumidity     | R             | Number    | Measured relative humidity, reported in percent |
-| targetTemperature   | R/W           | Number    | Current target temperature for this room |
+| targetTemperature   | R/W           | Number:Temperature    | Current target temperature for this room |
 | masterSwitch        | R/W           | Switch    | Switch AC ON or OFF |
 | currentMode         | R/W           | String    | Current mode (cool, heat, etc, actual modes provided provided by the API) being active |
 | fanLevel            | R/W           | String    | Current fan level (low, auto etc, actual levels provided provided by the API |
@@ -56,5 +57,5 @@ Bridge sensibo:account:home "Sensibo account" [apiKey="XYZASDASDAD", refreshInte
 sensibo.items:
 
 ```
-
+TBD
 ```

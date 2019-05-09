@@ -73,17 +73,17 @@ public class SensiboAccountHandlerTest {
     @Test
     public void testInitialize() throws InterruptedException, IOException {
         // Setup account
-        SensiboAccountConfiguration accountConfig = new SensiboAccountConfiguration();
+        final SensiboAccountConfiguration accountConfig = new SensiboAccountConfiguration();
         accountConfig.apiKey = "APIKEY";
         when(configuration.as(eq(SensiboAccountConfiguration.class))).thenReturn(accountConfig);
 
         // Setup initial response
-        String getPodsResponse = IOUtils.toString(getClass().getResourceAsStream("/get_pods_response.json"));
+        final String getPodsResponse = IOUtils.toString(getClass().getResourceAsStream("/get_pods_response.json"));
         stubFor(get(urlEqualTo("/api/v2/users/me/pods?apiKey=APIKEY"))
                 .willReturn(aResponse().withStatus(200).withBody(getPodsResponse)));
 
         // Setup 2nd response with details
-        String getPodDetailsResponse = IOUtils
+        final String getPodDetailsResponse = IOUtils
                 .toString(getClass().getResourceAsStream("/get_pod_details_response.json"));
         stubFor(get(urlEqualTo("/api/v2/pods/PODID?apiKey=APIKEY&fields=*"))
                 .willReturn(aResponse().withStatus(200).withBody(getPodDetailsResponse)));
@@ -91,14 +91,14 @@ public class SensiboAccountHandlerTest {
         when(sensiboAccountMock.getConfiguration()).thenReturn(configuration);
         when(sensiboAccountMock.getUID()).thenReturn(new ThingUID("sensibo:account:thinguid"));
 
-        SensiboAccountHandler subject = new SensiboAccountHandler(sensiboAccountMock, httpClient, bundleContext);
+        final SensiboAccountHandler subject = new SensiboAccountHandler(sensiboAccountMock, httpClient, bundleContext);
         // Async, poll for status
         subject.initialize();
 
         // Verify num things found == 1
         int numPods = 0;
         for (int i = 0; i < 20; i++) {
-            List<SensiboSky> things = subject.getModel().getPods();
+            final List<SensiboSky> things = subject.getModel().getPods();
             numPods = things.size();
             if (numPods == 1) {
                 break;

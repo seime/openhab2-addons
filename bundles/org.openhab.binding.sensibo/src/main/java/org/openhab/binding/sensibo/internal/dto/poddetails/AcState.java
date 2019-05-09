@@ -12,6 +12,9 @@
  */
 package org.openhab.binding.sensibo.internal.dto.poddetails;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class AcState {
     private boolean on;
     private String fanLevel;

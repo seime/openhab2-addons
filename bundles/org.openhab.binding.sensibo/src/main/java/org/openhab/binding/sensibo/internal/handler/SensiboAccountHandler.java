@@ -88,9 +88,9 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
     private SensiboModel model = new SensiboModel(0);
     private @Nullable ScheduledFuture<?> statusFuture;
     private SensiboAccountConfiguration config;
-    private Map<ThingUID, ServiceRegistration<DiscoveryService>> discoveryServiceRegistrations = new HashMap<>();
+    private final Map<ThingUID, ServiceRegistration<DiscoveryService>> discoveryServiceRegistrations = new HashMap<>();
 
-    public SensiboAccountHandler(Bridge bridge, HttpClient httpClient, BundleContext context) {
+    public SensiboAccountHandler(final Bridge bridge, final HttpClient httpClient, final BundleContext context) {
         super(bridge);
         this.httpClient = httpClient;
         this.httpClient.getContentDecoderFactories().clear();
@@ -98,12 +98,12 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
         gson = new GsonBuilder().registerTypeAdapter(ZonedDateTime.class, new TypeAdapter<ZonedDateTime>() {
             @Override
-            public void write(JsonWriter out, ZonedDateTime value) throws IOException {
+            public void write(final JsonWriter out, final ZonedDateTime value) throws IOException {
                 out.value(value.toString());
             }
 
             @Override
-            public ZonedDateTime read(JsonReader in) throws IOException {
+            public ZonedDateTime read(final JsonReader in) throws IOException {
                 return ZonedDateTime.parse(in.nextString());
             }
 
@@ -111,14 +111,14 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
         config = getConfigAs(SensiboAccountConfiguration.class);
         discoveryService = new SensiboDiscoveryService(this);
-        ServiceRegistration<DiscoveryService> serviceRegistration = context.registerService(DiscoveryService.class,
-                discoveryService, null);
+        final ServiceRegistration<DiscoveryService> serviceRegistration = context
+                .registerService(DiscoveryService.class, discoveryService, null);
         discoveryServiceRegistrations.put(this.getThing().getUID(), serviceRegistration);
         requestLogger = new RequestLogger(bridge.getUID().getId());
     }
 
     private boolean allowModelUpdate() {
-        long timeSinceLastUpdate = System.currentTimeMillis() - model.getLastUpdated();
+        final long timeSinceLastUpdate = System.currentTimeMillis() - model.getLastUpdated();
         if (timeSinceLastUpdate > MIN_TIME_BETWEEEN_MODEL_UPDATES_MS) {
             return true;
         }
@@ -131,7 +131,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
     }
 
     @Override
-    public void handleCommand(ChannelUID channelUID, Command command) {
+    public void handleCommand(final ChannelUID channelUID, final Command command) {
         logger.debug("Bridge does not support any commands, but received command " + command + " for channelUID "
                 + channelUID);
     }
@@ -145,7 +145,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
                 updateStatus(ThingStatus.ONLINE);
                 discoveryService.startService();
                 initPolling();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 model = new SensiboModel(0); // Empty model
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                         "error fetching initial data " + e.getMessage());
@@ -157,7 +157,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
     @Override
     public void handleRemoval() {
-        ServiceRegistration<DiscoveryService> serviceRegistration = discoveryServiceRegistrations
+        final ServiceRegistration<DiscoveryService> serviceRegistration = discoveryServiceRegistrations
                 .get(this.getThing().getUID());
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
@@ -180,7 +180,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
         statusFuture = scheduler.scheduleWithFixedDelay(() -> {
             try {
                 updateModelFromServerAndUpdateThingStatus();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 logger.debug("Error refreshing model", e);
             }
         }, config.refreshInterval, config.refreshInterval, TimeUnit.SECONDS);
@@ -188,18 +188,18 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
     protected SensiboModel refreshModel()
             throws SensiboCommunicationException, NoSuchAlgorithmException, UnsupportedEncodingException {
-        SensiboModel model = new SensiboModel(System.currentTimeMillis());
+        final SensiboModel model = new SensiboModel(System.currentTimeMillis());
 
-        GetPodsRequest getPodsRequest = new GetPodsRequest();
-        List<Pod> pods = sendRequest(buildGetPodsRequest(getPodsRequest), getPodsRequest,
+        final GetPodsRequest getPodsRequest = new GetPodsRequest();
+        final List<Pod> pods = sendRequest(buildGetPodsRequest(getPodsRequest), getPodsRequest,
                 new TypeToken<ArrayList<Pod>>() {
                 }.getType());
 
-        for (Pod pod : pods) {
-            GetPodsDetailsRequest getPodsDetailsRequest = new GetPodsDetailsRequest(pod.getId());
+        for (final Pod pod : pods) {
+            final GetPodsDetailsRequest getPodsDetailsRequest = new GetPodsDetailsRequest(pod.getId());
 
-            PodDetails podDetails = sendRequest(buildGetPodDetailsRequest(getPodsDetailsRequest), getPodsDetailsRequest,
-                    new TypeToken<PodDetails>() {
+            final PodDetails podDetails = sendRequest(buildGetPodDetailsRequest(getPodsDetailsRequest),
+                    getPodsDetailsRequest, new TypeToken<PodDetails>() {
                     }.getType());
 
             model.addPod(new SensiboSky(podDetails));
@@ -209,15 +209,15 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
     }
 
-    private <T> T sendRequest(Request request, AbstractRequest req, Type responseType)
+    private <T> T sendRequest(final Request request, final AbstractRequest req, final Type responseType)
             throws SensiboCommunicationException {
         try {
-            ContentResponse contentResponse = request.send();
-            String responseJson = contentResponse.getContentAsString();
+            final ContentResponse contentResponse = request.send();
+            final String responseJson = contentResponse.getContentAsString();
             if (contentResponse.getStatus() == HttpStatus.OK_200) {
-                JsonParser parser = new JsonParser();
-                JsonObject o = parser.parse(responseJson).getAsJsonObject();
-                String overallStatus = o.get("status").getAsString();
+                final JsonParser parser = new JsonParser();
+                final JsonObject o = parser.parse(responseJson).getAsJsonObject();
+                final String overallStatus = o.get("status").getAsString();
                 if ("success".equals(overallStatus)) {
                     return gson.fromJson(o.get("result"), responseType);
                 } else {
@@ -265,39 +265,39 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
     }
 
     private void updateThingStatuses() {
-        List<Thing> subThings = getThing().getThings();
-        for (Thing thing : subThings) {
-            ThingHandler handler = thing.getHandler();
+        final List<Thing> subThings = getThing().getThings();
+        for (final Thing thing : subThings) {
+            final ThingHandler handler = thing.getHandler();
             if (handler != null) {
-                SensiboBaseThingHandler mHandler = (SensiboBaseThingHandler) handler;
+                final SensiboBaseThingHandler mHandler = (SensiboBaseThingHandler) handler;
                 mHandler.updateState(model);
             }
         }
     }
 
-    private Request buildGetPodsRequest(GetPodsRequest req)
+    private Request buildGetPodsRequest(final GetPodsRequest req)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        Request request = buildRequest(req, null);
+        final Request request = buildRequest(req, null);
 
         return request;
     }
 
-    private Request buildGetPodDetailsRequest(GetPodsDetailsRequest getPodsDetailsRequest)
+    private Request buildGetPodDetailsRequest(final GetPodsDetailsRequest getPodsDetailsRequest)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        Request req = buildRequest(getPodsDetailsRequest, null);
+        final Request req = buildRequest(getPodsDetailsRequest, null);
         req.param("fields", "*");
 
         return req;
     }
 
-    private Request buildRequest(AbstractRequest req, Type type)
+    private Request buildRequest(final AbstractRequest req, final Type type)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
         Request request = httpClient.newRequest(API_ENDPOINT + req.getRequestUrl()).param("apiKey", config.apiKey)
                 .method(req.getMethod());
 
         if (req.getMethod() == HttpMethod.POST) {
-            String reqJson = gson.toJson(req, type);
+            final String reqJson = gson.toJson(req, type);
 
             request = request.content(new BytesContentProvider((gson.toJson(reqJson)).getBytes("UTF-8")));
         }
@@ -308,7 +308,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
     }
 
-    public void updateSensiboSkyAcState(@Nullable String macAddress, AcState newState) {
+    public void updateSensiboSkyAcState(@Nullable final String macAddress, final AcState newState) {
         /*
          * Optional<Heater> optionalHeater = model.findHeaterByMacOrId(macAddress, heaterId);
          * if (optionalHeater.isPresent()) {

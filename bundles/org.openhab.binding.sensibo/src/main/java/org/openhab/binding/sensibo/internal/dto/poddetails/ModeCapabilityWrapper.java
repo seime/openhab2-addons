@@ -14,6 +14,9 @@ package org.openhab.binding.sensibo.internal.dto.poddetails;
 
 import java.util.Map;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class ModeCapabilityWrapper {
     private Map<String, ModeCapability> modes;
 

@@ -16,6 +16,9 @@ import java.util.Map;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class PodDetails {
     private String id;
     private String macAddress;

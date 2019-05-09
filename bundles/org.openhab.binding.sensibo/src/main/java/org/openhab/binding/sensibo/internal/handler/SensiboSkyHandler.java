@@ -70,30 +70,30 @@ import tec.uom.se.unit.Units;
 public class SensiboSkyHandler extends SensiboBaseThingHandler implements ChannelTypeProvider {
     private final Logger logger = LoggerFactory.getLogger(SensiboSkyHandler.class);
     private @NonNullByDefault({}) SensiboSkyConfiguration config;
-    private Map<ChannelTypeUID, ChannelType> generatedChannelTypes = new HashMap<>();
+    private final Map<ChannelTypeUID, ChannelType> generatedChannelTypes = new HashMap<>();
 
-    public SensiboSkyHandler(Thing thing) {
+    public SensiboSkyHandler(final Thing thing) {
         super(thing);
     }
 
     @Override
-    public void handleCommand(ChannelUID channelUID, Command command) {
+    public void handleCommand(final ChannelUID channelUID, final Command command) {
         handleCommand(channelUID, command, getSensiboModel());
     }
 
-    private void updateAcState(AcState newState) {
-        SensiboAccountHandler accountHandler = getAccountHandler();
+    private void updateAcState(final AcState newState) {
+        final SensiboAccountHandler accountHandler = getAccountHandler();
         if (accountHandler != null) {
             accountHandler.updateSensiboSkyAcState(config.macAddress, newState);
         }
     }
 
     @Override
-    protected void handleCommand(@NonNull ChannelUID channelUID, @NonNull Command command,
-            @NonNull SensiboModel model) {
-        Optional<SensiboSky> optionalSensiboSky = model.findSensiboSkyByMacAddress(config.macAddress);
+    protected void handleCommand(@NonNull final ChannelUID channelUID, @NonNull final Command command,
+            @NonNull final SensiboModel model) {
+        final Optional<SensiboSky> optionalSensiboSky = model.findSensiboSkyByMacAddress(config.macAddress);
         if (optionalSensiboSky.isPresent()) {
-            SensiboSky unit = optionalSensiboSky.get();
+            final SensiboSky unit = optionalSensiboSky.get();
             if (unit.isAlive()) {
                 if (CHANNEL_CURRENT_HUMIDITY.equals(channelUID.getId())) {
                     if (command instanceof RefreshType) {
@@ -112,8 +112,8 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
                         updateState(channelUID, new QuantityType<>(unit.getAcState().getTargetTemperature(),
                                 unit.getTemperatureUnit()));
                     } else {
-                        QuantityType<?> newValue = (QuantityType<?>) command;
-                        AcState newAcState = unit.getAcState().clone();
+                        final QuantityType<?> newValue = (QuantityType<?>) command;
+                        final AcState newAcState = unit.getAcState().clone();
                         newAcState.setTargetTemperature(newValue.intValue());
                         newAcState.setTemperatureUnit(unit.getTemperatureUnit());
                         updateAcState(newAcState);
@@ -148,9 +148,9 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
     public void initialize() {
         config = getConfigAs(SensiboSkyConfiguration.class);
         logger.debug("Initializing SensiboSky using config {}", config);
-        Optional<SensiboSky> sensiboSky = getSensiboModel().findSensiboSkyByMacAddress(config.macAddress);
+        final Optional<SensiboSky> sensiboSky = getSensiboModel().findSensiboSkyByMacAddress(config.macAddress);
         if (sensiboSky.isPresent()) {
-            SensiboSky pod = sensiboSky.get();
+            final SensiboSky pod = sensiboSky.get();
             addDynamicChannelsAndProperties(sensiboSky.get());
 
             if (pod.isAlive()) {
@@ -163,17 +163,17 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
         }
     }
 
-    private boolean isDynamicChannel(ChannelTypeUID uid) {
+    private boolean isDynamicChannel(final ChannelTypeUID uid) {
         return SensiboBindingConstants.DYNAMIC_CHANNEL_TYPES.stream().filter(e -> uid.getId().startsWith(e)).findFirst()
                 .isPresent();
     }
 
-    private void addDynamicChannelsAndProperties(SensiboSky sensiboSky) {
+    private void addDynamicChannelsAndProperties(final SensiboSky sensiboSky) {
 
         // Dynamic channels
-        List<Channel> newChannels = new ArrayList<>();
-        for (Channel channel : getThing().getChannels()) {
-            ChannelTypeUID channelTypeUID = channel.getChannelTypeUID();
+        final List<Channel> newChannels = new ArrayList<>();
+        for (final Channel channel : getThing().getChannels()) {
+            final ChannelTypeUID channelTypeUID = channel.getChannelTypeUID();
             if (channelTypeUID != null && !isDynamicChannel(channelTypeUID)) {
                 newChannels.add(channel);
             }
@@ -181,28 +181,28 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
 
         generatedChannelTypes.clear();
 
-        ModeCapability capabilities = sensiboSky.getModeCapabilities();
-        List<Integer> targetTemperatures = sensiboSky.getTargetTemperatures();
+        final ModeCapability capabilities = sensiboSky.getModeCapabilities();
+        final List<Integer> targetTemperatures = sensiboSky.getTargetTemperatures();
 
-        ChannelTypeUID modeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_MODE, "Mode", "String",
-                sensiboSky.getRemoteCapabilities().keySet(), null, null);
+        final ChannelTypeUID modeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_MODE, "Mode",
+                "String", sensiboSky.getRemoteCapabilities().keySet(), null, null);
         newChannels.add(ChannelBuilder
                 .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_MODE), "String")
                 .withType(modeChannelType).build());
 
-        ChannelTypeUID swingModeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_SWING_MODE,
+        final ChannelTypeUID swingModeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_SWING_MODE,
                 "Swing Mode", "String", capabilities.getSwingModes(), null, null);
         newChannels.add(ChannelBuilder
                 .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_SWING_MODE), "String")
                 .withType(swingModeChannelType).build());
 
-        ChannelTypeUID fanLevelChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_FAN_LEVEL, "Fan Level",
-                "String", capabilities.getFanLevels(), null, null);
+        final ChannelTypeUID fanLevelChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_FAN_LEVEL,
+                "Fan Level", "String", capabilities.getFanLevels(), null, null);
         newChannels.add(ChannelBuilder
                 .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_FAN_LEVEL), "String")
                 .withType(fanLevelChannelType).build());
 
-        ChannelTypeUID targetTemperatureChannelType = addChannelType(
+        final ChannelTypeUID targetTemperatureChannelType = addChannelType(
                 SensiboBindingConstants.CHANNEL_TYPE_TARGET_TEMPERATURE, "Target Temperature", "Number:Temperature",
                 targetTemperatures, "%d %unit%", "TargetTemperature");
         newChannels.add(ChannelBuilder
@@ -211,7 +211,7 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
                 .withType(targetTemperatureChannelType).build());
 
         // Add properties
-        Map<String, String> properties = new HashMap<>();
+        final Map<String, String> properties = new HashMap<>();
         properties.put("podId", sensiboSky.getId());
         properties.put("firmwareType", sensiboSky.getFirmwareType());
         properties.put("firmwareVersion", sensiboSky.getFirmwareVersion());
@@ -221,20 +221,20 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
         updateThing(editThing().withChannels(newChannels).withProperties(properties).build());
     }
 
-    private ChannelTypeUID addChannelType(String channelTypePrefix, String label, String itemType,
-            Collection<?> options, @Nullable String pattern, @Nullable String tag) {
-        ChannelTypeUID channelTypeUID = new ChannelTypeUID(SensiboBindingConstants.BINDING_ID,
+    private ChannelTypeUID addChannelType(final String channelTypePrefix, final String label, final String itemType,
+            final Collection<?> options, @Nullable final String pattern, @Nullable final String tag) {
+        final ChannelTypeUID channelTypeUID = new ChannelTypeUID(SensiboBindingConstants.BINDING_ID,
                 channelTypePrefix + getThing().getUID().getId());
-        List<StateOption> stateOptions = options.stream()
+        final List<StateOption> stateOptions = options.stream()
                 .map(e -> new StateOption(e.toString(), e instanceof String ? beautify((String) e) : e.toString()))
                 .collect(Collectors.toList());
-        StateDescription stateDescription = new StateDescription(null, null, null, pattern, false, stateOptions);
-        StateChannelTypeBuilder builder = ChannelTypeBuilder.state(channelTypeUID, label, itemType)
+        final StateDescription stateDescription = new StateDescription(null, null, null, pattern, false, stateOptions);
+        final StateChannelTypeBuilder builder = ChannelTypeBuilder.state(channelTypeUID, label, itemType)
                 .withStateDescription(stateDescription);
         if (tag != null) {
             builder.withTag(tag);
         }
-        ChannelType channelType = builder.build();
+        final ChannelType channelType = builder.build();
 
         generatedChannelTypes.put(channelTypeUID, channelType);
 
@@ -242,14 +242,14 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
 
     }
 
-    private static String beautify(String camelCaseWording) {
-        StringBuilder b = new StringBuilder();
-        for (String s : StringUtils.splitByCharacterTypeCamelCase(camelCaseWording)) {
+    private static String beautify(final String camelCaseWording) {
+        final StringBuilder b = new StringBuilder();
+        for (final String s : StringUtils.splitByCharacterTypeCamelCase(camelCaseWording)) {
             b.append(" ");
             b.append(s);
         }
-        StringBuilder bs = new StringBuilder();
-        for (String t : StringUtils.splitByWholeSeparator(b.toString(), " _")) {
+        final StringBuilder bs = new StringBuilder();
+        for (final String t : StringUtils.splitByWholeSeparator(b.toString(), " _")) {
             bs.append(" ");
             bs.append(t);
         }
@@ -258,12 +258,12 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
     }
 
     @Override
-    public @Nullable Collection<ChannelType> getChannelTypes(@Nullable Locale locale) {
+    public @Nullable Collection<ChannelType> getChannelTypes(@Nullable final Locale locale) {
         return generatedChannelTypes.values();
     }
 
     @Override
-    public @Nullable ChannelType getChannelType(ChannelTypeUID channelTypeUID, @Nullable Locale locale) {
+    public @Nullable ChannelType getChannelType(final ChannelTypeUID channelTypeUID, @Nullable final Locale locale) {
         return generatedChannelTypes.get(channelTypeUID);
     }
 

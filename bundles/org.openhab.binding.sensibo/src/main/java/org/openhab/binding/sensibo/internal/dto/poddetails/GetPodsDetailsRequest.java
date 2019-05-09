@@ -14,11 +14,14 @@ package org.openhab.binding.sensibo.internal.dto.poddetails;
 
 import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class GetPodsDetailsRequest extends AbstractRequest {
 
-    private String id;
+    private final String id;
 
-    public GetPodsDetailsRequest(String id) {
+    public GetPodsDetailsRequest(final String id) {
         super();
         this.id = id;
     }

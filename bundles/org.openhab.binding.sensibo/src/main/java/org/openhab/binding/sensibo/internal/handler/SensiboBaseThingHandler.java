@@ -30,18 +30,18 @@ import org.slf4j.LoggerFactory;
 public abstract class SensiboBaseThingHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(SensiboBaseThingHandler.class);
 
-    public SensiboBaseThingHandler(Thing thing) {
+    public SensiboBaseThingHandler(final Thing thing) {
         super(thing);
     }
 
-    public void updateState(SensiboModel model) {
-        for (Channel channel : getThing().getChannels()) {
+    public void updateState(final SensiboModel model) {
+        for (final Channel channel : getThing().getChannels()) {
             handleCommand(channel.getUID(), RefreshType.REFRESH, model);
         }
     }
 
     protected SensiboModel getSensiboModel() {
-        SensiboAccountHandler accountHandler = getAccountHandler();
+        final SensiboAccountHandler accountHandler = getAccountHandler();
         if (accountHandler != null) {
             return accountHandler.getModel();
         }
@@ -52,9 +52,9 @@ public abstract class SensiboBaseThingHandler extends BaseThingHandler {
     }
 
     protected SensiboAccountHandler getAccountHandler() {
-        Bridge bridge = getBridge();
+        final Bridge bridge = getBridge();
         if (bridge != null) {
-            SensiboAccountHandler accountHandler = (SensiboAccountHandler) bridge.getHandler();
+            final SensiboAccountHandler accountHandler = (SensiboAccountHandler) bridge.getHandler();
             if (accountHandler != null) {
                 return accountHandler;
             }

@@ -27,27 +27,27 @@ import org.openhab.binding.sensibo.internal.dto.poddetails.ModeCapability;
 import org.openhab.binding.sensibo.internal.dto.poddetails.PodDetails;
 
 /**
- * The {@link SensiboSky} represents a Sensibo unit
+ * The {@link SensiboSky} represents a Sensibo Sky unit
  *
  * @author Arne Seime - Initial contribution
  */
 public class SensiboSky extends Pod {
 
-    private String macAddress;
-    private String firmwareVersion;
-    private String firmwareType;
-    private String serialNumber;
+    private final String macAddress;
+    private final String firmwareVersion;
+    private final String firmwareType;
+    private final String serialNumber;
     private @NonNull Unit<@NonNull Temperature> temperatureUnit;
-    private String originalTemperatureUnit;
-    private String productModel;
+    private final String originalTemperatureUnit;
+    private final String productModel;
     private Boolean smartMode;
-    private AcState acState;
-    private Double temperature;
-    private Double humidity;
-    private boolean alive;
-    private Map<String, ModeCapability> remoteCapabilities;
+    private final AcState acState;
+    private final Double temperature;
+    private final Double humidity;
+    private final boolean alive;
+    private final Map<String, ModeCapability> remoteCapabilities;
 
-    public SensiboSky(PodDetails dto) {
+    public SensiboSky(final PodDetails dto) {
         this.id = dto.getId();
         this.macAddress = StringUtils.remove(dto.getMacAddress(), ':');
         this.firmwareVersion = dto.getFirmwareVersion();
@@ -68,7 +68,7 @@ public class SensiboSky extends Pod {
         this.productModel = dto.getProductModel();
         this.acState = new AcState(dto.getAcState());
 
-        Measurement lastMeasurement = dto.getLastMeasurement();
+        final Measurement lastMeasurement = dto.getLastMeasurement();
         this.temperature = lastMeasurement.getTemperature();
         this.humidity = lastMeasurement.getHumidity();
 

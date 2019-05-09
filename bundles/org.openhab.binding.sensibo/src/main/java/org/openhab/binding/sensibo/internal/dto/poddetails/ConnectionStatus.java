@@ -14,6 +14,9 @@ package org.openhab.binding.sensibo.internal.dto.poddetails;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class ConnectionStatus {
     @SerializedName("isAlive")
     private boolean alive;

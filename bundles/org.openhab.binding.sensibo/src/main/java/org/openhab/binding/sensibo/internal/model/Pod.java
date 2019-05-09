@@ -12,6 +12,11 @@
  */
 package org.openhab.binding.sensibo.internal.model;
 
+/**
+ * Represents a generic Sensibo controllable thing
+ * 
+ * @author Arne Seime - Initial contribution
+ */
 public abstract class Pod {
     protected String id;
 

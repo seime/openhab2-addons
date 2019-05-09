@@ -14,6 +14,9 @@ package org.openhab.binding.sensibo.internal.dto.pods;
 
 import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class GetPodsRequest extends AbstractRequest {
 
     @Override

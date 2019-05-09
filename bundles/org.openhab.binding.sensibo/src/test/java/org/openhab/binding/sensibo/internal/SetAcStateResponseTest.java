@@ -24,7 +24,7 @@ public class SetAcStateResponseTest extends AbstractSerializationDeserialization
     @Test
     public void testDeserialize() throws IOException {
 
-        SetAcStateReponse rsp = deSerialize("/set_acstate_response.json", SetAcStateReponse.class);
+        final SetAcStateReponse rsp = deSerialize("/set_acstate_response.json", SetAcStateReponse.class);
 
         assertNotNull(rsp.getAcState());
 

@@ -23,15 +23,15 @@ import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
 public class SensiboCommunicationException extends Exception {
     private static final long serialVersionUID = 1L;
 
-    public SensiboCommunicationException(String message, Throwable cause) {
+    public SensiboCommunicationException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
-    public SensiboCommunicationException(String message) {
+    public SensiboCommunicationException(final String message) {
         super(message);
     }
 
-    public SensiboCommunicationException(@NonNull AbstractRequest req, String overallStatus) {
+    public SensiboCommunicationException(@NonNull final AbstractRequest req, final String overallStatus) {
         super("Server responded with error to request " + req.getClass().getSimpleName() + "/" + req.getRequestUrl()
                 + ": " + overallStatus);
     }

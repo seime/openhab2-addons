@@ -16,6 +16,9 @@ import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class Temperature {
     private boolean isNative;
     @SerializedName("values")

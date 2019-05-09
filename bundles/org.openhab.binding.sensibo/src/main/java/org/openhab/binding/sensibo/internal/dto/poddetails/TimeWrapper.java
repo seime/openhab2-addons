@@ -14,6 +14,9 @@ package org.openhab.binding.sensibo.internal.dto.poddetails;
 
 import java.time.ZonedDateTime;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class TimeWrapper {
     private ZonedDateTime time;
 

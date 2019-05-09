@@ -29,10 +29,10 @@ public class GetPodsResponseTest extends AbstractSerializationDeserializationTes
     @Test
     public void testDeserialize() throws IOException {
 
-        Type type = new TypeToken<ArrayList<Pod>>() {
+        final Type type = new TypeToken<ArrayList<Pod>>() {
         }.getType();
 
-        List<Pod> rsp = deSerialize("/get_pods_response.json", type);
+        final List<Pod> rsp = deSerialize("/get_pods_response.json", type);
 
         assertEquals(1, rsp.size());
         assertEquals("PODID", rsp.get(0).getId());

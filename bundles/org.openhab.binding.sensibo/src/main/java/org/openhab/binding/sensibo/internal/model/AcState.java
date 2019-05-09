@@ -19,6 +19,9 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.smarthome.core.library.unit.ImperialUnits;
 import org.eclipse.smarthome.core.library.unit.SIUnits;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class AcState {
     private boolean on;
     private String fanLevel;
@@ -27,7 +30,7 @@ public class AcState {
     private String mode;
     private String swing;
 
-    public AcState(org.openhab.binding.sensibo.internal.dto.poddetails.AcState dto) {
+    public AcState(final org.openhab.binding.sensibo.internal.dto.poddetails.AcState dto) {
 
         this.on = dto.isOn();
         this.fanLevel = dto.getFanLevel();
@@ -47,7 +50,7 @@ public class AcState {
         }
     }
 
-    public AcState(AcState original) {
+    public AcState(final AcState original) {
         this.on = original.isOn();
         this.fanLevel = original.getFanLevel();
         this.targetTemperature = original.getTargetTemperature();
@@ -86,27 +89,27 @@ public class AcState {
         return swing;
     }
 
-    public void setOn(boolean on) {
+    public void setOn(final boolean on) {
         this.on = on;
     }
 
-    public void setFanLevel(String fanLevel) {
+    public void setFanLevel(final String fanLevel) {
         this.fanLevel = fanLevel;
     }
 
-    public void setTemperatureUnit(Unit<Temperature> temperatureUnit) {
+    public void setTemperatureUnit(final Unit<Temperature> temperatureUnit) {
         this.temperatureUnit = temperatureUnit;
     }
 
-    public void setTargetTemperature(int targetTemperature) {
+    public void setTargetTemperature(final int targetTemperature) {
         this.targetTemperature = targetTemperature;
     }
 
-    public void setMode(String mode) {
+    public void setMode(final String mode) {
         this.mode = mode;
     }
 
-    public void setSwing(String swing) {
+    public void setSwing(final String swing) {
         this.swing = swing;
     }
 

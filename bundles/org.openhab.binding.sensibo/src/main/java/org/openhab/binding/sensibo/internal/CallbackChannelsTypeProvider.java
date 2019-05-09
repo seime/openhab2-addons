@@ -27,39 +27,38 @@ import org.eclipse.smarthome.core.thing.type.ChannelTypeUID;
 import org.openhab.binding.sensibo.internal.handler.SensiboSkyHandler;
 
 /**
- * Provide a custom channel type for available inputs
+ * Channel Type Provider that does a callback the SensiboSkyHandler that initiated it.
  *
- * @author David Graeff - Initial contribution
- * @author Tomasz Maruszak - Refactoring the input source names.
+ * @author Arne Seime - Initial contribution
  */
 @NonNullByDefault
 public class CallbackChannelsTypeProvider implements ChannelTypeProvider, ThingHandlerService {
     private @NonNullByDefault({}) SensiboSkyHandler handler;
 
     @Override
-    public @Nullable Collection<ChannelType> getChannelTypes(@Nullable Locale locale) {
+    public @Nullable Collection<ChannelType> getChannelTypes(@Nullable final Locale locale) {
         return handler.getChannelTypes(locale);
     }
 
     @Override
-    public @Nullable ChannelType getChannelType(ChannelTypeUID channelTypeUID, @Nullable Locale locale) {
+    public @Nullable ChannelType getChannelType(final ChannelTypeUID channelTypeUID, @Nullable final Locale locale) {
         return handler.getChannelType(channelTypeUID, locale);
     }
 
     @Override
-    public @Nullable ChannelGroupType getChannelGroupType(ChannelGroupTypeUID channelGroupTypeUID,
-            @Nullable Locale locale) {
+    public @Nullable ChannelGroupType getChannelGroupType(final ChannelGroupTypeUID channelGroupTypeUID,
+            @Nullable final Locale locale) {
         return null;
     }
 
     @Override
-    public @Nullable Collection<ChannelGroupType> getChannelGroupTypes(@Nullable Locale locale) {
+    public @Nullable Collection<ChannelGroupType> getChannelGroupTypes(@Nullable final Locale locale) {
         return null;
     }
 
     @NonNullByDefault({})
     @Override
-    public void setThingHandler(ThingHandler handler) {
+    public void setThingHandler(final ThingHandler handler) {
         this.handler = (SensiboSkyHandler) handler;
     }
 

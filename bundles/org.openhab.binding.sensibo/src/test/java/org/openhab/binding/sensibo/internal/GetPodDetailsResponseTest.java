@@ -29,7 +29,7 @@ public class GetPodDetailsResponseTest extends AbstractSerializationDeserializat
 
     @Test
     public void testDeserialize() throws IOException {
-        PodDetails rsp = deSerialize("/get_pod_details_response.json", PodDetails.class);
+        final PodDetails rsp = deSerialize("/get_pod_details_response.json", PodDetails.class);
 
         assertEquals("MA:C:AD:DR:ES:S0", rsp.getMacAddress());
         assertEquals("IN010056", rsp.getFirmwareVersion());
@@ -45,23 +45,23 @@ public class GetPodDetailsResponseTest extends AbstractSerializationDeserializat
 
     }
 
-    private void assertRemoteCapabilities(Map<String, ModeCapability> remoteCapabilities) {
+    private void assertRemoteCapabilities(final Map<String, ModeCapability> remoteCapabilities) {
         assertNotNull(remoteCapabilities);
 
         assertEquals(5, remoteCapabilities.size());
-        ModeCapability mode = remoteCapabilities.get("heat");
+        final ModeCapability mode = remoteCapabilities.get("heat");
 
         assertNotNull(mode.getSwingModes());
         assertNotNull(mode.getFanLevels());
         assertNotNull(mode.getTemperatures());
-        Map<String, Temperature> temperatures = mode.getTemperatures();
-        Temperature temperature = temperatures.get("C");
+        final Map<String, Temperature> temperatures = mode.getTemperatures();
+        final Temperature temperature = temperatures.get("C");
         assertNotNull(temperature);
         assertNotNull(temperature.getValidValues());
 
     }
 
-    private void assertMeasurement(Measurement lastMeasurement) {
+    private void assertMeasurement(final Measurement lastMeasurement) {
         assertNotNull(lastMeasurement);
         assertNull(lastMeasurement.getBatteryVoltage());
         assertEquals(Double.valueOf("22.5"), lastMeasurement.getTemperature());
@@ -71,7 +71,7 @@ public class GetPodDetailsResponseTest extends AbstractSerializationDeserializat
 
     }
 
-    private void assertAcState(AcState acState) {
+    private void assertAcState(final AcState acState) {
         assertNotNull(acState);
 
         assertTrue(acState.isOn());

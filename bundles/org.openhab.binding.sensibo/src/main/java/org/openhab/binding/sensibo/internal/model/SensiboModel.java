@@ -25,14 +25,14 @@ import org.eclipse.jdt.annotation.NonNull;
  * @author Arne Seime - Initial contribution
  */
 public class SensiboModel {
-    private long lastUpdated;
-    private List<SensiboSky> pods = new ArrayList<>();
+    private final long lastUpdated;
+    private final List<SensiboSky> pods = new ArrayList<>();
 
-    public SensiboModel(long lastUpdated) {
+    public SensiboModel(final long lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
 
-    public void addPod(SensiboSky pod) {
+    public void addPod(final SensiboSky pod) {
         pods.add(pod);
     }
 
@@ -44,8 +44,8 @@ public class SensiboModel {
         return lastUpdated;
     }
 
-    public Optional<@NonNull SensiboSky> findSensiboSkyByMacAddress(String macAddress) {
-        String macAddressWithoutColons = StringUtils.remove(macAddress, ':');
+    public Optional<@NonNull SensiboSky> findSensiboSkyByMacAddress(final String macAddress) {
+        final String macAddressWithoutColons = StringUtils.remove(macAddress, ':');
         return pods.stream().filter(pod -> macAddressWithoutColons.equals(pod.getMacAddress())).findFirst();
     }
 

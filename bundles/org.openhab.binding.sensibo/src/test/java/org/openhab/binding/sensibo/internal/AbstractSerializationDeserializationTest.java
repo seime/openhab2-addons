@@ -36,24 +36,24 @@ public abstract class AbstractSerializationDeserializationTest {
 
         gson = new GsonBuilder().registerTypeAdapter(ZonedDateTime.class, new TypeAdapter<ZonedDateTime>() {
             @Override
-            public void write(JsonWriter out, ZonedDateTime value) throws IOException {
+            public void write(final JsonWriter out, final ZonedDateTime value) throws IOException {
                 out.value(value.toString());
             }
 
             @Override
-            public ZonedDateTime read(JsonReader in) throws IOException {
+            public ZonedDateTime read(final JsonReader in) throws IOException {
                 return ZonedDateTime.parse(in.nextString());
             }
 
         }).setPrettyPrinting().create();
     }
 
-    protected <T> T deSerialize(String jsonClasspathName, Type type) throws IOException {
-        String json = IOUtils
+    protected <T> T deSerialize(final String jsonClasspathName, final Type type) throws IOException {
+        final String json = IOUtils
                 .toString(AbstractSerializationDeserializationTest.class.getResourceAsStream(jsonClasspathName));
 
-        JsonParser parser = new JsonParser();
-        JsonObject o = parser.parse(json).getAsJsonObject();
+        final JsonParser parser = new JsonParser();
+        final JsonObject o = parser.parse(json).getAsJsonObject();
         assertEquals("success", o.get("status").getAsString());
 
         return gson.fromJson(o.get("result"), type);

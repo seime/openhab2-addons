@@ -16,6 +16,9 @@ import java.time.ZonedDateTime;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * @author Arne Seime - Initial contribution
+ */
 public class Measurement {
     private Double batteryVoltage;
     private Double temperature;

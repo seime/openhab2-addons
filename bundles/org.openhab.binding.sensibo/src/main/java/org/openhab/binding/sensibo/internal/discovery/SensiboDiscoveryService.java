@@ -43,9 +43,9 @@ public class SensiboDiscoveryService extends AbstractDiscoveryService {
             .unmodifiableSet(Stream.of(SensiboBindingConstants.THING_TYPE_SENSIBOSKY).collect(Collectors.toSet()));
     private final Logger logger = LoggerFactory.getLogger(SensiboDiscoveryService.class);
     private ScheduledFuture<?> discoveryJob;
-    private SensiboAccountHandler accountHandler;
+    private final SensiboAccountHandler accountHandler;
 
-    public SensiboDiscoveryService(SensiboAccountHandler accountHandler) {
+    public SensiboDiscoveryService(final SensiboAccountHandler accountHandler) {
         super(DISCOVERABLE_THING_TYPES_UIDS, 10);
         this.accountHandler = accountHandler;
     }
@@ -60,27 +60,27 @@ public class SensiboDiscoveryService extends AbstractDiscoveryService {
         logger.debug("Start scan for Sensibo devices.");
         synchronized (this) {
             try {
-                ThingUID accountUID = accountHandler.getThing().getUID();
+                final ThingUID accountUID = accountHandler.getThing().getUID();
                 accountHandler.updateModelFromServerAndUpdateThingStatus();
-                SensiboModel model = accountHandler.getModel();
-                for (SensiboSky pod : model.getPods()) {
+                final SensiboModel model = accountHandler.getModel();
+                for (final SensiboSky pod : model.getPods()) {
 
-                    ThingUID podUID = new ThingUID(SensiboBindingConstants.THING_TYPE_SENSIBOSKY, accountUID,
+                    final ThingUID podUID = new ThingUID(SensiboBindingConstants.THING_TYPE_SENSIBOSKY, accountUID,
                             String.valueOf(pod.getMacAddress()));
-                    Map<String, Object> properties = new HashMap<>();
+                    final Map<String, Object> properties = new HashMap<>();
                     properties.put("podId", pod.getId());
                     properties.put("firmwareType", pod.getFirmwareType());
                     properties.put("firmwareVersion", pod.getFirmwareVersion());
                     properties.put("productModel", pod.getProductModel());
                     properties.put("macAddress", pod.getMacAddress());
 
-                    DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(podUID).withBridge(accountUID)
+                    final DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(podUID).withBridge(accountUID)
                             .withLabel(pod.getProductName()).withRepresentationProperty("macAddress")
                             .withProperties(properties).build();
                     thingDiscovered(discoveryResult);
 
                 }
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 logger.debug("Error during discovery: {}", e.getMessage());
             } finally {
                 removeOlderResults(getTimestampOfLastScan());
