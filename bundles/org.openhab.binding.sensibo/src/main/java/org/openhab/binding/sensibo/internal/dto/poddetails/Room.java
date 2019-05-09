@@ -16,9 +16,5 @@ package org.openhab.binding.sensibo.internal.dto.poddetails;
  * @author Arne Seime - Initial contribution
  */
 public class Room {
-    private String name;
-
-    public String getName() {
-        return name;
-    }
+    public String name;
 }

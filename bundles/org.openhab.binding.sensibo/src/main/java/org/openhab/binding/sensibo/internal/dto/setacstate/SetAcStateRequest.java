@@ -10,27 +10,23 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.sensibo.internal.dto;
+package org.openhab.binding.sensibo.internal.dto.setacstate;
 
 import org.eclipse.jetty.http.HttpMethod;
+import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
 import org.openhab.binding.sensibo.internal.dto.poddetails.AcState;
 
 /**
  * @author Arne Seime - Initial contribution
  */
 public class SetAcStateRequest extends AbstractRequest {
-
     public SetAcStateRequest(String podId, AcState acState) {
         this.podId = podId;
         this.acState = acState;
     }
 
-    private transient String podId; // Transient fields are ignored by gson
-    private AcState acState;
-
-    public AcState getAcState() {
-        return acState;
-    }
+    public transient String podId; // Transient fields are ignored by gson
+    public AcState acState;
 
     @Override
     public String getRequestUrl() {

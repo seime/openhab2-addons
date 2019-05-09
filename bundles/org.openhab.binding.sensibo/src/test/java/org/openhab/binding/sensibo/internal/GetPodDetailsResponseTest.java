@@ -34,16 +34,16 @@ public class GetPodDetailsResponseTest extends AbstractSerializationDeserializat
     public void testDeserialize() throws IOException {
         final PodDetails rsp = deSerializeResponse("/get_pod_details_response.json", PodDetails.class);
 
-        assertEquals("MA:C:AD:DR:ES:S0", rsp.getMacAddress());
-        assertEquals("IN010056", rsp.getFirmwareVersion());
-        assertEquals("cc3100_stm32f0", rsp.getFirmwareType());
-        assertEquals("SERIALNUMASSTRING", rsp.getSerialNumber());
-        assertEquals("C", rsp.getTemperatureUnit());
-        assertEquals("skyv2", rsp.getProductModel());
-        assertNull(rsp.getSmartMode());
+        assertEquals("MA:C:AD:DR:ES:S0", rsp.macAddress);
+        assertEquals("IN010056", rsp.firmwareVersion);
+        assertEquals("cc3100_stm32f0", rsp.firmwareType);
+        assertEquals("SERIALNUMASSTRING", rsp.serialNumber);
+        assertEquals("C", rsp.temperatureUnit);
+        assertEquals("skyv2", rsp.productModel);
+        assertNull(rsp.smartMode);
 
-        assertAcState(rsp.getAcState());
-        assertMeasurement(rsp.getLastMeasurement());
+        assertAcState(rsp.acState);
+        assertMeasurement(rsp.lastMeasurement);
         assertRemoteCapabilities(rsp.getRemoteCapabilities());
 
     }
@@ -54,35 +54,35 @@ public class GetPodDetailsResponseTest extends AbstractSerializationDeserializat
         assertEquals(5, remoteCapabilities.size());
         final ModeCapability mode = remoteCapabilities.get("heat");
 
-        assertNotNull(mode.getSwingModes());
-        assertNotNull(mode.getFanLevels());
-        assertNotNull(mode.getTemperatures());
-        final Map<String, Temperature> temperatures = mode.getTemperatures();
+        assertNotNull(mode.swingModes);
+        assertNotNull(mode.fanLevels);
+        assertNotNull(mode.temperatures);
+        final Map<String, Temperature> temperatures = mode.temperatures;
         final Temperature temperature = temperatures.get("C");
         assertNotNull(temperature);
-        assertNotNull(temperature.getValidValues());
+        assertNotNull(temperature.validValues);
 
     }
 
     private void assertMeasurement(final Measurement lastMeasurement) {
         assertNotNull(lastMeasurement);
-        assertNull(lastMeasurement.getBatteryVoltage());
-        assertEquals(Double.valueOf("22.5"), lastMeasurement.getTemperature());
-        assertEquals(Double.valueOf("24.2"), lastMeasurement.getHumidity());
-        assertEquals(Integer.valueOf("-71"), lastMeasurement.getWifiSignalStrength());
-        assertEquals(ZonedDateTime.parse("2019-05-05T07:52:11Z"), lastMeasurement.getMeasurementTimestamp());
+        assertNull(lastMeasurement.batteryVoltage);
+        assertEquals(Double.valueOf("22.5"), lastMeasurement.temperature);
+        assertEquals(Double.valueOf("24.2"), lastMeasurement.humidity);
+        assertEquals(Integer.valueOf("-71"), lastMeasurement.wifiSignalStrength);
+        assertEquals(ZonedDateTime.parse("2019-05-05T07:52:11Z"), lastMeasurement.measurementTimestamp.time);
 
     }
 
     private void assertAcState(final AcState acState) {
         assertNotNull(acState);
 
-        assertTrue(acState.isOn());
-        assertEquals("medium_high", acState.getFanLevel());
-        assertEquals("C", acState.getTemperatureUnit());
-        assertEquals(21, acState.getTargetTemperature());
-        assertEquals("heat", acState.getMode());
-        assertEquals("rangeFull", acState.getSwing());
+        assertTrue(acState.on);
+        assertEquals("medium_high", acState.fanLevel);
+        assertEquals("C", acState.temperatureUnit);
+        assertEquals(21, acState.targetTemperature);
+        assertEquals("heat", acState.mode);
+        assertEquals("rangeFull", acState.swing);
 
     }
 }

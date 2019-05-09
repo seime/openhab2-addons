@@ -22,19 +22,7 @@ import com.google.gson.annotations.SerializedName;
  */
 public class ModeCapability {
     @SerializedName("swing")
-    private List<String> swingModes;
-    private Map<String, Temperature> temperatures;
-    private List<String> fanLevels;
-
-    public List<String> getSwingModes() {
-        return swingModes;
-    }
-
-    public Map<String, Temperature> getTemperatures() {
-        return temperatures;
-    }
-
-    public List<String> getFanLevels() {
-        return fanLevels;
-    }
+    public List<String> swingModes;
+    public Map<String, Temperature> temperatures;
+    public List<String> fanLevels;
 }

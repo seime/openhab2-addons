@@ -19,10 +19,6 @@ import com.google.gson.annotations.SerializedName;
  */
 public class ConnectionStatus {
     @SerializedName("isAlive")
-    private boolean alive;
-
-    public boolean isAlive() {
-        return alive;
-    }
+    public boolean alive;
 
 }

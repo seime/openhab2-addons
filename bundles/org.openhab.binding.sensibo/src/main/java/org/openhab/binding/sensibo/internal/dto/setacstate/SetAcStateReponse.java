@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.sensibo.internal.dto;
+package org.openhab.binding.sensibo.internal.dto.setacstate;
 
 import org.openhab.binding.sensibo.internal.dto.poddetails.AcState;
 
@@ -18,10 +18,5 @@ import org.openhab.binding.sensibo.internal.dto.poddetails.AcState;
  * @author Arne Seime - Initial contribution
  */
 public class SetAcStateReponse {
-    private AcState acState;
-
-    public AcState getAcState() {
-        return acState;
-    }
-
+    public AcState acState;
 }

@@ -20,15 +20,7 @@ import com.google.gson.annotations.SerializedName;
  * @author Arne Seime - Initial contribution
  */
 public class Temperature {
-    private boolean isNative;
+    public boolean isNative;
     @SerializedName("values")
-    private List<Integer> validValues;
-
-    public boolean isNative() {
-        return isNative;
-    }
-
-    public List<Integer> getValidValues() {
-        return validValues;
-    }
+    public List<Integer> validValues;
 }

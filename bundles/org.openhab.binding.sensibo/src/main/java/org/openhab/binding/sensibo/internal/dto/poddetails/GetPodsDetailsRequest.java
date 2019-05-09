@@ -18,11 +18,9 @@ import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
  * @author Arne Seime - Initial contribution
  */
 public class GetPodsDetailsRequest extends AbstractRequest {
-
-    private final String id;
+    public final String id;
 
     public GetPodsDetailsRequest(final String id) {
-        super();
         this.id = id;
     }
 

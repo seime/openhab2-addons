@@ -38,6 +38,6 @@ public class GetPodsResponseTest extends AbstractSerializationDeserializationTes
         final List<Pod> rsp = deSerializeResponse("/get_pods_response.json", type);
 
         assertEquals(1, rsp.size());
-        assertEquals("PODID", rsp.get(0).getId());
+        assertEquals("PODID", rsp.get(0).id);
     }
 }

@@ -49,12 +49,12 @@ public class SensiboSky extends Pod {
     private final Map<String, ModeCapability> remoteCapabilities;
 
     public SensiboSky(final PodDetails dto) {
-        this.id = dto.getId();
-        this.macAddress = StringUtils.remove(dto.getMacAddress(), ':');
-        this.firmwareVersion = dto.getFirmwareVersion();
-        this.firmwareType = dto.getFirmwareType();
-        this.serialNumber = dto.getSerialNumber();
-        this.originalTemperatureUnit = dto.getTemperatureUnit();
+        this.id = dto.id;
+        this.macAddress = StringUtils.remove(dto.macAddress, ':');
+        this.firmwareVersion = dto.firmwareVersion;
+        this.firmwareType = dto.firmwareType;
+        this.serialNumber = dto.serialNumber;
+        this.originalTemperatureUnit = dto.temperatureUnit;
         switch (originalTemperatureUnit) {
             case "C":
                 this.temperatureUnit = SIUnits.CELSIUS;
@@ -66,12 +66,12 @@ public class SensiboSky extends Pod {
                 throw new IllegalArgumentException("Do not understand temperature unit " + temperatureUnit);
 
         }
-        this.productModel = dto.getProductModel();
-        this.acState = new AcState(dto.getAcState());
+        this.productModel = dto.productModel;
+        this.acState = new AcState(dto.acState);
 
-        final Measurement lastMeasurement = dto.getLastMeasurement();
-        this.temperature = lastMeasurement.getTemperature();
-        this.humidity = lastMeasurement.getHumidity();
+        final Measurement lastMeasurement = dto.lastMeasurement;
+        this.temperature = lastMeasurement.temperature;
+        this.humidity = lastMeasurement.humidity;
 
         this.alive = dto.isAlive();
         this.remoteCapabilities = dto.getRemoteCapabilities();
@@ -138,11 +138,10 @@ public class SensiboSky extends Pod {
 
     public ModeCapability getModeCapabilities() {
         return remoteCapabilities.get(acState.getMode());
-
     }
 
     public List<Integer> getTargetTemperatures() {
-        return getModeCapabilities().getTemperatures().get(originalTemperatureUnit).getValidValues();
+        return getModeCapabilities().temperatures.get(originalTemperatureUnit).validValues;
     }
 
     /**

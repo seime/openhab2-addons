@@ -17,8 +17,8 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 
 import org.junit.Test;
-import org.openhab.binding.sensibo.internal.dto.SetAcStateRequest;
 import org.openhab.binding.sensibo.internal.dto.poddetails.AcState;
+import org.openhab.binding.sensibo.internal.dto.setacstate.SetAcStateRequest;
 
 /**
  * @author Arne Seime - Initial contribution
@@ -32,8 +32,8 @@ public class SetAcStateRequestTest extends AbstractSerializationDeserializationT
         String serializedJson = serialize(req);
 
         final SetAcStateRequest deSerializedRequest = deSerializeFromString(serializedJson, SetAcStateRequest.class);
-        assertNotNull(deSerializedRequest.getAcState());
-        assertTrue(deSerializedRequest.getAcState().isOn());
+        assertNotNull(deSerializedRequest.acState);
+        assertTrue(deSerializedRequest.acState.on);
     }
 
 }

@@ -18,10 +18,5 @@ import java.time.ZonedDateTime;
  * @author Arne Seime - Initial contribution
  */
 public class TimeWrapper {
-    private ZonedDateTime time;
-
-    public ZonedDateTime getTime() {
-        return time;
-    }
-
+    public ZonedDateTime time;
 }

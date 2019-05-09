@@ -209,13 +209,13 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
                 .withType(modeChannelType).build());
 
         final ChannelTypeUID swingModeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_SWING_MODE,
-                "Swing Mode", "String", capabilities.getSwingModes(), null, null);
+                "Swing Mode", "String", capabilities.swingModes, null, null);
         newChannels.add(ChannelBuilder
                 .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_SWING_MODE), "String")
                 .withType(swingModeChannelType).build());
 
         final ChannelTypeUID fanLevelChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_FAN_LEVEL,
-                "Fan Level", "String", capabilities.getFanLevels(), null, null);
+                "Fan Level", "String", capabilities.fanLevels, null, null);
         newChannels.add(ChannelBuilder
                 .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_FAN_LEVEL), "String")
                 .withType(fanLevelChannelType).build());

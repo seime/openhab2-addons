@@ -18,7 +18,6 @@ import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
  * @author Arne Seime - Initial contribution
  */
 public class GetPodsRequest extends AbstractRequest {
-
     @Override
     public String getRequestUrl() {
         return "/users/me/pods";

@@ -31,13 +31,13 @@ public class AcState {
     private String swing;
 
     public AcState(final org.openhab.binding.sensibo.internal.dto.poddetails.AcState dto) {
-        this.on = dto.isOn();
-        this.fanLevel = dto.getFanLevel();
-        this.targetTemperature = dto.getTargetTemperature();
-        this.mode = dto.getMode();
-        this.swing = dto.getSwing();
+        this.on = dto.on;
+        this.fanLevel = dto.fanLevel;
+        this.targetTemperature = dto.targetTemperature;
+        this.mode = dto.mode;
+        this.swing = dto.swing;
 
-        switch (dto.getTemperatureUnit()) {
+        switch (dto.temperatureUnit) {
             case "C":
                 this.temperatureUnit = SIUnits.CELSIUS;
                 break;
@@ -50,11 +50,11 @@ public class AcState {
     }
 
     public AcState(final AcState original) {
-        this.on = original.isOn();
-        this.fanLevel = original.getFanLevel();
-        this.targetTemperature = original.getTargetTemperature();
-        this.mode = original.getMode();
-        this.swing = original.getSwing();
+        this.on = original.on;
+        this.fanLevel = original.fanLevel;
+        this.targetTemperature = original.targetTemperature;
+        this.mode = original.mode;
+        this.swing = original.swing;
         this.temperatureUnit = original.temperatureUnit;
     }
 

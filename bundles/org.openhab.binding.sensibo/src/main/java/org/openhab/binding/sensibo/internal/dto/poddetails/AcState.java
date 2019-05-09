@@ -23,12 +23,12 @@ import org.eclipse.smarthome.core.library.unit.SIUnits;
  * @author Arne Seime - Initial contribution
  */
 public class AcState {
-    private boolean on;
-    private String fanLevel;
-    private String temperatureUnit;
-    private int targetTemperature;
-    private String mode;
-    private String swing;
+    public boolean on;
+    public String fanLevel;
+    public String temperatureUnit;
+    public int targetTemperature;
+    public String mode;
+    public String swing;
 
     public AcState(boolean on, String fanLevel, String temperatureUnit, int targetTemperature, String mode,
             String swing) {
@@ -59,30 +59,6 @@ public class AcState {
         } else {
             throw new IllegalArgumentException("Unexpected temperature unit " + unit);
         }
-    }
-
-    public boolean isOn() {
-        return on;
-    }
-
-    public String getFanLevel() {
-        return fanLevel;
-    }
-
-    public String getTemperatureUnit() {
-        return temperatureUnit;
-    }
-
-    public int getTargetTemperature() {
-        return targetTemperature;
-    }
-
-    public String getMode() {
-        return mode;
-    }
-
-    public String getSwing() {
-        return swing;
     }
 
 }

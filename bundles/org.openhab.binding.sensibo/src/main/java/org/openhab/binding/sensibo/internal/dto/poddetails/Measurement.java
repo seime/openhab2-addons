@@ -20,35 +20,19 @@ import com.google.gson.annotations.SerializedName;
  * @author Arne Seime - Initial contribution
  */
 public class Measurement {
-    private Double batteryVoltage;
-    private Double temperature;
-    private Double humidity;
+    public Double batteryVoltage;
+    public Double temperature;
+    public Double humidity;
     @SerializedName("rssi")
-    private Integer wifiSignalStrength;
+    public Integer wifiSignalStrength;
     @SerializedName("time")
-    private TimeWrapper measurementTimestamp;
-
-    public Double getBatteryVoltage() {
-        return batteryVoltage;
-    }
-
-    public Double getTemperature() {
-        return temperature;
-    }
-
-    public Double getHumidity() {
-        return humidity;
-    }
+    public TimeWrapper measurementTimestamp;
 
     public ZonedDateTime getMeasurementTimestamp() {
         if (measurementTimestamp != null) {
-            return measurementTimestamp.getTime();
+            return measurementTimestamp.time;
         }
         return null;
-    }
-
-    public Integer getWifiSignalStrength() {
-        return wifiSignalStrength;
     }
 
 }

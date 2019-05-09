@@ -18,9 +18,5 @@ import java.util.Map;
  * @author Arne Seime - Initial contribution
  */
 public class ModeCapabilityWrapper {
-    private Map<String, ModeCapability> modes;
-
-    public Map<String, ModeCapability> getModes() {
-        return modes;
-    }
+    public Map<String, ModeCapability> modes;
 }

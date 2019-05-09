@@ -51,12 +51,12 @@ import org.openhab.binding.sensibo.internal.client.RequestLogger;
 import org.openhab.binding.sensibo.internal.config.SensiboAccountConfiguration;
 import org.openhab.binding.sensibo.internal.discovery.SensiboDiscoveryService;
 import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
-import org.openhab.binding.sensibo.internal.dto.SetAcStateReponse;
-import org.openhab.binding.sensibo.internal.dto.SetAcStateRequest;
 import org.openhab.binding.sensibo.internal.dto.poddetails.GetPodsDetailsRequest;
 import org.openhab.binding.sensibo.internal.dto.poddetails.PodDetails;
 import org.openhab.binding.sensibo.internal.dto.pods.GetPodsRequest;
 import org.openhab.binding.sensibo.internal.dto.pods.Pod;
+import org.openhab.binding.sensibo.internal.dto.setacstate.SetAcStateReponse;
+import org.openhab.binding.sensibo.internal.dto.setacstate.SetAcStateRequest;
 import org.openhab.binding.sensibo.internal.model.AcState;
 import org.openhab.binding.sensibo.internal.model.SensiboModel;
 import org.openhab.binding.sensibo.internal.model.SensiboSky;
@@ -198,7 +198,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
                 }.getType());
 
         for (final Pod pod : pods) {
-            final GetPodsDetailsRequest getPodsDetailsRequest = new GetPodsDetailsRequest(pod.getId());
+            final GetPodsDetailsRequest getPodsDetailsRequest = new GetPodsDetailsRequest(pod.id);
 
             final PodDetails podDetails = sendRequest(buildGetPodDetailsRequest(getPodsDetailsRequest),
                     getPodsDetailsRequest, new TypeToken<PodDetails>() {
@@ -327,7 +327,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
                         new TypeToken<SetAcStateReponse>() {
                         }.getType());
 
-                model.updateAcState(macAddress, new AcState(response.getAcState()));
+                model.updateAcState(macAddress, new AcState(response.acState));
                 handler.updateState(model);
             } catch (UnsupportedEncodingException | SensiboCommunicationException | NoSuchAlgorithmException e) {
                 logger.info("Error setting ac state for {}", macAddress, e);

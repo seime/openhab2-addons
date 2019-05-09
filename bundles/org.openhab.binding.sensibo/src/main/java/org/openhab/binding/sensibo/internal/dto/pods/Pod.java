@@ -16,10 +16,5 @@ package org.openhab.binding.sensibo.internal.dto.pods;
  * @author Arne Seime - Initial contribution
  */
 public class Pod {
-    private String id;
-
-    public String getId() {
-        return id;
-    }
-
+    public String id;
 }

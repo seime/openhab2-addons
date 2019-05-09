@@ -20,71 +20,31 @@ import com.google.gson.annotations.SerializedName;
  * @author Arne Seime - Initial contribution
  */
 public class PodDetails {
-    private String id;
-    private String macAddress;
-    private String firmwareVersion;
-    private String firmwareType;
+    public String id;
+    public String macAddress;
+    public String firmwareVersion;
+    public String firmwareType;
     @SerializedName("serial")
-    private String serialNumber;
-    private String temperatureUnit;
-    private String productModel;
-    private Boolean smartMode;
-    private AcState acState;
+    public String serialNumber;
+    public String temperatureUnit;
+    public String productModel;
+    public Boolean smartMode;
+    public AcState acState;
     @SerializedName("measurements")
-    private Measurement lastMeasurement;
+    public Measurement lastMeasurement;
     private ModeCapabilityWrapper remoteCapabilities;
-    private ConnectionStatus connectionStatus;
-    private Room room;
-
-    public String getMacAddress() {
-        return macAddress;
-    }
-
-    public String getFirmwareVersion() {
-        return firmwareVersion;
-    }
-
-    public String getFirmwareType() {
-        return firmwareType;
-    }
-
-    public String getSerialNumber() {
-        return serialNumber;
-    }
-
-    public String getTemperatureUnit() {
-        return temperatureUnit;
-    }
-
-    public String getProductModel() {
-        return productModel;
-    }
-
-    public Boolean getSmartMode() {
-        return smartMode;
-    }
-
-    public AcState getAcState() {
-        return acState;
-    }
-
-    public Measurement getLastMeasurement() {
-        return lastMeasurement;
-    }
+    public ConnectionStatus connectionStatus;
+    public Room room;
 
     public Map<String, ModeCapability> getRemoteCapabilities() {
-        return remoteCapabilities.getModes();
+        return remoteCapabilities.modes;
     }
 
     public boolean isAlive() {
-        return connectionStatus.isAlive();
-    }
-
-    public String getId() {
-        return id;
+        return connectionStatus.alive;
     }
 
     public String getRoomName() {
-        return room.getName();
+        return room.name;
     }
 }
