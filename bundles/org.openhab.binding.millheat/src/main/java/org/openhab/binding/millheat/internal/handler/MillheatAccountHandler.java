@@ -156,7 +156,6 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
 
     public boolean doLogin() {
         try {
-            config = getConfigAs(MillheatAccountConfiguration.class);
             final LoginResponse rsp = sendLoginRequest(new LoginRequest(config.username, config.password),
                     LoginResponse.class);
             final int errorCode = rsp.errorCode;
