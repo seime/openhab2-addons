@@ -392,7 +392,7 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
         if (optionalHome.isPresent() && optionalRoom.isPresent()) {
             SetRoomTempRequest req = new SetRoomTempRequest(optionalHome.get(), optionalRoom.get());
             if (command instanceof QuantityType<?>) {
-                int newTemp = (int) ((QuantityType<?>) command).longValue();
+                int newTemp = command.as(QuantityType.class).toUnit(SIUnits.CELCIUS).intValue();
                 switch (mode) {
                     case Sleep:
                         req.sleepTemp = newTemp;
