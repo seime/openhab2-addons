@@ -34,9 +34,9 @@ public enum ModeType {
         return null;
     }
 
-    private int value;
+    private final int value;
 
-    private ModeType(final int value) {
+    ModeType(final int value) {
         this.value = value;
     }
 
