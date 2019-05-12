@@ -93,21 +93,21 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
     private static final int MIN_TIME_BETWEEEN_MODEL_UPDATES_MS = 30_000;
     private static final int NUM_NONCE_CHARS = 16;
     private static final String CONTENT_TYPE = "application/x-zc-object";
-    public static String API_ENDPOINT_1 = "https://eurouter.ablecloud.cn:9005/zc-account/v1/";
-    public static String API_ENDPOINT_2 = "https://eurouter.ablecloud.cn:9005/millService/v1/";
     private static final String ALLOWED_NONCE_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final String REQUEST_TIMEOUT = "300";
+    public static String authEndpoint = "https://eurouter.ablecloud.cn:9005/zc-account/v1/";
+    public static String serviceEndpoint = "https://eurouter.ablecloud.cn:9005/millService/v1/";
     private final Logger logger = LoggerFactory.getLogger(MillheatAccountHandler.class);
     private String userId;
     private String token;
     private final HttpClient httpClient;
-    private RequestLogger requestLogger;
-    private MillheatDiscoveryService discoveryService;
-    private Gson gson;
+    private final RequestLogger requestLogger;
+    private final MillheatDiscoveryService discoveryService;
+    private final Gson gson;
     private MillheatModel model = new MillheatModel(0);
     private @Nullable ScheduledFuture<?> statusFuture;
     private MillheatAccountConfiguration config;
-    private Map<ThingUID, ServiceRegistration<DiscoveryService>> discoveryServiceRegistrations = new HashMap<>();
+    private final Map<ThingUID, ServiceRegistration<DiscoveryService>> discoveryServiceRegistrations = new HashMap<>();
 
     private static String getRandomString(final int sizeOfRandomString) {
         final Random random = new Random();
@@ -118,26 +118,25 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
         return sb.toString();
     }
 
-    public MillheatAccountHandler(Bridge bridge, HttpClient httpClient, BundleContext context) {
+    public MillheatAccountHandler(final Bridge bridge, final HttpClient httpClient, final BundleContext context) {
         super(bridge);
         this.httpClient = httpClient;
         this.httpClient.getContentDecoderFactories().clear();
         this.httpClient.setUserAgentField(new HttpField("User-Agent", "MillheatApp"));
-        BooleanSerializer serializer = new BooleanSerializer();
+        final BooleanSerializer serializer = new BooleanSerializer();
 
         gson = new GsonBuilder().setPrettyPrinting().setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .registerTypeAdapter(Boolean.class, serializer).registerTypeAdapter(boolean.class, serializer).create();
 
-        config = getConfigAs(MillheatAccountConfiguration.class);
         discoveryService = new MillheatDiscoveryService(this);
-        ServiceRegistration<DiscoveryService> serviceRegistration = context.registerService(DiscoveryService.class,
-                discoveryService, null);
+        final ServiceRegistration<DiscoveryService> serviceRegistration = context
+                .registerService(DiscoveryService.class, discoveryService, null);
         discoveryServiceRegistrations.put(this.getThing().getUID(), serviceRegistration);
         requestLogger = new RequestLogger(bridge.getUID().getId());
     }
 
     private boolean allowModelUpdate() {
-        long timeSinceLastUpdate = System.currentTimeMillis() - model.getLastUpdated();
+        final long timeSinceLastUpdate = System.currentTimeMillis() - model.getLastUpdated();
         if (timeSinceLastUpdate > MIN_TIME_BETWEEEN_MODEL_UPDATES_MS) {
             return true;
         }
@@ -150,7 +149,7 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
     }
 
     @Override
-    public void handleCommand(ChannelUID channelUID, Command command) {
+    public void handleCommand(final ChannelUID channelUID, final Command command) {
         logger.debug("Bridge does not support any commands, but received command " + command + " for channelUID "
                 + channelUID);
     }
@@ -158,9 +157,9 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
     public boolean doLogin() {
         try {
             config = getConfigAs(MillheatAccountConfiguration.class);
-            LoginResponse rsp = sendLoginRequest(new LoginRequest(config.username, config.password),
+            final LoginResponse rsp = sendLoginRequest(new LoginRequest(config.username, config.password),
                     LoginResponse.class);
-            int errorCode = rsp.errorCode;
+            final int errorCode = rsp.errorCode;
             if (0 != errorCode) {
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                         String.format("Error login in: code=%s, type=%s, message=%s", errorCode, rsp.errorName,
@@ -179,7 +178,7 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
                     return true;
                 }
             }
-        } catch (MillheatCommunicationException e) {
+        } catch (final MillheatCommunicationException e) {
             logger.info("Error login", e);
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Error login: " + e.getMessage());
         }
@@ -196,7 +195,7 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
                     updateStatus(ThingStatus.ONLINE);
                     discoveryService.startService();
                     initPolling();
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     model = new MillheatModel(0); // Empty model
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                             "error fetching initial data " + e.getMessage());
@@ -209,7 +208,7 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
 
     @Override
     public void handleRemoval() {
-        ServiceRegistration<DiscoveryService> serviceRegistration = discoveryServiceRegistrations
+        final ServiceRegistration<DiscoveryService> serviceRegistration = discoveryServiceRegistrations
                 .get(this.getThing().getUID());
         if (serviceRegistration != null) {
             serviceRegistration.unregister();
@@ -232,26 +231,27 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
         statusFuture = scheduler.scheduleWithFixedDelay(() -> {
             try {
                 updateModelFromServerAndUpdateThingStatus();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 logger.debug("Error refreshing model", e);
             }
         }, config.refreshInterval, config.refreshInterval, TimeUnit.SECONDS);
     }
 
-    private <T> T sendLoginRequest(AbstractRequest req, Class<T> responseType) throws MillheatCommunicationException {
+    private <T> T sendLoginRequest(final AbstractRequest req, final Class<T> responseType)
+            throws MillheatCommunicationException {
         try {
-            Request request = httpClient.newRequest(API_ENDPOINT_1 + req.getRequestUrl());
+            final Request request = httpClient.newRequest(authEndpoint + req.getRequestUrl());
             addStandardHeadersAndPayload(request, req);
             return sendRequest(request, req, responseType);
-        } catch (UnsupportedEncodingException e) {
+        } catch (final UnsupportedEncodingException e) {
             throw new MillheatCommunicationException("Error building Millheat request", e);
         }
     }
 
-    private <T> T sendLoggedInRequest(AbstractRequest req, Class<T> responseType)
+    private <T> T sendLoggedInRequest(final AbstractRequest req, final Class<T> responseType)
             throws MillheatCommunicationException {
         try {
-            Request request = buildLoggedInRequest(req);
+            final Request request = buildLoggedInRequest(req);
             return sendRequest(request, req, responseType);
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
             throw new MillheatCommunicationException("Error building Millheat request", e);
@@ -259,13 +259,13 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T sendRequest(Request request, AbstractRequest req, Class<T> responseType)
+    private <T> T sendRequest(final Request request, final AbstractRequest req, final Class<T> responseType)
             throws MillheatCommunicationException {
         try {
-            ContentResponse contentResponse = request.send();
-            String responseJson = contentResponse.getContentAsString();
+            final ContentResponse contentResponse = request.send();
+            final String responseJson = contentResponse.getContentAsString();
             if (contentResponse.getStatus() == HttpStatus.OK_200) {
-                AbstractResponse rsp = (AbstractResponse) gson.fromJson(responseJson, responseType);
+                final AbstractResponse rsp = (AbstractResponse) gson.fromJson(responseJson, responseType);
                 if (rsp == null) {
                     return (T) null;
                 } else if (rsp.errorCode == 0) {
@@ -284,31 +284,31 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
     }
 
     protected MillheatModel refreshModel() throws MillheatCommunicationException {
-        MillheatModel model = new MillheatModel(System.currentTimeMillis());
-        GetHomesResponse homesRsp = sendLoggedInRequest(new GetHomesRequest(), GetHomesResponse.class);
-        for (HomeDTO dto : homesRsp.homes) {
+        final MillheatModel model = new MillheatModel(System.currentTimeMillis());
+        final GetHomesResponse homesRsp = sendLoggedInRequest(new GetHomesRequest(), GetHomesResponse.class);
+        for (final HomeDTO dto : homesRsp.homes) {
             model.addHome(new Home(dto));
         }
-        for (Home home : model.getHomes()) {
-            SelectRoomByHomeResponse roomRsp = sendLoggedInRequest(
+        for (final Home home : model.getHomes()) {
+            final SelectRoomByHomeResponse roomRsp = sendLoggedInRequest(
                     new SelectRoomByHomeRequest(Long.parseLong(home.getId()), home.getTimezone()),
                     SelectRoomByHomeResponse.class);
-            for (RoomDTO dto : roomRsp.rooms) {
+            for (final RoomDTO dto : roomRsp.rooms) {
                 home.addRoom(new Room(dto, home));
             }
 
-            for (Room room : home.getRooms()) {
-                SelectDeviceByRoomResponse deviceRsp = sendLoggedInRequest(
+            for (final Room room : home.getRooms()) {
+                final SelectDeviceByRoomResponse deviceRsp = sendLoggedInRequest(
                         new SelectDeviceByRoomRequest(Long.parseLong(room.getId()), home.getTimezone()),
                         SelectDeviceByRoomResponse.class);
-                for (DeviceDTO dto : deviceRsp.devices) {
+                for (final DeviceDTO dto : deviceRsp.devices) {
                     room.addHeater(new Heater(dto, room));
                 }
             }
-            GetIndependentDevicesByHomeResponse independentRsp = sendLoggedInRequest(
+            final GetIndependentDevicesByHomeResponse independentRsp = sendLoggedInRequest(
                     new GetIndependentDevicesByHomeRequest(Long.parseLong(home.getId()), home.getTimezone()),
                     GetIndependentDevicesByHomeResponse.class);
-            for (DeviceDTO dto : independentRsp.devices) {
+            for (final DeviceDTO dto : independentRsp.devices) {
                 home.addHeater(new Heater(dto));
             }
         }
@@ -336,7 +336,7 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
                     model = refreshModel();
                     updateThingStatuses();
                     success = true;
-                } catch (MillheatCommunicationException e) {
+                } catch (final MillheatCommunicationException e) {
                     if (AbstractResponse.ERROR_CODE_ACCESS_TOKEN_EXPIRED == e.getErrorCode()
                             || AbstractResponse.ERROR_CODE_INVALID_SIGNATURE == e.getErrorCode()) {
                         doLogin();
@@ -350,57 +350,56 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
     }
 
     private void updateThingStatuses() {
-        List<Thing> subThings = getThing().getThings();
-        for (Thing thing : subThings) {
-            ThingHandler handler = thing.getHandler();
+        final List<Thing> subThings = getThing().getThings();
+        for (final Thing thing : subThings) {
+            final ThingHandler handler = thing.getHandler();
             if (handler != null) {
-                MillheatBaseThingHandler mHandler = (MillheatBaseThingHandler) handler;
+                final MillheatBaseThingHandler mHandler = (MillheatBaseThingHandler) handler;
                 mHandler.updateState(model);
             }
         }
     }
 
-    private Request buildLoggedInRequest(AbstractRequest req)
+    private Request buildLoggedInRequest(final AbstractRequest req)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        String nonce = getRandomString(NUM_NONCE_CHARS);
-        String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
-        String signatureBasis = REQUEST_TIMEOUT + timestamp + nonce + token;
-        String signature = DigestUtils.shaHex(signatureBasis);
-        String reqJson = gson.toJson(req);
+        final String nonce = getRandomString(NUM_NONCE_CHARS);
+        final String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
+        final String signatureBasis = REQUEST_TIMEOUT + timestamp + nonce + token;
+        final String signature = DigestUtils.shaHex(signatureBasis);
+        final String reqJson = gson.toJson(req);
 
-        Request request = httpClient.newRequest(API_ENDPOINT_2 + req.getRequestUrl());
+        final Request request = httpClient.newRequest(serviceEndpoint + req.getRequestUrl());
 
         return addStandardHeadersAndPayload(request, req).header("X-Zc-Timestamp", timestamp)
                 .header("X-Zc-Timeout", REQUEST_TIMEOUT).header("X-Zc-Nonce", nonce).header("X-Zc-User-Id", userId)
                 .header("X-Zc-User-Signature", signature).header("X-Zc-Content-Length", "" + reqJson.length());
-
     }
 
-    private Request addStandardHeadersAndPayload(Request req, AbstractRequest payload)
+    private Request addStandardHeadersAndPayload(final Request req, final AbstractRequest payload)
             throws UnsupportedEncodingException {
         requestLogger.listenTo(req);
 
         return req.header("Connection", "Keep-Alive").header("X-Zc-Major-Domain", "seanywell")
                 .header("X-Zc-Msg-Name", "millService").header("X-Zc-Sub-Domain", "milltype").header("X-Zc-Seq-Id", "1")
                 .header("X-Zc-Version", "1").method(HttpMethod.POST).timeout(5, TimeUnit.SECONDS)
-                .content(new BytesContentProvider((gson.toJson(payload)).getBytes("UTF-8")), CONTENT_TYPE);
+                .content(new BytesContentProvider(gson.toJson(payload).getBytes("UTF-8")), CONTENT_TYPE);
     }
 
-    public void updateRoomTemperature(String roomId, Command command, ModeType mode) {
-        Optional<Home> optionalHome = model.findHomeByRoomId(roomId);
-        Optional<Room> optionalRoom = model.findRoomById(roomId);
+    public void updateRoomTemperature(final String roomId, final Command command, final ModeType mode) {
+        final Optional<Home> optionalHome = model.findHomeByRoomId(roomId);
+        final Optional<Room> optionalRoom = model.findRoomById(roomId);
         if (optionalHome.isPresent() && optionalRoom.isPresent()) {
-            SetRoomTempRequest req = new SetRoomTempRequest(optionalHome.get(), optionalRoom.get());
+            final SetRoomTempRequest req = new SetRoomTempRequest(optionalHome.get(), optionalRoom.get());
             if (command instanceof QuantityType<?>) {
-                int newTemp = (int) ((QuantityType<?>) command).longValue();
+                final int newTemp = (int) ((QuantityType<?>) command).longValue();
                 switch (mode) {
-                    case Sleep:
+                    case SLEEP:
                         req.sleepTemp = newTemp;
                         break;
-                    case Away:
+                    case AWAY:
                         req.awayTemp = newTemp;
                         break;
-                    case Comfort:
+                    case COMFORT:
                         req.comfortTemp = newTemp;
                         break;
                     default:
@@ -408,7 +407,7 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
                 }
                 try {
                     sendLoggedInRequest(req, SetRoomTempResponse.class);
-                } catch (MillheatCommunicationException e) {
+                } catch (final MillheatCommunicationException e) {
                     logger.info("Error updating temperature for room {}", roomId, e);
                 }
             } else {
@@ -418,11 +417,12 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
         }
     }
 
-    public void updateIndependentHeaterProperties(@Nullable String macAddress, @Nullable String heaterId,
-            @Nullable Command temperatureCommand, @Nullable Command masterOnOffCommand, @Nullable Command fanCommand) {
-        Optional<Heater> optionalHeater = model.findHeaterByMacOrId(macAddress, heaterId);
+    public void updateIndependentHeaterProperties(@Nullable final String macAddress, @Nullable final String heaterId,
+            @Nullable final Command temperatureCommand, @Nullable final Command masterOnOffCommand,
+            @Nullable final Command fanCommand) {
+        final Optional<Heater> optionalHeater = model.findHeaterByMacOrId(macAddress, heaterId);
         if (optionalHeater.isPresent()) {
-            Heater heater = optionalHeater.get();
+            final Heater heater = optionalHeater.get();
             int setTemp = heater.getTargetTemp();
             if (temperatureCommand != null && temperatureCommand instanceof QuantityType<?>) {
                 setTemp = (int) ((QuantityType<?>) temperatureCommand).longValue();
@@ -435,13 +435,13 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
             if (fanCommand != null) {
                 fanActive = fanCommand == OnOffType.ON ? true : false;
             }
-            SetDeviceTempRequest req = new SetDeviceTempRequest(heater, setTemp, masterOnOff, fanActive);
+            final SetDeviceTempRequest req = new SetDeviceTempRequest(heater, setTemp, masterOnOff, fanActive);
             try {
                 sendLoggedInRequest(req, SetRoomTempResponse.class);
                 heater.setTargetTemp(setTemp);
                 heater.setPowerStatus(masterOnOff);
                 heater.setFanActive(fanActive);
-            } catch (MillheatCommunicationException e) {
+            } catch (final MillheatCommunicationException e) {
                 logger.info("Error updating temperature for heater {}", macAddress, e);
             }
         }

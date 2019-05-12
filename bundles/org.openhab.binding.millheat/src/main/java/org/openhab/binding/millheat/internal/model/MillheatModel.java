@@ -26,14 +26,14 @@ import org.eclipse.jdt.annotation.Nullable;
  * @author Arne Seime - Initial contribution
  */
 public class MillheatModel {
-    private long lastUpdated;
-    private List<Home> homes = new ArrayList<>();
+    private final long lastUpdated;
+    private final List<Home> homes = new ArrayList<>();
 
-    public MillheatModel(long lastUpdated) {
+    public MillheatModel(final long lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
 
-    public void addHome(Home home) {
+    public void addHome(final Home home) {
         homes.add(home);
     }
 
@@ -45,7 +45,7 @@ public class MillheatModel {
         return lastUpdated;
     }
 
-    public Optional<Heater> findHeaterById(@NonNull String id) {
+    public Optional<Heater> findHeaterById(@NonNull final String id) {
         return Stream
                 .concat(homes.stream().flatMap(home -> home.getRooms().stream())
                         .flatMap(room -> room.getHeaters().stream()),
@@ -53,7 +53,7 @@ public class MillheatModel {
                 .filter(heater -> id.equals(heater.getId())).findFirst();
     }
 
-    public Optional<Heater> findHeaterByMacOrId(@Nullable String macAddress, @Nullable String id) {
+    public Optional<Heater> findHeaterByMacOrId(@Nullable final String macAddress, @Nullable final String id) {
         Optional<Heater> heater = Optional.empty();
 
         if (macAddress != null) {
@@ -65,7 +65,7 @@ public class MillheatModel {
         return heater;
     }
 
-    public Optional<Heater> findHeaterByMac(@NonNull String macAddress) {
+    public Optional<Heater> findHeaterByMac(@NonNull final String macAddress) {
         return Stream
                 .concat(homes.stream().flatMap(home -> home.getRooms().stream())
                         .flatMap(room -> room.getHeaters().stream()),
@@ -74,15 +74,15 @@ public class MillheatModel {
 
     }
 
-    public Optional<Room> findRoomById(@NonNull String id) {
+    public Optional<Room> findRoomById(@NonNull final String id) {
         return homes.stream().flatMap(home -> home.getRooms().stream()).filter(room -> id.equals(room.getId()))
                 .findFirst();
 
     }
 
-    public Optional<Home> findHomeByRoomId(@NonNull String id) {
-        for (Home home : homes) {
-            for (Room room : home.getRooms()) {
+    public Optional<Home> findHomeByRoomId(@NonNull final String id) {
+        for (final Home home : homes) {
+            for (final Room room : home.getRooms()) {
                 if (id.equals(room.getId())) {
                     return Optional.of(home);
                 }

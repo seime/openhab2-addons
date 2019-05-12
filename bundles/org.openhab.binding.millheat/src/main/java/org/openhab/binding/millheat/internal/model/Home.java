@@ -25,40 +25,41 @@ import org.openhab.binding.millheat.internal.dto.HomeDTO;
  * @author Arne Seime - Initial contribution
  */
 public class Home {
-    private String id;
-    private String name;
-    private int type;
-    private String timezone;
-    private int holidayTemp;
+    private final String id;
+    private final String name;
+    private final int type;
+    private final String timezone;
+    private final int holidayTemp;
     private Mode mode;
-    private String program = null;
-    private List<Room> rooms = new ArrayList<>();
-    private List<Heater> independentHeaters = new ArrayList<>();
+    private final String program = null;
+    private final List<Room> rooms = new ArrayList<>();
+    private final List<Heater> independentHeaters = new ArrayList<>();
 
-    public Home(HomeDTO dto) {
+    public Home(final HomeDTO dto) {
         id = String.valueOf(dto.homeId);
         name = dto.name;
         type = dto.homeType;
         timezone = dto.timeZone;
         holidayTemp = dto.holidayTemp;
         if (dto.holiday) {
-            LocalDateTime modeStart = LocalDateTime.ofEpochSecond(dto.holidayStartTime, 0, ZoneOffset.of(timezone));
-            LocalDateTime modeEnd = LocalDateTime.ofEpochSecond(dto.holidayEndTime, 0, ZoneOffset.of(timezone));
-            mode = new Mode(ModeType.AdvancedAway, modeStart, modeEnd);
+            final LocalDateTime modeStart = LocalDateTime.ofEpochSecond(dto.holidayStartTime, 0,
+                    ZoneOffset.of(timezone));
+            final LocalDateTime modeEnd = LocalDateTime.ofEpochSecond(dto.holidayEndTime, 0, ZoneOffset.of(timezone));
+            mode = new Mode(ModeType.ADWANCEDAWAY, modeStart, modeEnd);
         } else if (dto.alwaysHome) {
-            mode = new Mode(ModeType.AlwaysHome, null, null);
+            mode = new Mode(ModeType.ALWAYSHOME, null, null);
         } else {
-            LocalDateTime modeStart = LocalDateTime.ofEpochSecond(dto.modeStartTime, 0, ZoneOffset.of(timezone));
-            LocalDateTime modeEnd = modeStart.withHour(dto.modeHour).withMinute(dto.modeMinute);
+            final LocalDateTime modeStart = LocalDateTime.ofEpochSecond(dto.modeStartTime, 0, ZoneOffset.of(timezone));
+            final LocalDateTime modeEnd = modeStart.withHour(dto.modeHour).withMinute(dto.modeMinute);
             mode = new Mode(ModeType.valueOf(dto.currentMode), modeStart, modeEnd);
         }
     }
 
-    public void addRoom(Room room) {
+    public void addRoom(final Room room) {
         rooms.add(room);
     }
 
-    public void addHeater(Heater heater) {
+    public void addHeater(final Heater heater) {
         independentHeaters.add(heater);
     }
 

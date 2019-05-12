@@ -49,30 +49,31 @@ public class MillheatHandlerFactory extends BaseThingHandlerFactory {
                     MillheatBindingConstants.THING_TYPE_ROOM).collect(Collectors.toSet()));
 
     @Override
-    protected @Nullable ThingHandler createHandler(Thing thing) {
-        ThingTypeUID thingTypeUID = thing.getThingTypeUID();
+    protected @Nullable ThingHandler createHandler(final Thing thing) {
+        final ThingTypeUID thingTypeUID = thing.getThingTypeUID();
         if (MillheatBindingConstants.THING_TYPE_HEATER.equals(thingTypeUID)) {
             return new MillheatHeaterHandler(thing);
         } else if (MillheatBindingConstants.THING_TYPE_ROOM.equals(thingTypeUID)) {
             return new MillheatRoomHandler(thing);
         } else if (MillheatBindingConstants.THING_TYPE_ACCOUNT.equals(thingTypeUID)) {
-            MillheatAccountHandler handler = new MillheatAccountHandler((Bridge) thing, httpClient, bundleContext);
+            final MillheatAccountHandler handler = new MillheatAccountHandler((Bridge) thing, httpClient,
+                    bundleContext);
             return handler;
         }
         return null;
     }
 
     @Reference
-    protected void setHttpClientFactory(HttpClientFactory httpClientFactory) {
+    protected void setHttpClientFactory(final HttpClientFactory httpClientFactory) {
         this.httpClient = httpClientFactory.getCommonHttpClient();
     }
 
-    protected void unsetHttpClientFactory(HttpClientFactory httpClientFactory) {
+    protected void unsetHttpClientFactory(final HttpClientFactory httpClientFactory) {
         this.httpClient = null;
     }
 
     @Override
-    public boolean supportsThingType(ThingTypeUID thingTypeUID) {
+    public boolean supportsThingType(final ThingTypeUID thingTypeUID) {
         return SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
     }
 }

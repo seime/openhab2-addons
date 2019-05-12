@@ -21,19 +21,19 @@ import org.openhab.binding.millheat.internal.dto.DeviceDTO;
  */
 public class Heater {
     private Room room;
-    private String id;
-    private String name;
-    private String macAddress;
-    private boolean heatingActive;
+    private final String id;
+    private final String name;
+    private final String macAddress;
+    private final boolean heatingActive;
     private boolean canChangeTemp = true;
-    private int subDomain;
-    private int currentTemp;
+    private final int subDomain;
+    private final int currentTemp;
     private Integer targetTemp;
     private boolean fanActive;
     private boolean powerStatus;
-    private boolean windowOpen;
+    private final boolean windowOpen;
 
-    public Heater(DeviceDTO dto) {
+    public Heater(final DeviceDTO dto) {
         id = String.valueOf(dto.deviceId);
         name = dto.deviceName;
         macAddress = dto.macAddress;
@@ -47,7 +47,7 @@ public class Heater {
         windowOpen = dto.openWindow;
     }
 
-    public Heater(DeviceDTO dto, Room room) {
+    public Heater(final DeviceDTO dto, final Room room) {
         this.room = room;
         id = String.valueOf(dto.deviceId);
         name = dto.deviceName;
@@ -58,19 +58,19 @@ public class Heater {
         currentTemp = (int) dto.currentTemp;
         if (room != null && room.getMode() != null) {
             switch (room.getMode()) {
-                case Comfort:
+                case COMFORT:
                     setTargetTemp(room.getComfortTemp());
                     break;
-                case Sleep:
+                case SLEEP:
                     setTargetTemp(room.getSleepTemp());
                     break;
-                case Away:
+                case AWAY:
                     setTargetTemp(room.getAwayTemp());
                     break;
-                case Off:
+                case OFF:
                     setTargetTemp(null);
                 default:
-                    // TODO
+                    // NOOP
             }
         }
         setFanActive(dto.fanStatus);
@@ -134,15 +134,15 @@ public class Heater {
         return windowOpen;
     }
 
-    public void setTargetTemp(Integer targetTemp) {
+    public void setTargetTemp(final Integer targetTemp) {
         this.targetTemp = targetTemp;
     }
 
-    public void setFanActive(boolean fanActive) {
+    public void setFanActive(final boolean fanActive) {
         this.fanActive = fanActive;
     }
 
-    public void setPowerStatus(boolean powerStatus) {
+    public void setPowerStatus(final boolean powerStatus) {
         this.powerStatus = powerStatus;
     }
 

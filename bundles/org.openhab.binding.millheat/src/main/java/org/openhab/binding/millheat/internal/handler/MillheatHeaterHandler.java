@@ -51,20 +51,21 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(MillheatHeaterHandler.class);
     private @NonNullByDefault({}) MillheatHeaterConfiguration config;
 
-    public MillheatHeaterHandler(Thing thing) {
+    public MillheatHeaterHandler(final Thing thing) {
         super(thing);
     }
 
     @Override
-    public void handleCommand(ChannelUID channelUID, Command command) {
+    public void handleCommand(final ChannelUID channelUID, final Command command) {
         handleCommand(channelUID, command, getMillheatModel());
     }
 
     @Override
-    protected void handleCommand(ChannelUID channelUID, @NonNull Command command, @NonNull MillheatModel model) {
-        Optional<Heater> optionalHeater = model.findHeaterByMacOrId(config.macAddress, config.heaterId);
+    protected void handleCommand(final ChannelUID channelUID, @NonNull final Command command,
+            @NonNull final MillheatModel model) {
+        final Optional<Heater> optionalHeater = model.findHeaterByMacOrId(config.macAddress, config.heaterId);
         if (optionalHeater.isPresent()) {
-            Heater heater = optionalHeater.get();
+            final Heater heater = optionalHeater.get();
             if (MillheatBindingConstants.CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new QuantityType<>(heater.getCurrentTemp(), Units.CELSIUS));
@@ -109,7 +110,7 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
                     if (heater.isCanChangeTemp() && heater.getTargetTemp() != null) {
                         updateState(channelUID, new QuantityType<>(heater.getTargetTemp(), Units.CELSIUS));
                     } else if (heater.getRoom() != null) {
-                        Integer targetTemperature = heater.getRoom().getTargetTemperature();
+                        final Integer targetTemperature = heater.getRoom().getTargetTemperature();
                         if (targetTemperature != null) {
                             updateState(channelUID, new QuantityType<>(targetTemperature, Units.CELSIUS));
                         } else {
@@ -145,9 +146,9 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
         }
     }
 
-    private void updateIndependentHeaterProperties(@Nullable Command temperatureCommand,
-            @Nullable Command masterOnOffCommand, @Nullable Command fanCommand) {
-        MillheatAccountHandler accountHandler = getAccountHandler();
+    private void updateIndependentHeaterProperties(@Nullable final Command temperatureCommand,
+            @Nullable final Command masterOnOffCommand, @Nullable final Command fanCommand) {
+        final MillheatAccountHandler accountHandler = getAccountHandler();
         if (accountHandler != null) {
             accountHandler.updateIndependentHeaterProperties(config.macAddress, config.heaterId, temperatureCommand,
                     masterOnOffCommand, fanCommand);
@@ -161,7 +162,7 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
         if (config.heaterId == null && config.macAddress == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR);
         } else {
-            Optional<Heater> heater = getMillheatModel().findHeaterByMacOrId(config.macAddress, config.heaterId);
+            final Optional<Heater> heater = getMillheatModel().findHeaterByMacOrId(config.macAddress, config.heaterId);
             if (heater.isPresent()) {
                 addOptionalChannels(heater.get());
                 updateStatus(ThingStatus.ONLINE);
@@ -171,8 +172,8 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
         }
     }
 
-    private void addOptionalChannels(Heater heater) {
-        List<Channel> newChannels = new ArrayList<>();
+    private void addOptionalChannels(final Heater heater) {
+        final List<Channel> newChannels = new ArrayList<>();
         newChannels.addAll(getThing().getChannels());
         if (heater.isCanChangeTemp() && heater.getRoom() == null) {
             // Add power switch channel

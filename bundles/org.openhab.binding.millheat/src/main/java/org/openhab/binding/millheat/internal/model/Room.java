@@ -23,19 +23,19 @@ import org.openhab.binding.millheat.internal.dto.RoomDTO;
  * @author Arne Seime - Initial contribution
  */
 public class Room {
-    private Home home;
-    private String id;
-    private String name;
-    private int currentTemp;
-    private int comfortTemp;
-    private int sleepTemp;
-    private int awayTemp;
-    private boolean heatingActive;
-    private ModeType mode;
-    private String roomProgramName;
-    private List<Heater> heaters = new ArrayList<>();
+    private final Home home;
+    private final String id;
+    private final String name;
+    private final int currentTemp;
+    private final int comfortTemp;
+    private final int sleepTemp;
+    private final int awayTemp;
+    private final boolean heatingActive;
+    private final ModeType mode;
+    private final String roomProgramName;
+    private final List<Heater> heaters = new ArrayList<>();
 
-    public Room(RoomDTO dto, Home home) {
+    public Room(final RoomDTO dto, final Home home) {
         this.home = home;
         id = String.valueOf(dto.roomId);
         name = dto.name;
@@ -48,7 +48,7 @@ public class Room {
         roomProgramName = dto.roomProgram;
     }
 
-    public void addHeater(Heater h) {
+    public void addHeater(final Heater h) {
         heaters.add(h);
     }
 
@@ -58,16 +58,16 @@ public class Room {
 
     public Integer getTargetTemperature() {
         switch (mode) {
-            case AdvancedAway:
+            case ADWANCEDAWAY:
                 return home.getHolidayTemp();
-            case Sleep:
+            case SLEEP:
                 return sleepTemp;
-            case Comfort:
+            case COMFORT:
                 return comfortTemp;
-            case Away:
+            case AWAY:
                 return awayTemp;
-            case Off:
-            case AlwaysHome:
+            case OFF:
+            case ALWAYSHOME:
             default:
                 return null;
         }

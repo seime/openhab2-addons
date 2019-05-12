@@ -15,7 +15,6 @@ package org.openhab.binding.millheat.internal.dto;
 import com.google.gson.annotations.SerializedName;
 
 /**
- *
  * @author Arne Seime - Initial contribution
  */
 public class HomeDTO {

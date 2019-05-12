@@ -22,7 +22,7 @@ public class SelectDeviceByRoomRequest extends AbstractRequest {
     @SerializedName("timeZoneNum")
     public String timeZone;
 
-    public SelectDeviceByRoomRequest(Long roomId, String timeZone) {
+    public SelectDeviceByRoomRequest(final Long roomId, final String timeZone) {
         this.roomId = roomId;
         this.timeZone = timeZone;
     }

@@ -20,11 +20,11 @@ import java.time.LocalDateTime;
  * @author Arne Seime - Initial contribution
  */
 public class Mode {
-    private ModeType mode;
-    private LocalDateTime start;
-    private LocalDateTime end;
+    private final ModeType mode;
+    private final LocalDateTime start;
+    private final LocalDateTime end;
 
-    public Mode(ModeType mode, LocalDateTime start, LocalDateTime end) {
+    public Mode(final ModeType mode, final LocalDateTime start, final LocalDateTime end) {
         this.mode = mode;
         this.start = start;
         this.end = end;

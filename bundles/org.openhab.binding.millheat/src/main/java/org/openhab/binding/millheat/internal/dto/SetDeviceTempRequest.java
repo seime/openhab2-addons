@@ -33,7 +33,8 @@ public class SetDeviceTempRequest extends AbstractRequest {
         return "deviceControl";
     }
 
-    public SetDeviceTempRequest(Heater heater, int targetTemperature, boolean masterSwitch, boolean fanActive) {
+    public SetDeviceTempRequest(final Heater heater, final int targetTemperature, final boolean masterSwitch,
+            final boolean fanActive) {
         this.subDomain = heater.getSubDomain();
         this.deviceId = Integer.parseInt(heater.getId());
         this.holdTemp = targetTemperature;

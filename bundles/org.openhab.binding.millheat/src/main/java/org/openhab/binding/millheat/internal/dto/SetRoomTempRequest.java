@@ -25,7 +25,7 @@ public class SetRoomTempRequest extends AbstractRequest {
     public int awayTemp;
     public int homeType;
 
-    public SetRoomTempRequest(Home home, Room room) {
+    public SetRoomTempRequest(final Home home, final Room room) {
         roomId = Long.parseLong(room.getId());
         homeType = home.getType();
         comfortTemp = room.getComfortTemp();

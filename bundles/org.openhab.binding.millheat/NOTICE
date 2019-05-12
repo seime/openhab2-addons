@@ -11,3 +11,5 @@ https://www.eclipse.org/legal/epl-2.0/.
 == Source Code
 
 https://github.com/openhab/openhab2-addons
+
+Contains code from https://stackoverflow.com/questions/50318736/how-to-log-httpclient-requests-response-including-body

@@ -13,13 +13,12 @@
 package org.openhab.binding.millheat.internal.dto;
 
 /**
- *
  * @author Arne Seime - Initial contribution
  */
 public class GetIndependentDevicesByHomeRequest extends AbstractRequest {
     public Long homeId;
 
-    public GetIndependentDevicesByHomeRequest(Long homeId, String timeZone) {
+    public GetIndependentDevicesByHomeRequest(final Long homeId, final String timeZone) {
         this.homeId = homeId;
     }
 

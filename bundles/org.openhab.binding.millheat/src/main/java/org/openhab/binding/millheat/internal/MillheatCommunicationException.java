@@ -25,15 +25,15 @@ public class MillheatCommunicationException extends Exception {
     private static final long serialVersionUID = 1L;
     private int errorCode = 0;
 
-    public MillheatCommunicationException(String message, Throwable cause) {
+    public MillheatCommunicationException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
-    public MillheatCommunicationException(String message) {
+    public MillheatCommunicationException(final String message) {
         super(message);
     }
 
-    public MillheatCommunicationException(@NonNull AbstractRequest req, @NonNull AbstractResponse rsp) {
+    public MillheatCommunicationException(@NonNull final AbstractRequest req, @NonNull final AbstractResponse rsp) {
         super("Server responded with error to request " + req.getClass().getSimpleName() + "/" + req.getRequestUrl()
                 + ": " + rsp.errorCode + "/" + rsp.errorName + "/" + rsp.errorDescription);
         this.errorCode = rsp.errorCode;

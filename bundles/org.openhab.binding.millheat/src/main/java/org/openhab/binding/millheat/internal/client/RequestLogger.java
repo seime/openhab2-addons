@@ -34,7 +34,7 @@ import com.google.gson.JsonSyntaxException;
 /**
  * Logs HttpClient request/response traffic.
  *
- * @author Gili Tzabari https://stackoverflow.com/users/14731/gili
+ * @author Gili Tzabari - Initial contribution https://stackoverflow.com/users/14731/gili
  *         https://stackoverflow.com/questions/50318736/how-to-log-httpclient-requests-response-including-body
  * @author Arne Seime - adapted for Millheat binding
  */
@@ -42,29 +42,29 @@ import com.google.gson.JsonSyntaxException;
 public final class RequestLogger {
     private final Logger logger = LoggerFactory.getLogger(RequestLogger.class);
     private final AtomicLong nextId = new AtomicLong();
-    private JsonParser parser;
-    private Gson gson;
-    private String prefix;
+    private final JsonParser parser;
+    private final Gson gson;
+    private final String prefix;
 
-    public RequestLogger(String prefix) {
+    public RequestLogger(final String prefix) {
         parser = new JsonParser();
         gson = new GsonBuilder().setPrettyPrinting().setLenient().create();
         this.prefix = prefix;
     }
 
-    private void dump(Request request) {
-        long idV = nextId.getAndIncrement();
+    private void dump(final Request request) {
+        final long idV = nextId.getAndIncrement();
         if (logger.isDebugEnabled()) {
-            String id = prefix + "-" + idV;
-            StringBuilder group = new StringBuilder();
+            final String id = prefix + "-" + idV;
+            final StringBuilder group = new StringBuilder();
             request.onRequestBegin(theRequest -> group.append(
                     "Request " + id + "\n" + id + " > " + theRequest.getMethod() + " " + theRequest.getURI() + "\n"));
             request.onRequestHeaders(theRequest -> {
-                for (HttpField header : theRequest.getHeaders()) {
+                for (final HttpField header : theRequest.getHeaders()) {
                     group.append(id + " > " + header + "\n");
                 }
             });
-            StringBuilder contentBuffer = new StringBuilder();
+            final StringBuilder contentBuffer = new StringBuilder();
             request.onRequestContent((theRequest, content) -> contentBuffer
                     .append(reformatJson(getCharset(theRequest.getHeaders()).decode(content).toString())));
             request.onRequestSuccess(theRequest -> {
@@ -84,7 +84,7 @@ public final class RequestLogger {
                 group.append("\n");
             });
             request.onResponseHeaders(theResponse -> {
-                for (HttpField header : theResponse.getHeaders()) {
+                for (final HttpField header : theResponse.getHeaders()) {
                     group.append(id + " < " + header + "\n");
                 }
             });
@@ -99,30 +99,30 @@ public final class RequestLogger {
         }
     }
 
-    private Charset getCharset(HttpFields headers) {
-        String contentType = headers.get(HttpHeader.CONTENT_TYPE);
+    private Charset getCharset(final HttpFields headers) {
+        final String contentType = headers.get(HttpHeader.CONTENT_TYPE);
         if (contentType == null) {
             return StandardCharsets.UTF_8;
         }
-        String[] tokens = contentType.toLowerCase(Locale.US).split("charset=");
+        final String[] tokens = contentType.toLowerCase(Locale.US).split("charset=");
         if (tokens.length != 2) {
             return StandardCharsets.UTF_8;
         }
 
-        String encoding = tokens[1].replaceAll("[;\"]", "");
+        final String encoding = tokens[1].replaceAll("[;\"]", "");
         return Charset.forName(encoding);
     }
 
-    public Request listenTo(Request request) {
+    public Request listenTo(final Request request) {
         dump(request);
         return request;
     }
 
-    private String reformatJson(String jsonString) {
+    private String reformatJson(final String jsonString) {
         try {
-            JsonElement json = parser.parse(jsonString);
+            final JsonElement json = parser.parse(jsonString);
             return gson.toJson(json);
-        } catch (JsonSyntaxException e) {
+        } catch (final JsonSyntaxException e) {
             logger.info("Could not reformat malformed JSON due to '{}'", e.getMessage());
             return jsonString;
         }

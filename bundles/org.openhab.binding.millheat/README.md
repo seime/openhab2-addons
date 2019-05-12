@@ -33,15 +33,16 @@ See full example below for how to configure using thing files.
 
 ### Heater
 
-* `macAddress` = network mac address of device. 
-Can be found in the app by viewing devices. 
-Or you can find it during discovery. 
-Used for heaters connected to a room
-* `heaterId` = id of device/heater. 
-Use auto discovery to find this value. 
-Used to identify independent heaters or heaters connected to a room
-* `power` = number of watts this heater is consuming when active. 
+* `macAddress` = network mac address of device.  
+Can be found in the app by viewing devices.
+Or you can find it during discovery.
+Used for heaters connected to a room.
+* `heaterId` = id of device/heater.  
+Use auto discovery to find this value.
+Used to identify independent heaters or heaters connected to a room.
+* `power` = number of watts this heater is consuming when active.  
 Used to provide data for the currentPower channel.
+
 
 ## Channels
 

@@ -19,7 +19,7 @@ public class LoginRequest extends AbstractRequest {
     public String account;
     public String password;
 
-    public LoginRequest(String username, String password) {
+    public LoginRequest(final String username, final String password) {
         this.account = username;
         this.password = password;
     }

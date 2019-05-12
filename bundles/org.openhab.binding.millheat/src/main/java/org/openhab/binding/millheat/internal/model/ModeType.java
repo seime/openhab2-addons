@@ -12,37 +12,31 @@
  */
 package org.openhab.binding.millheat.internal.model;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * The {@link ModeType} represents a type of mode the user can set in the app.
  *
  * @author Arne Seime - Initial contribution
  */
 public enum ModeType {
-    AlwaysHome(-1),
-    Comfort(1),
-    Sleep(2),
-    Away(3),
-    AdvancedAway(4),
-    Off(5);
+    ALWAYSHOME(-1),
+    COMFORT(1),
+    SLEEP(2),
+    AWAY(3),
+    ADWANCEDAWAY(4),
+    OFF(5);
 
-    private static Map<Integer, ModeType> map = new HashMap<>();
-
-    static {
-        for (ModeType Mode : ModeType.values()) {
-            map.put(Mode.value, Mode);
+    public static ModeType valueOf(final int modeVal) {
+        for (final ModeType mode : ModeType.values()) {
+            if (mode.value == modeVal) {
+                return mode;
+            }
         }
-    }
-
-    public static ModeType valueOf(int mode) {
-        return map.get(mode);
+        return null;
     }
 
     private int value;
 
-    private ModeType(int value) {
+    private ModeType(final int value) {
         this.value = value;
     }
 

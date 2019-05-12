@@ -30,18 +30,18 @@ import org.slf4j.LoggerFactory;
 public abstract class MillheatBaseThingHandler extends BaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(MillheatBaseThingHandler.class);
 
-    public MillheatBaseThingHandler(Thing thing) {
+    public MillheatBaseThingHandler(final Thing thing) {
         super(thing);
     }
 
-    public void updateState(MillheatModel model) {
-        for (Channel channel : getThing().getChannels()) {
+    public void updateState(final MillheatModel model) {
+        for (final Channel channel : getThing().getChannels()) {
             handleCommand(channel.getUID(), RefreshType.REFRESH, model);
         }
     }
 
     protected MillheatModel getMillheatModel() {
-        MillheatAccountHandler accountHandler = getAccountHandler();
+        final MillheatAccountHandler accountHandler = getAccountHandler();
         if (accountHandler != null) {
             return accountHandler.getModel();
         }
@@ -52,9 +52,9 @@ public abstract class MillheatBaseThingHandler extends BaseThingHandler {
     }
 
     protected MillheatAccountHandler getAccountHandler() {
-        Bridge bridge = getBridge();
+        final Bridge bridge = getBridge();
         if (bridge != null) {
-            MillheatAccountHandler accountHandler = (MillheatAccountHandler) bridge.getHandler();
+            final MillheatAccountHandler accountHandler = (MillheatAccountHandler) bridge.getHandler();
             if (accountHandler != null) {
                 return accountHandler;
             }

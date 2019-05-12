@@ -48,28 +48,28 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
     private final Logger logger = LoggerFactory.getLogger(MillheatRoomHandler.class);
     private @NonNullByDefault({}) MillheatRoomConfiguration config;
 
-    public MillheatRoomHandler(Thing thing) {
+    public MillheatRoomHandler(final Thing thing) {
         super(thing);
     }
 
     @Override
-    public void handleCommand(ChannelUID channelUID, Command command) {
+    public void handleCommand(final ChannelUID channelUID, final Command command) {
         handleCommand(channelUID, command, getMillheatModel());
     }
 
-    private void updateRoomTemperature(String roomId, Command command, ModeType modeType) {
-        MillheatAccountHandler accountHandler = getAccountHandler();
+    private void updateRoomTemperature(final String roomId, final Command command, final ModeType modeType) {
+        final MillheatAccountHandler accountHandler = getAccountHandler();
         if (accountHandler != null) {
             accountHandler.updateRoomTemperature(config.roomId, command, modeType);
         }
     }
 
     @Override
-    protected void handleCommand(@NonNull ChannelUID channelUID, @NonNull Command command,
-            @NonNull MillheatModel model) {
-        Optional<Room> optionalRoom = model.findRoomById(config.roomId);
+    protected void handleCommand(@NonNull final ChannelUID channelUID, @NonNull final Command command,
+            @NonNull final MillheatModel model) {
+        final Optional<Room> optionalRoom = model.findRoomById(config.roomId);
         if (optionalRoom.isPresent()) {
-            Room room = optionalRoom.get();
+            final Room room = optionalRoom.get();
             if (CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new QuantityType<>(room.getCurrentTemp(), Units.CELSIUS));
@@ -86,23 +86,23 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new QuantityType<>(room.getComfortTemp(), Units.CELSIUS));
                 } else {
-                    updateRoomTemperature(config.roomId, command, ModeType.Comfort);
+                    updateRoomTemperature(config.roomId, command, ModeType.COMFORT);
                 }
             } else if (CHANNEL_SLEEP_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new QuantityType<>(room.getSleepTemp(), Units.CELSIUS));
                 } else {
-                    updateRoomTemperature(config.roomId, command, ModeType.Sleep);
+                    updateRoomTemperature(config.roomId, command, ModeType.SLEEP);
                 }
             } else if (CHANNEL_AWAY_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     updateState(channelUID, new QuantityType<>(room.getAwayTemp(), Units.CELSIUS));
                 } else {
-                    updateRoomTemperature(config.roomId, command, ModeType.Away);
+                    updateRoomTemperature(config.roomId, command, ModeType.AWAY);
                 }
             } else if (CHANNEL_TARGET_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
-                    Integer targetTemperature = room.getTargetTemperature();
+                    final Integer targetTemperature = room.getTargetTemperature();
                     if (targetTemperature != null) {
                         updateState(channelUID, new QuantityType<>(targetTemperature, Units.CELSIUS));
                     } else {
@@ -126,7 +126,7 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
     public void initialize() {
         config = getConfigAs(MillheatRoomConfiguration.class);
         logger.debug("Initializing Millheat heater using config {}", config);
-        Optional<Room> room = getMillheatModel().findRoomById(config.roomId);
+        final Optional<Room> room = getMillheatModel().findRoomById(config.roomId);
         if (room.isPresent()) {
             updateStatus(ThingStatus.ONLINE);
         } else {

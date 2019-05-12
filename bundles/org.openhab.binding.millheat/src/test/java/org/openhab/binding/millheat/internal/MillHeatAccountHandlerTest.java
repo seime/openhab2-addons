@@ -36,7 +36,6 @@ import org.osgi.framework.BundleContext;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 /**
- *
  * @author Arne Seime - Initial contribution
  */
 public class MillHeatAccountHandlerTest {
@@ -58,8 +57,8 @@ public class MillHeatAccountHandlerTest {
         MockitoAnnotations.initMocks(this);
         httpClient = new HttpClient();
         httpClient.start();
-        MillheatAccountHandler.API_ENDPOINT_1 = "http://localhost:9999/zc-account/v1/";
-        MillheatAccountHandler.API_ENDPOINT_2 = "http://localhost:9999/millService/v1/";
+        MillheatAccountHandler.authEndpoint = "http://localhost:9999/zc-account/v1/";
+        MillheatAccountHandler.serviceEndpoint = "http://localhost:9999/millService/v1/";
     }
 
     @After
@@ -69,18 +68,19 @@ public class MillHeatAccountHandlerTest {
 
     @Test
     public void testLogin() throws InterruptedException, IOException {
-        String loginResponse = IOUtils.toString(getClass().getResourceAsStream("/login_response_ok.json"));
+        final String loginResponse = IOUtils.toString(getClass().getResourceAsStream("/login_response_ok.json"));
         stubFor(post(urlEqualTo("/zc-account/v1/login"))
                 .willReturn(aResponse().withStatus(200).withBody(loginResponse)));
         when(millheatAccountMock.getConfiguration()).thenReturn(configuration);
         when(millheatAccountMock.getUID()).thenReturn(new ThingUID("millheat:account:thinguid"));
 
-        MillheatAccountConfiguration accountConfig = new MillheatAccountConfiguration();
+        final MillheatAccountConfiguration accountConfig = new MillheatAccountConfiguration();
         accountConfig.username = "username";
         accountConfig.password = "password";
         when(configuration.as(eq(MillheatAccountConfiguration.class))).thenReturn(accountConfig);
 
-        MillheatAccountHandler subject = new MillheatAccountHandler(millheatAccountMock, httpClient, bundleContext);
+        final MillheatAccountHandler subject = new MillheatAccountHandler(millheatAccountMock, httpClient,
+                bundleContext);
         subject.doLogin();
         verify(postRequestedFor(urlMatching("/zc-account/v1/login"))
                 .withRequestBody(matching(".*username.*password.*")));
