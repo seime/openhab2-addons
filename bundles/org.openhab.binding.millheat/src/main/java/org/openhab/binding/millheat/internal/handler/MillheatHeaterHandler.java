@@ -22,6 +22,8 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.OpenClosedType;
 import org.eclipse.smarthome.core.library.types.QuantityType;
+import org.eclipse.smarthome.core.library.unit.SIUnits;
+import org.eclipse.smarthome.core.library.unit.SmartHomeUnits;
 import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
@@ -37,8 +39,6 @@ import org.openhab.binding.millheat.internal.model.Heater;
 import org.openhab.binding.millheat.internal.model.MillheatModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import tec.uom.se.unit.Units;
 
 /**
  * The {@link MillheatHeaterHandler} is responsible for handling commands, which are
@@ -68,7 +68,7 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
             final Heater heater = optionalHeater.get();
             if (MillheatBindingConstants.CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
-                    updateState(channelUID, new QuantityType<>(heater.getCurrentTemp(), Units.CELSIUS));
+                    updateState(channelUID, new QuantityType<>(heater.getCurrentTemp(), SIUnits.CELSIUS));
                 }
             } else if (MillheatBindingConstants.CHANNEL_HEATING_ACTIVE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
@@ -94,9 +94,9 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
                 if (command instanceof RefreshType) {
                     if (config.power != null) {
                         if (heater.isHeatingActive()) {
-                            updateState(channelUID, new QuantityType<>(config.power, Units.WATT));
+                            updateState(channelUID, new QuantityType<>(config.power, SmartHomeUnits.WATT));
                         } else {
-                            updateState(channelUID, new QuantityType<>(0, Units.WATT));
+                            updateState(channelUID, new QuantityType<>(0, SmartHomeUnits.WATT));
                         }
                     } else {
                         updateState(channelUID, UnDefType.UNDEF);
@@ -108,11 +108,11 @@ public class MillheatHeaterHandler extends MillheatBaseThingHandler {
             } else if (MillheatBindingConstants.CHANNEL_TARGET_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
                     if (heater.isCanChangeTemp() && heater.getTargetTemp() != null) {
-                        updateState(channelUID, new QuantityType<>(heater.getTargetTemp(), Units.CELSIUS));
+                        updateState(channelUID, new QuantityType<>(heater.getTargetTemp(), SIUnits.CELSIUS));
                     } else if (heater.getRoom() != null) {
                         final Integer targetTemperature = heater.getRoom().getTargetTemperature();
                         if (targetTemperature != null) {
-                            updateState(channelUID, new QuantityType<>(targetTemperature, Units.CELSIUS));
+                            updateState(channelUID, new QuantityType<>(targetTemperature, SIUnits.CELSIUS));
                         } else {
                             updateState(channelUID, UnDefType.UNDEF);
                         }
