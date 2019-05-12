@@ -56,46 +56,43 @@ public class MillheatDiscoveryService extends AbstractDiscoveryService {
     }
 
     @Override
-    protected void startScan() {
+    protected synchronized void startScan() {
         logger.debug("Start scan for Millheat devices.");
-        synchronized (this) {
-            try {
-                final ThingUID accountUID = accountHandler.getThing().getUID();
-                accountHandler.updateModelFromServerAndUpdateThingStatus();
-                final MillheatModel model = accountHandler.getModel();
-                for (final Home home : model.getHomes()) {
-                    for (final Room room : home.getRooms()) {
-                        final ThingUID roomUID = new ThingUID(MillheatBindingConstants.THING_TYPE_ROOM, accountUID,
-                                String.valueOf(room.getId()));
-                        final DiscoveryResult discoveryResultRoom = DiscoveryResultBuilder.create(roomUID)
-                                .withBridge(accountUID).withLabel(room.getName()).withProperty("roomId", room.getId())
-                                .withRepresentationProperty("roomId").build();
-                        thingDiscovered(discoveryResultRoom);
-                        for (final Heater heater : room.getHeaters()) {
-                            final ThingUID heaterUID = new ThingUID(MillheatBindingConstants.THING_TYPE_HEATER,
-                                    accountUID, String.valueOf(heater.getId()));
-                            final DiscoveryResult discoveryResultHeater = DiscoveryResultBuilder.create(heaterUID)
-                                    .withBridge(accountUID).withLabel(heater.getName())
-                                    .withProperty("heaterId", heater.getId()).withRepresentationProperty("macAddress")
-                                    .withProperty("macAddress", heater.getMacAddress()).build();
-                            thingDiscovered(discoveryResultHeater);
-                        }
-                    }
-                    for (final Heater heater : home.getIndependentHeaters()) {
+        try {
+            final ThingUID accountUID = accountHandler.getThing().getUID();
+            accountHandler.updateModelFromServerAndUpdateThingStatus();
+            final MillheatModel model = accountHandler.getModel();
+            for (final Home home : model.getHomes()) {
+                for (final Room room : home.getRooms()) {
+                    final ThingUID roomUID = new ThingUID(MillheatBindingConstants.THING_TYPE_ROOM, accountUID,
+                            String.valueOf(room.getId()));
+                    final DiscoveryResult discoveryResultRoom = DiscoveryResultBuilder.create(roomUID)
+                            .withBridge(accountUID).withLabel(room.getName()).withProperty("roomId", room.getId())
+                            .withRepresentationProperty("roomId").build();
+                    thingDiscovered(discoveryResultRoom);
+                    for (final Heater heater : room.getHeaters()) {
                         final ThingUID heaterUID = new ThingUID(MillheatBindingConstants.THING_TYPE_HEATER, accountUID,
                                 String.valueOf(heater.getId()));
                         final DiscoveryResult discoveryResultHeater = DiscoveryResultBuilder.create(heaterUID)
                                 .withBridge(accountUID).withLabel(heater.getName())
-                                .withRepresentationProperty("heaterId").withProperty("heaterId", heater.getId())
-                                .build();
+                                .withProperty("heaterId", heater.getId()).withRepresentationProperty("macAddress")
+                                .withProperty("macAddress", heater.getMacAddress()).build();
                         thingDiscovered(discoveryResultHeater);
                     }
                 }
-            } catch (final Exception e) {
-                logger.debug("Error during discovery: {}", e.getMessage());
-            } finally {
-                removeOlderResults(getTimestampOfLastScan());
+                for (final Heater heater : home.getIndependentHeaters()) {
+                    final ThingUID heaterUID = new ThingUID(MillheatBindingConstants.THING_TYPE_HEATER, accountUID,
+                            String.valueOf(heater.getId()));
+                    final DiscoveryResult discoveryResultHeater = DiscoveryResultBuilder.create(heaterUID)
+                            .withBridge(accountUID).withLabel(heater.getName()).withRepresentationProperty("heaterId")
+                            .withProperty("heaterId", heater.getId()).build();
+                    thingDiscovered(discoveryResultHeater);
+                }
             }
+        } catch (final Exception e) {
+            logger.debug("Error during discovery: {}", e.getMessage());
+        } finally {
+            removeOlderResults(getTimestampOfLastScan());
         }
     }
 
