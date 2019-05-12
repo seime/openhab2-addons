@@ -424,7 +424,7 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
         if (optionalHeater.isPresent()) {
             Heater heater = optionalHeater.get();
             int setTemp = heater.getTargetTemp();
-            if (temperatureCommand != null && temperatureCommand instanceof QuantityType<?>) {
+            if (temperatureCommand instanceof QuantityType<?>) {
                 setTemp = (int) ((QuantityType<?>) temperatureCommand).longValue();
             }
             boolean masterOnOff = heater.isPowerStatus();
