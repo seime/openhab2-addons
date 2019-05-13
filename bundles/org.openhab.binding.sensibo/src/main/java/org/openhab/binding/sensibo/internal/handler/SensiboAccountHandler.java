@@ -147,10 +147,14 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
                 updateStatus(ThingStatus.ONLINE);
                 discoveryService.startService();
                 initPolling();
+            } catch (final SensiboCommunicationException e) {
+                model = new SensiboModel(0); // Empty model
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                        "Error fetching initial data: " + e.getMessage());
             } catch (final Exception e) {
                 model = new SensiboModel(0); // Empty model
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                        "error fetching initial data " + e.getMessage());
+                        "Error fetching initial data: " + e.getMessage());
                 logger.info("Error initializing Sensibo data", e);
             }
         });
@@ -224,6 +228,8 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
                 } else {
                     throw new SensiboCommunicationException(req, overallStatus);
                 }
+            } else if (contentResponse.getStatus() == HttpStatus.FORBIDDEN_403) {
+                throw new SensiboCommunicationException("Invalid API key");
             } else {
                 throw new SensiboCommunicationException(
                         "Error sending request to Sensibo server. Server responded with " + contentResponse.getStatus()
