@@ -28,7 +28,6 @@ public class PodDetails {
     public String serialNumber;
     public String temperatureUnit;
     public String productModel;
-    public Boolean smartMode;
     public AcState acState;
     @SerializedName("measurements")
     public Measurement lastMeasurement;

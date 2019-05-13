@@ -40,12 +40,18 @@ public class GetPodDetailsResponseTest extends AbstractSerializationDeserializat
         assertEquals("SERIALNUMASSTRING", rsp.serialNumber);
         assertEquals("C", rsp.temperatureUnit);
         assertEquals("skyv2", rsp.productModel);
-        assertNull(rsp.smartMode);
-
         assertAcState(rsp.acState);
         assertMeasurement(rsp.lastMeasurement);
         assertRemoteCapabilities(rsp.getRemoteCapabilities());
 
+    }
+
+    @Test
+    public void testDeserializeWithSmartModeSetup() throws IOException {
+        final PodDetails rsp = deSerializeResponse("/get_pod_details_response_smartmode_settings.json",
+                PodDetails.class);
+
+        assertEquals("34:15:13:AA:AA:AA", rsp.macAddress);
     }
 
     private void assertRemoteCapabilities(final Map<String, ModeCapability> remoteCapabilities) {
