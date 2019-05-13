@@ -89,7 +89,7 @@ millheat.items:
 
 ```
 // Items connected to ROOM channels
-Number Heating_Office_Room_Current_Temperature "Office current [%d °C]" <temperature>  {channel="millheat:room:home:office:currentTemperature"}
+Number:Temperature Heating_Office_Room_Current_Temperature "Office current [%d °C]" <temperature>  {channel="millheat:room:home:office:currentTemperature"}
 Number Heating_Office_Room_Target_Temperature "Office target [%d °C]" <temperature>  {channel="millheat:room:home:office:targetTemperature"}
 Number Heating_Office_Room_Sleep_Temperature "Office sleep [%d °C]" <temperature>  {channel="millheat:room:home:office:sleepTemperature"}
 Number Heating_Office_Room_Away_Temperature "Office away [%d °C]" <temperature>  {channel="millheat:room:home:office:awayTemperature"}

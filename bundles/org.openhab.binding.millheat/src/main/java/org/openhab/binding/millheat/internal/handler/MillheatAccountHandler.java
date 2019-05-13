@@ -38,6 +38,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.smarthome.config.discovery.DiscoveryService;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.QuantityType;
+import org.eclipse.smarthome.core.library.unit.SIUnits;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
@@ -390,7 +391,9 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
         if (optionalHome.isPresent() && optionalRoom.isPresent()) {
             final SetRoomTempRequest req = new SetRoomTempRequest(optionalHome.get(), optionalRoom.get());
             if (command instanceof QuantityType<?>) {
-                final int newTemp = (int) ((QuantityType<?>) command).longValue();
+                @SuppressWarnings({ "unchecked", "null" })
+                final int newTemp = ((QuantityType<?>) command).as(QuantityType.class).toUnit(SIUnits.CELSIUS)
+                        .intValue();
                 switch (mode) {
                     case SLEEP:
                         req.sleepTemp = newTemp;
@@ -423,7 +426,7 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
         if (optionalHeater.isPresent()) {
             final Heater heater = optionalHeater.get();
             int setTemp = heater.getTargetTemp();
-            if (temperatureCommand != null && temperatureCommand instanceof QuantityType<?>) {
+            if (temperatureCommand instanceof QuantityType<?>) {
                 setTemp = (int) ((QuantityType<?>) temperatureCommand).longValue();
             }
             boolean masterOnOff = heater.isPowerStatus();
