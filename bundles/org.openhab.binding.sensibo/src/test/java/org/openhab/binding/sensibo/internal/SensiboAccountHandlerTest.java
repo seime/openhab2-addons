@@ -36,6 +36,7 @@ import org.openhab.binding.sensibo.internal.handler.SensiboAccountHandler;
 import org.openhab.binding.sensibo.internal.model.SensiboSky;
 import org.osgi.framework.BundleContext;
 
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 /**
@@ -43,7 +44,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
  */
 public class SensiboAccountHandlerTest {
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(9999);
+    public WireMockRule wireMockRule = new WireMockRule(WireMockConfiguration.options().dynamicPort());
 
     @Mock
     private Bridge sensiboAccountMock;
@@ -60,7 +61,7 @@ public class SensiboAccountHandlerTest {
         MockitoAnnotations.initMocks(this);
         httpClient = new HttpClient();
         httpClient.start();
-        SensiboAccountHandler.API_ENDPOINT = "http://localhost:9999/api/v2"; // https://home.sensibo.com/api/v2
+        SensiboAccountHandler.API_ENDPOINT = "http://localhost:" + wireMockRule.port() + "/api/v2"; // https://home.sensibo.com/api/v2
 
     }
 
