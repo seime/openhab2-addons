@@ -120,11 +120,8 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
     }
 
     private boolean allowModelUpdate() {
-        final long timeSinceLastUpdate = System.currentTimeMillis() - model.getLastUpdated();
-        if (timeSinceLastUpdate > MIN_TIME_BETWEEEN_MODEL_UPDATES_MS) {
-            return true;
-        }
-        return false;
+        final long diffMsSinceLastUpdate = System.currentTimeMillis() - model.getLastUpdated();
+        return diffMsSinceLastUpdate > MIN_TIME_BETWEEEN_MODEL_UPDATES_MS;
     }
 
     @NonNull
@@ -261,6 +258,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
                     model = refreshModel();
                     updateThingStatuses();
                     success = true;
+                    updateStatus(ThingStatus.ONLINE);
                 } catch (SensiboCommunicationException | NoSuchAlgorithmException | UnsupportedEncodingException e) {
                     logger.debug("Error updating Sensibo model do to {}, retries left {}", e.getMessage(), retriesLeft);
                 }

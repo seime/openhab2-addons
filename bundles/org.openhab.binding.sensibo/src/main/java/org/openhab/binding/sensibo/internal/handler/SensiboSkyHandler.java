@@ -95,6 +95,7 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
         if (optionalSensiboSky.isPresent()) {
             final SensiboSky unit = optionalSensiboSky.get();
             if (unit.isAlive()) {
+                updateStatus(ThingStatus.ONLINE); // In case it has been offline
                 if (CHANNEL_CURRENT_HUMIDITY.equals(channelUID.getId())) {
                     if (command instanceof RefreshType) {
                         updateState(channelUID, new QuantityType<>(unit.getHumidity(), Units.PERCENT));
@@ -246,6 +247,7 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
         final List<StateOption> stateOptions = options.stream()
                 .map(e -> new StateOption(e.toString(), e instanceof String ? beautify((String) e) : e.toString()))
                 .collect(Collectors.toList());
+        @SuppressWarnings("deprecation")
         final StateDescription stateDescription = new StateDescription(null, null, null, pattern, false, stateOptions);
         final StateChannelTypeBuilder builder = ChannelTypeBuilder.state(channelTypeUID, label, itemType)
                 .withStateDescription(stateDescription);
