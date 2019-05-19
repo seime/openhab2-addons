@@ -14,7 +14,7 @@
 
     <parameter name="refreshInterval" type="integer" required="false" min="30" unit="s">
       <label>Refresh interval</label>
-      <description>Specifies the refresh time in seconds for polling temperature updates from Sensibo service</description>
+      <description>How often to fetch updates from Sensibo service (polling interval)</description>
       <default>120</default>
     </parameter>
   </config-description>

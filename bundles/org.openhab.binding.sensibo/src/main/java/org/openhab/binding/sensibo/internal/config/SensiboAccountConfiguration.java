@@ -22,5 +22,10 @@ public class SensiboAccountConfiguration {
      * API key from https://home.sensibo.com/me/api
      */
     public String apiKey;
-    public int refreshInterval = 30;
+    public int refreshInterval = 120;
+
+    @Override
+    public String toString() {
+        return "SensiboAccountConfiguration [apiKey=" + apiKey + ", refreshInterval=" + refreshInterval + "]";
+    }
 }

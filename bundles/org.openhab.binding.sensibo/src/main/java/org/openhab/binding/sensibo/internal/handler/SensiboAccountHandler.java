@@ -138,6 +138,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
     @Override
     public void initialize() {
         config = getConfigAs(SensiboAccountConfiguration.class);
+        logger.debug("Initializing Sensibo Account bridge using config {}", config);
         scheduler.execute(() -> {
             try {
                 model = refreshModel();
