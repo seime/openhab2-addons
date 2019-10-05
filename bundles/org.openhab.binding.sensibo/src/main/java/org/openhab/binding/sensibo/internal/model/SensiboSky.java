@@ -25,6 +25,7 @@ import org.eclipse.smarthome.core.library.unit.SIUnits;
 import org.openhab.binding.sensibo.internal.dto.poddetails.Measurement;
 import org.openhab.binding.sensibo.internal.dto.poddetails.ModeCapability;
 import org.openhab.binding.sensibo.internal.dto.poddetails.PodDetails;
+import org.openhab.binding.sensibo.internal.dto.poddetails.Schedule;
 
 /**
  * The {@link SensiboSky} represents a Sensibo Sky unit
@@ -46,7 +47,22 @@ public class SensiboSky extends Pod {
     private Double humidity = null;
     private boolean alive = false;
     private final String roomName;
+    private Schedule[] schedules;
+
+    public String getOriginalTemperatureUnit() {
+        return originalTemperatureUnit;
+    }
+
+    public String getRoomName() {
+        return roomName;
+    }
+
+    public Schedule[] getSchedules() {
+        return schedules;
+    }
+
     private final Map<String, ModeCapability> remoteCapabilities;
+    private Timer timer;
 
     public SensiboSky(final PodDetails dto) {
         this.id = dto.id;
@@ -72,6 +88,10 @@ public class SensiboSky extends Pod {
 
         if (dto.acState != null) {
             this.acState = new AcState(dto.acState);
+        }
+
+        if (dto.timer != null) {
+            this.timer = new Timer(dto.timer);
         }
 
         final Measurement lastMeasurement = dto.lastMeasurement;
@@ -165,4 +185,9 @@ public class SensiboSky extends Pod {
     public void updateAcState(AcState newAcState) {
         this.acState = newAcState;
     }
+
+    public Timer getTimer() {
+        return timer;
+    }
+
 }

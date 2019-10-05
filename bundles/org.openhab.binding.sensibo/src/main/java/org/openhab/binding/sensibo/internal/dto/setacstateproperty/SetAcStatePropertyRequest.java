@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.sensibo.internal.dto.setacstate;
+package org.openhab.binding.sensibo.internal.dto.setacstateproperty;
 
 import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
 
@@ -30,7 +30,7 @@ public class SetAcStatePropertyRequest extends AbstractRequest {
 
     @Override
     public String getRequestUrl() {
-        return String.format("/pods/%s/acStates/%s", podId, property);
+        return String.format("/v2/pods/%s/acStates/%s", podId, property);
     }
 
     @Override

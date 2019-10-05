@@ -15,6 +15,7 @@
       <channel id="currentTemperature" typeId="currentTemperature" />
       <channel id="currentHumidity" typeId="currentHumidity" />
       <channel id="masterSwitch" typeId="masterSwitch" />
+      <channel id="timer" typeId="timer" />
     </channels>
 
     <representation-property>macAddress</representation-property>

@@ -10,25 +10,25 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.sensibo.internal;
+package org.openhab.binding.sensibo.internal.dto;
 
 import static org.junit.Assert.*;
 
 import java.io.IOException;
 
 import org.junit.Test;
-import org.openhab.binding.sensibo.internal.dto.setacstate.SetAcStateReponse;
+import org.openhab.binding.sensibo.internal.dto.setacstateproperty.SetAcStatePropertyReponse;
 
 /**
  * @author Arne Seime - Initial contribution
  */
-public class SetAcStateResponseTest extends AbstractSerializationDeserializationTest {
+public class SetAcStatePropertyResponseTest extends AbstractSerializationDeserializationTest {
 
     @Test
     public void testDeserialize() throws IOException {
 
-        final SetAcStateReponse rsp = wireHelper.deSerializeResponse("/set_acstate_response.json",
-                SetAcStateReponse.class);
+        final SetAcStatePropertyReponse rsp = wireHelper.deSerializeResponse("/set_acstate_response.json",
+                SetAcStatePropertyReponse.class);
 
         assertNotNull(rsp.acState);
         assertTrue(rsp.acState.on);

@@ -48,8 +48,10 @@ import org.openhab.binding.sensibo.internal.dto.poddetails.GetPodsDetailsRequest
 import org.openhab.binding.sensibo.internal.dto.poddetails.PodDetails;
 import org.openhab.binding.sensibo.internal.dto.pods.GetPodsRequest;
 import org.openhab.binding.sensibo.internal.dto.pods.Pod;
-import org.openhab.binding.sensibo.internal.dto.setacstate.SetAcStatePropertyRequest;
-import org.openhab.binding.sensibo.internal.dto.setacstate.SetAcStateReponse;
+import org.openhab.binding.sensibo.internal.dto.setacstateproperty.SetAcStatePropertyReponse;
+import org.openhab.binding.sensibo.internal.dto.setacstateproperty.SetAcStatePropertyRequest;
+import org.openhab.binding.sensibo.internal.dto.settimer.SetTimerReponse;
+import org.openhab.binding.sensibo.internal.dto.settimer.SetTimerRequest;
 import org.openhab.binding.sensibo.internal.model.AcState;
 import org.openhab.binding.sensibo.internal.model.SensiboModel;
 import org.openhab.binding.sensibo.internal.model.SensiboSky;
@@ -74,7 +76,7 @@ import com.google.gson.stream.JsonWriter;
  */
 @NonNullByDefault
 public class SensiboAccountHandler extends BaseBridgeHandler {
-    public static String API_ENDPOINT = "https://home.sensibo.com/api/v2";
+    public static String API_ENDPOINT = "https://home.sensibo.com/api";
     private static final int MIN_TIME_BETWEEEN_MODEL_UPDATES_MS = 30_000;
     private final Logger logger = LoggerFactory.getLogger(SensiboAccountHandler.class);
     private final HttpClient httpClient;
@@ -268,7 +270,11 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
     private Request buildSetAcStatePropertyRequest(SetAcStatePropertyRequest setAcStateRequest) {
         final Request req = buildRequest(setAcStateRequest);
+        return req;
+    }
 
+    private Request buildSetTimerRequest(SetTimerRequest setTimerRequest) {
+        final Request req = buildRequest(setTimerRequest);
         return req;
     }
 
@@ -296,14 +302,36 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
                 SetAcStatePropertyRequest setAcStatePropertyRequest = new SetAcStatePropertyRequest(sensiboSky.getId(),
                         property, value);
                 Request request = buildSetAcStatePropertyRequest(setAcStatePropertyRequest);
-                SetAcStateReponse response = sendRequest(request, setAcStatePropertyRequest,
-                        new TypeToken<SetAcStateReponse>() {
+                SetAcStatePropertyReponse response = sendRequest(request, setAcStatePropertyRequest,
+                        new TypeToken<SetAcStatePropertyReponse>() {
                         }.getType());
 
                 model.updateAcState(macAddress, new AcState(response.acState));
                 handler.updateState(model);
             } catch (SensiboCommunicationException e) {
                 logger.debug("Error setting ac state for {}", macAddress, e);
+            }
+        }
+    }
+
+    public void updateSensiboSkyTimer(@Nullable final String macAddress, int secondsFromNow) {
+        Optional<SensiboSky> optionalHeater = model.findSensiboSkyByMacAddress(macAddress);
+        if (optionalHeater.isPresent()) {
+            SensiboSky sensiboSky = optionalHeater.get();
+            try {
+
+                org.openhab.binding.sensibo.internal.dto.poddetails.AcState offState = new org.openhab.binding.sensibo.internal.dto.poddetails.AcState(
+                        sensiboSky.getAcState());
+                offState.on = false;
+
+                SetTimerRequest setAcStatePropertyRequest = new SetTimerRequest(sensiboSky.getId(), secondsFromNow / 60,
+                        offState);
+                Request request = buildSetTimerRequest(setAcStatePropertyRequest);
+                // No data in response
+                sendRequest(request, setAcStatePropertyRequest, new TypeToken<SetTimerReponse>() {
+                }.getType());
+            } catch (SensiboCommunicationException e) {
+                logger.debug("Error setting timer for {}", macAddress, e);
             }
         }
     }

@@ -10,13 +10,15 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.sensibo.internal.dto.setacstate;
+package org.openhab.binding.sensibo.internal.dto;
 
-import org.openhab.binding.sensibo.internal.dto.poddetails.AcState;
+import org.openhab.binding.sensibo.internal.WireHelper;
 
 /**
  * @author Arne Seime - Initial contribution
  */
-public class SetAcStateReponse {
-    public AcState acState;
+public abstract class AbstractSerializationDeserializationTest {
+
+    protected WireHelper wireHelper = new WireHelper();
+
 }

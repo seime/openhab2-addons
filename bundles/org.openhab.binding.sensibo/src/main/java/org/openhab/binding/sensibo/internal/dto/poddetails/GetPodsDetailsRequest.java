@@ -26,7 +26,7 @@ public class GetPodsDetailsRequest extends AbstractRequest {
 
     @Override
     public String getRequestUrl() {
-        return String.format("/pods/%s", id);
+        return String.format("/v2/pods/%s", id);
     }
 
 }

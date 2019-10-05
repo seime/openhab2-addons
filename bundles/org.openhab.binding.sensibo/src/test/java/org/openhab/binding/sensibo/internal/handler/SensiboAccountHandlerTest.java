@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.sensibo.internal;
+package org.openhab.binding.sensibo.internal.handler;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.assertEquals;
@@ -32,7 +32,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.openhab.binding.sensibo.internal.config.SensiboAccountConfiguration;
-import org.openhab.binding.sensibo.internal.handler.SensiboAccountHandler;
 import org.openhab.binding.sensibo.internal.model.SensiboSky;
 import org.osgi.framework.BundleContext;
 
@@ -61,7 +60,7 @@ public class SensiboAccountHandlerTest {
         MockitoAnnotations.initMocks(this);
         httpClient = new HttpClient();
         httpClient.start();
-        SensiboAccountHandler.API_ENDPOINT = "http://localhost:" + wireMockRule.port() + "/api/v2"; // https://home.sensibo.com/api/v2
+        SensiboAccountHandler.API_ENDPOINT = "http://localhost:" + wireMockRule.port() + "/api"; // https://home.sensibo.com/api/v2
 
     }
 

@@ -35,6 +35,7 @@ import org.apache.commons.lang.builder.ToStringStyle;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.QuantityType;
 import org.eclipse.smarthome.core.library.types.StringType;
@@ -54,6 +55,7 @@ import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.types.StateDescription;
 import org.eclipse.smarthome.core.types.StateOption;
+import org.eclipse.smarthome.core.types.UnDefType;
 import org.openhab.binding.sensibo.internal.CallbackChannelsTypeProvider;
 import org.openhab.binding.sensibo.internal.SensiboBindingConstants;
 import org.openhab.binding.sensibo.internal.config.SensiboSkyConfiguration;
@@ -88,7 +90,6 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
     }
 
     private void updateAcState(SensiboSky sensiboSky, String property, Object value) {
-
         StateChange stateChange = checkStateChangeValid(sensiboSky, property, value);
         if (stateChange.valid) {
             final SensiboAccountHandler accountHandler = getAccountHandler();
@@ -98,6 +99,13 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
         } else {
             logger.info("Update command not sent; invalid state change for SensiboSky AC state: {}",
                     stateChange.validationMessage);
+        }
+    }
+
+    private void updateTimer(SensiboSky sensiboSky, int secondsFromNowUntilSwitchOff) {
+        final SensiboAccountHandler accountHandler = getAccountHandler();
+        if (accountHandler != null) {
+            accountHandler.updateSensiboSkyTimer(config.macAddress, secondsFromNowUntilSwitchOff);
         }
     }
 
@@ -158,6 +166,17 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
                     } else if (command instanceof StringType) {
                         final StringType newValue = (StringType) command;
                         updateAcState(unit, "fanLevel", newValue.toString());
+                    }
+                } else if (CHANNEL_TIMER.equals(channelUID.getId())) {
+                    if (command instanceof RefreshType) {
+                        if (unit.getTimer() != null && unit.getTimer().secondsRemaining >= 60) {
+                            updateState(channelUID, new DecimalType(unit.getTimer().secondsRemaining));
+                        } else {
+                            updateState(channelUID, UnDefType.UNDEF);
+                        }
+                    } else if (command instanceof DecimalType) {
+                        final DecimalType newValue = (DecimalType) command;
+                        updateTimer(unit, newValue.intValue());
                     }
                 }
             } else {

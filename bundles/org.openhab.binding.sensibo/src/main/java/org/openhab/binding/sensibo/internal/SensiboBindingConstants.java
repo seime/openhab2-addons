@@ -36,6 +36,7 @@ public class SensiboBindingConstants {
     public static final String CHANNEL_CURRENT_TEMPERATURE = "currentTemperature";
     public static final String CHANNEL_CURRENT_HUMIDITY = "currentHumidity";
     public static final String CHANNEL_MASTER_SWITCH = "masterSwitch";
+    public static final String CHANNEL_TIMER = "timer";
 
     // Dynamic channels
     public static final String CHANNEL_FAN_LEVEL = "fanLevel";

@@ -10,17 +10,11 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.sensibo.internal.dto.pods;
-
-import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
+package org.openhab.binding.sensibo.internal.dto.settimer;
 
 /**
  * @author Arne Seime - Initial contribution
  */
-public class GetPodsRequest extends AbstractRequest {
-    @Override
-    public String getRequestUrl() {
-        return "/v2/users/me/pods";
-    }
+public class SetTimerReponse {
 
 }

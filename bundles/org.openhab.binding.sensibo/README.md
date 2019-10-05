@@ -43,6 +43,7 @@ Or you can find it during discovery.
 | mode                | R/W           | String                | Current mode (cool, heat, etc, actual modes provided provided by the API) being active |
 | fanLevel            | R/W           | String                | Current fan level (low, auto etc, actual levels provided provided by the API |
 | swingMode           | R/W           | String                | Current swing mode (actual modes provided provided by the API |
+| timer               | R/W           | Number                | Number of seconds until AC is switched off automatically |
 
 ## Full Example
 
@@ -64,4 +65,5 @@ String AC_Office_Room_Mode "AC mode [%s]" {channel="sensibo:sensibosky:home:offi
 String AC_Office_Room_Swing_Mode "AC swing mode [%s]" {channel="sensibo:sensibosky:home:office:swingMode"}
 Switch AC_Office_Heater_MasterSwitch "AC power [%s]" <switch>  {channel="sensibo:sensibosky:home:office:masterSwitch"}
 String AC_Office_Heater_Fan_Level "Fan level [%s]" <fan>  {channel="sensibo:sensibosky:home:office:fanLevel"}
+Number AC_Office_Heater_Timer "Timer seconds [%d]" <timer>  {channel="sensibo:sensibosky:home:office:timer"}
 ```

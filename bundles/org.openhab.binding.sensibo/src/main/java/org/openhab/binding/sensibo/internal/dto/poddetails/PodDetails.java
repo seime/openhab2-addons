@@ -34,6 +34,8 @@ public class PodDetails {
     private ModeCapabilityWrapper remoteCapabilities;
     public ConnectionStatus connectionStatus;
     public Room room;
+    public Schedule[] schedules;
+    public Timer timer;
 
     public Map<String, ModeCapability> getRemoteCapabilities() {
         return remoteCapabilities.modes;

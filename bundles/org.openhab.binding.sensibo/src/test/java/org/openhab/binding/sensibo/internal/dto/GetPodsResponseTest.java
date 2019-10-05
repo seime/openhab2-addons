@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.sensibo.internal;
+package org.openhab.binding.sensibo.internal.dto;
 
 import static org.junit.Assert.assertEquals;
 

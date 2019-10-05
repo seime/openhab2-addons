@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.sensibo.internal;
+package org.openhab.binding.sensibo.internal.dto;
 
 import static org.junit.Assert.*;
 
@@ -18,23 +18,24 @@ import java.io.IOException;
 
 import org.junit.Test;
 import org.openhab.binding.sensibo.internal.dto.poddetails.AcState;
-import org.openhab.binding.sensibo.internal.dto.setacstate.SetAcStateRequest;
+import org.openhab.binding.sensibo.internal.dto.settimer.SetTimerRequest;
 
 /**
  * @author Arne Seime - Initial contribution
  */
-public class SetAcStateRequestTest extends AbstractSerializationDeserializationTest {
+public class SetTimerRequestTest extends AbstractSerializationDeserializationTest {
 
     @Test
     public void testSerializeDeserialize() throws IOException {
-        AcState acState = new AcState(true, "fanLevel", "C", 21, "mode", "swing");
-        SetAcStateRequest req = new SetAcStateRequest("PODID", acState);
+        AcState acState = new AcState(false, "fanLevel", "C", 21, "mode", "swing");
+        SetTimerRequest req = new SetTimerRequest("PODID", 60, acState);
         String serializedJson = wireHelper.serialize(req);
 
-        final SetAcStateRequest deSerializedRequest = wireHelper.deSerializeFromString(serializedJson,
-                SetAcStateRequest.class);
+        final SetTimerRequest deSerializedRequest = wireHelper.deSerializeFromString(serializedJson,
+                SetTimerRequest.class);
         assertNotNull(deSerializedRequest.acState);
-        assertTrue(deSerializedRequest.acState.on);
+        assertEquals(60, deSerializedRequest.minutesFromNow);
+        assertFalse(deSerializedRequest.acState.on);
     }
 
 }

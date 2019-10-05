@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.sensibo.internal.dto.setacstate;
+package org.openhab.binding.sensibo.internal.dto.settimer;
 
 import org.eclipse.jetty.http.HttpMethod;
 import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
@@ -19,22 +19,24 @@ import org.openhab.binding.sensibo.internal.dto.poddetails.AcState;
 /**
  * @author Arne Seime - Initial contribution
  */
-public class SetAcStateRequest extends AbstractRequest {
-    public SetAcStateRequest(String podId, AcState acState) {
+public class SetTimerRequest extends AbstractRequest {
+    public SetTimerRequest(String podId, int minutesFromNow, AcState acState) {
         this.podId = podId;
         this.acState = acState;
+        this.minutesFromNow = minutesFromNow;
     }
 
     public transient String podId; // Transient fields are ignored by gson
     public AcState acState;
+    public int minutesFromNow;
 
     @Override
     public String getRequestUrl() {
-        return String.format("/pods/%s/acStates", podId);
+        return String.format("/v1/pods/%s/timer/", podId);
     }
 
     @Override
     public String getMethod() {
-        return HttpMethod.POST.asString();
+        return HttpMethod.PUT.asString();
     }
 }
