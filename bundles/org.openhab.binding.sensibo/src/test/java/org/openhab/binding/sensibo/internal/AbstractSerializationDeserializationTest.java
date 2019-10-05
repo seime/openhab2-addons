@@ -12,70 +12,11 @@
  */
 package org.openhab.binding.sensibo.internal;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.time.ZonedDateTime;
-
-import org.apache.commons.io.IOUtils;
-import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-
 /**
  * @author Arne Seime - Initial contribution
  */
 public abstract class AbstractSerializationDeserializationTest {
 
-    private Gson gson;
+    protected WireHelper wireHelper = new WireHelper();
 
-    public AbstractSerializationDeserializationTest() {
-
-        gson = new GsonBuilder().registerTypeAdapter(ZonedDateTime.class, new TypeAdapter<ZonedDateTime>() {
-            @Override
-            public void write(final JsonWriter out, final ZonedDateTime value) throws IOException {
-                out.value(value.toString());
-            }
-
-            @Override
-            public ZonedDateTime read(final JsonReader in) throws IOException {
-                return ZonedDateTime.parse(in.nextString());
-            }
-
-        }).setPrettyPrinting().create();
-    }
-
-    protected <T> T deSerializeResponse(final String jsonClasspathName, final Type type) throws IOException {
-        final String json = IOUtils
-                .toString(AbstractSerializationDeserializationTest.class.getResourceAsStream(jsonClasspathName));
-
-        final JsonParser parser = new JsonParser();
-        final JsonObject o = parser.parse(json).getAsJsonObject();
-        assertEquals("success", o.get("status").getAsString());
-
-        return gson.fromJson(o.get("result"), type);
-
-    }
-
-    protected <T> T deSerializeFromClasspathResource(final String jsonClasspathName, final Type type)
-            throws IOException {
-        final String json = IOUtils
-                .toString(AbstractSerializationDeserializationTest.class.getResourceAsStream(jsonClasspathName));
-        return deSerializeFromString(json, type);
-    }
-
-    protected <T> T deSerializeFromString(final String json, final Type type) throws IOException {
-        return gson.fromJson(json, type);
-    }
-
-    protected <T> String serialize(final AbstractRequest req) throws IOException {
-        return gson.toJson(req);
-    }
 }

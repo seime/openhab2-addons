@@ -32,8 +32,25 @@ import org.openhab.binding.sensibo.internal.model.SensiboSky;
 public class GetPodDetailsResponseTest extends AbstractSerializationDeserializationTest {
 
     @Test
+    public void testDeserializeWithSmartModeSetup() throws IOException {
+        final PodDetails rsp = wireHelper.deSerializeResponse("/get_pod_details_response_smartmode_settings.json",
+                PodDetails.class);
+
+        assertEquals("34:15:13:AA:AA:AA", rsp.macAddress);
+    }
+
+    @Test
+    public void testDeserializeNullpointerExample() throws IOException {
+        final PodDetails rsp = wireHelper.deSerializeResponse("/get_pod_details_response_nullpointer.json",
+                PodDetails.class);
+        SensiboSky internal = new SensiboSky(rsp);
+
+        assertEquals("50175457", internal.getSerialNumber());
+    }
+
+    @Test
     public void testDeserialize() throws IOException {
-        final PodDetails rsp = deSerializeResponse("/get_pod_details_response.json", PodDetails.class);
+        final PodDetails rsp = wireHelper.deSerializeResponse("/get_pod_details_response.json", PodDetails.class);
 
         assertEquals("MA:C:AD:DR:ES:S0", rsp.macAddress);
         assertEquals("IN010056", rsp.firmwareVersion);
@@ -45,22 +62,6 @@ public class GetPodDetailsResponseTest extends AbstractSerializationDeserializat
         assertMeasurement(rsp.lastMeasurement);
         assertRemoteCapabilities(rsp.getRemoteCapabilities());
 
-    }
-
-    @Test
-    public void testDeserializeWithSmartModeSetup() throws IOException {
-        final PodDetails rsp = deSerializeResponse("/get_pod_details_response_smartmode_settings.json",
-                PodDetails.class);
-
-        assertEquals("34:15:13:AA:AA:AA", rsp.macAddress);
-    }
-
-    @Test
-    public void testDeserializeNullpointerExample() throws IOException {
-        final PodDetails rsp = deSerializeResponse("/get_pod_details_response_nullpointer.json", PodDetails.class);
-        SensiboSky internal = new SensiboSky(rsp);
-
-        assertEquals("50175457", internal.getSerialNumber());
     }
 
     private void assertRemoteCapabilities(final Map<String, ModeCapability> remoteCapabilities) {

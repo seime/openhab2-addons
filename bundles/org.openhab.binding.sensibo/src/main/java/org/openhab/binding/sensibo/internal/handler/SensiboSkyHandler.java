@@ -25,14 +25,20 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.measure.Unit;
+import javax.measure.quantity.Temperature;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.WordUtils;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.OnOffType;
 import org.eclipse.smarthome.core.library.types.QuantityType;
 import org.eclipse.smarthome.core.library.types.StringType;
+import org.eclipse.smarthome.core.library.unit.SIUnits;
 import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
@@ -52,7 +58,6 @@ import org.openhab.binding.sensibo.internal.CallbackChannelsTypeProvider;
 import org.openhab.binding.sensibo.internal.SensiboBindingConstants;
 import org.openhab.binding.sensibo.internal.config.SensiboSkyConfiguration;
 import org.openhab.binding.sensibo.internal.dto.poddetails.ModeCapability;
-import org.openhab.binding.sensibo.internal.model.AcState;
 import org.openhab.binding.sensibo.internal.model.SensiboModel;
 import org.openhab.binding.sensibo.internal.model.SensiboSky;
 import org.slf4j.Logger;
@@ -71,6 +76,7 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
     private final Logger logger = LoggerFactory.getLogger(SensiboSkyHandler.class);
     private @NonNullByDefault({}) SensiboSkyConfiguration config;
     private final Map<ChannelTypeUID, ChannelType> generatedChannelTypes = new HashMap<>();
+    private boolean dynamicChannelsInitialized = false; // Capabilities might be missing on first init
 
     public SensiboSkyHandler(final Thing thing) {
         super(thing);
@@ -81,10 +87,17 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
         handleCommand(channelUID, command, getSensiboModel());
     }
 
-    private void updateAcState(final AcState newState) {
-        final SensiboAccountHandler accountHandler = getAccountHandler();
-        if (accountHandler != null) {
-            accountHandler.updateSensiboSkyAcState(config.macAddress, newState, this);
+    private void updateAcState(SensiboSky sensiboSky, String property, Object value) {
+
+        StateChange stateChange = checkStateChangeValid(sensiboSky, property, value);
+        if (stateChange.valid) {
+            final SensiboAccountHandler accountHandler = getAccountHandler();
+            if (accountHandler != null) {
+                accountHandler.updateSensiboSkyAcState(config.macAddress, property, value, this);
+            }
+        } else {
+            logger.info("Update command not sent; invalid state change for SensiboSky AC state: {}",
+                    stateChange.validationMessage);
         }
     }
 
@@ -94,6 +107,10 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
         final Optional<SensiboSky> optionalSensiboSky = model.findSensiboSkyByMacAddress(config.macAddress);
         if (optionalSensiboSky.isPresent()) {
             final SensiboSky unit = optionalSensiboSky.get();
+
+            if (!dynamicChannelsInitialized) {
+                addDynamicChannelsAndProperties(optionalSensiboSky.get());
+            }
             if (unit.isAlive()) {
                 updateStatus(ThingStatus.ONLINE); // In case it has been offline
                 if (CHANNEL_CURRENT_HUMIDITY.equals(channelUID.getId())) {
@@ -109,9 +126,7 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
                         updateState(channelUID, unit.getAcState().isOn() ? OnOffType.ON : OnOffType.OFF);
                     } else if (command instanceof OnOffType) {
                         final OnOffType newValue = (OnOffType) command;
-                        final AcState newAcState = unit.getAcState().clone();
-                        newAcState.setOn(newValue == OnOffType.ON ? true : false);
-                        updateAcState(newAcState);
+                        updateAcState(unit, "on", newValue == OnOffType.ON);
                     }
                 } else if (CHANNEL_TARGET_TEMPERATURE.equals(channelUID.getId())) {
                     if (command instanceof RefreshType) {
@@ -119,37 +134,30 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
                                 unit.getTemperatureUnit()));
                     } else if (command instanceof QuantityType<?>) {
                         final QuantityType<?> newValue = (QuantityType<?>) command;
-                        final AcState newAcState = unit.getAcState().clone();
-                        newAcState.setTargetTemperature(newValue.intValue());
-                        newAcState.setTemperatureUnit(unit.getTemperatureUnit());
-                        updateAcState(newAcState);
+                        // TODO check that temperature units match, if not give error message
+                        updateAcState(unit, "targetTemperature", newValue.intValue());
                     }
                 } else if (CHANNEL_MODE.equals(channelUID.getId())) {
                     if (command instanceof RefreshType) {
                         updateState(channelUID, new StringType(unit.getAcState().getMode()));
                     } else if (command instanceof StringType) {
                         final StringType newValue = (StringType) command;
-                        final AcState newAcState = unit.getAcState().clone();
-                        newAcState.setMode(newValue.toString());
-                        updateAcState(newAcState);
+                        updateAcState(unit, "mode", newValue.toString());
+                        addDynamicChannelsAndProperties(unit);
                     }
                 } else if (CHANNEL_SWING_MODE.equals(channelUID.getId())) {
                     if (command instanceof RefreshType) {
                         updateState(channelUID, new StringType(unit.getAcState().getSwing()));
                     } else if (command instanceof StringType) {
                         final StringType newValue = (StringType) command;
-                        final AcState newAcState = unit.getAcState().clone();
-                        newAcState.setSwing(newValue.toString());
-                        updateAcState(newAcState);
+                        updateAcState(unit, "swing", newValue.toString());
                     }
                 } else if (CHANNEL_FAN_LEVEL.equals(channelUID.getId())) {
                     if (command instanceof RefreshType) {
                         updateState(channelUID, new StringType(unit.getAcState().getFanLevel()));
                     } else if (command instanceof StringType) {
                         final StringType newValue = (StringType) command;
-                        final AcState newAcState = unit.getAcState().clone();
-                        newAcState.setFanLevel(newValue.toString());
-                        updateAcState(newAcState);
+                        updateAcState(unit, "fanLevel", newValue.toString());
                     }
                 }
             } else {
@@ -189,7 +197,7 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
                 .isPresent();
     }
 
-    private void addDynamicChannelsAndProperties(final SensiboSky sensiboSky) {
+    private boolean addDynamicChannelsAndProperties(final SensiboSky sensiboSky) {
         final List<Channel> newChannels = new ArrayList<>();
         for (final Channel channel : getThing().getChannels()) {
             final ChannelTypeUID channelTypeUID = channel.getChannelTypeUID();
@@ -200,34 +208,42 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
 
         generatedChannelTypes.clear();
 
-        final ModeCapability capabilities = sensiboSky.getModeCapabilities();
-        final List<Integer> targetTemperatures = sensiboSky.getTargetTemperatures();
+        final ModeCapability capabilities = sensiboSky.getCurrentModeCapabilities();
+        if (capabilities != null) {
 
-        final ChannelTypeUID modeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_MODE, "Mode",
-                "String", sensiboSky.getRemoteCapabilities().keySet(), null, null);
-        newChannels.add(ChannelBuilder
-                .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_MODE), "String")
-                .withType(modeChannelType).build());
+            final List<Integer> targetTemperatures = sensiboSky.getTargetTemperatures();
 
-        final ChannelTypeUID swingModeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_SWING_MODE,
-                "Swing Mode", "String", capabilities.swingModes, null, null);
-        newChannels.add(ChannelBuilder
-                .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_SWING_MODE), "String")
-                .withType(swingModeChannelType).build());
+            final ChannelTypeUID modeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_MODE, "Mode",
+                    "String", sensiboSky.getRemoteCapabilities().keySet(), null, null);
+            newChannels.add(ChannelBuilder
+                    .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_MODE), "String")
+                    .withType(modeChannelType).build());
 
-        final ChannelTypeUID fanLevelChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_FAN_LEVEL,
-                "Fan Level", "String", capabilities.fanLevels, null, null);
-        newChannels.add(ChannelBuilder
-                .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_FAN_LEVEL), "String")
-                .withType(fanLevelChannelType).build());
+            final ChannelTypeUID swingModeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_SWING_MODE,
+                    "Swing Mode", "String", capabilities.swingModes, null, null);
+            newChannels.add(ChannelBuilder
+                    .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_SWING_MODE), "String")
+                    .withType(swingModeChannelType).build());
 
-        final ChannelTypeUID targetTemperatureChannelType = addChannelType(
-                SensiboBindingConstants.CHANNEL_TYPE_TARGET_TEMPERATURE, "Target Temperature", "Number:Temperature",
-                targetTemperatures, "%d %unit%", "TargetTemperature");
-        newChannels.add(ChannelBuilder
-                .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_TARGET_TEMPERATURE),
-                        "Number:Temperature")
-                .withType(targetTemperatureChannelType).build());
+            final ChannelTypeUID fanLevelChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_FAN_LEVEL,
+                    "Fan Level", "String", capabilities.fanLevels, null, null);
+            newChannels.add(ChannelBuilder
+                    .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_FAN_LEVEL), "String")
+                    .withType(fanLevelChannelType).build());
+
+            final ChannelTypeUID targetTemperatureChannelType = addChannelType(
+                    SensiboBindingConstants.CHANNEL_TYPE_TARGET_TEMPERATURE, "Target Temperature", "Number:Temperature",
+                    targetTemperatures, "%d %unit%", "TargetTemperature");
+            newChannels
+                    .add(ChannelBuilder
+                            .create(new ChannelUID(getThing().getUID(),
+                                    SensiboBindingConstants.CHANNEL_TARGET_TEMPERATURE), "Number:Temperature")
+                            .withType(targetTemperatureChannelType).build());
+
+            dynamicChannelsInitialized = true;
+        } else {
+            dynamicChannelsInitialized = false;
+        }
 
         // Add properties
         final Map<String, String> properties = new HashMap<>();
@@ -238,6 +254,8 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
         properties.put("macAddress", sensiboSky.getMacAddress());
 
         updateThing(editThing().withChannels(newChannels).withProperties(properties).build());
+
+        return dynamicChannelsInitialized;
     }
 
     private ChannelTypeUID addChannelType(final String channelTypePrefix, final String label, final String itemType,
@@ -284,6 +302,73 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
     @Override
     public @Nullable ChannelType getChannelType(final ChannelTypeUID channelTypeUID, @Nullable final Locale locale) {
         return generatedChannelTypes.get(channelTypeUID);
+    }
+
+    public StateChange checkStateChangeValid(SensiboSky sensiboSky, String property, Object value) {
+        StateChange stateChange = new StateChange();
+
+        ModeCapability currentModeCapabilities = sensiboSky.getCurrentModeCapabilities();
+
+        switch (property) {
+            case "targetTemperature":
+                Unit<Temperature> temperatureUnit = sensiboSky.getTemperatureUnit();
+                if (temperatureUnit != null && currentModeCapabilities != null) {
+                    org.openhab.binding.sensibo.internal.dto.poddetails.Temperature validTemperatures = currentModeCapabilities.temperatures
+                            .get(temperatureUnit == SIUnits.CELSIUS ? "C" : "F");
+                    if (!validTemperatures.validValues.contains(value)) {
+                        stateChange.addError(
+                                String.format("Cannot change targetTemperature to %s, valid targetTemperatures are %s",
+                                        value, ToStringBuilder.reflectionToString(
+                                                validTemperatures.validValues.toArray(), ToStringStyle.SIMPLE_STYLE)));
+                    }
+                }
+                break;
+            case "mode":
+                if (!sensiboSky.getRemoteCapabilities().keySet().contains(value)) {
+                    stateChange.addError(String.format("Cannot change mode to %s, valid modes are %s", value,
+                            ToStringBuilder.reflectionToString(sensiboSky.getRemoteCapabilities().keySet().toArray(),
+                                    ToStringStyle.SIMPLE_STYLE)));
+                }
+                break;
+            case "fanLevel":
+                if (currentModeCapabilities != null && !currentModeCapabilities.fanLevels.contains(value)) {
+                    stateChange.addError(String.format("Cannot change fanLevel to %s, valid fanLevels are %s", value,
+                            ToStringBuilder.reflectionToString(currentModeCapabilities.fanLevels.toArray(),
+                                    ToStringStyle.SIMPLE_STYLE)));
+                }
+                break;
+            case "on":
+                // Always allowed
+                break;
+            case "swing":
+                if (currentModeCapabilities != null && !currentModeCapabilities.swingModes.contains(value)) {
+                    stateChange.addError(String.format("Cannot change swing to %s, valid swings are %s", value,
+                            ToStringBuilder.reflectionToString(currentModeCapabilities.swingModes.toArray(),
+                                    ToStringStyle.SIMPLE_STYLE)));
+                }
+                break;
+            default:
+                stateChange.addError(String.format("No such ac state property %s", property));
+        }
+
+        return stateChange;
+    }
+
+    public class StateChange {
+        boolean valid = true;
+        @Nullable
+        String validationMessage;
+
+        public void addError(String validationMessage) {
+            valid = false;
+            this.validationMessage = validationMessage;
+        }
+
+        @Override
+        public String toString() {
+            return "StateChange [valid=" + valid + ", validationMessage=" + validationMessage + "]";
+        }
+
     }
 
 }

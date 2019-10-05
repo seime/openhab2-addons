@@ -50,7 +50,7 @@ sensibo.things:
 
 ```
 Bridge sensibo:account:home "Sensibo account" [apiKey="XYZASDASDAD", refreshInterval=120] {
-    Thing sensibosky office "Sensibo Sky Office" [ macAddress="00:11:22:33:44:55" ]
+    Thing sensibosky office "Sensibo Sky Office" [ macAddress="001122334455" ]
 }
 ```
 

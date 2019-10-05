@@ -35,7 +35,7 @@ public class GetPodsResponseTest extends AbstractSerializationDeserializationTes
         final Type type = new TypeToken<ArrayList<Pod>>() {
         }.getType();
 
-        final List<Pod> rsp = deSerializeResponse("/get_pods_response.json", type);
+        final List<Pod> rsp = wireHelper.deSerializeResponse("/get_pods_response.json", type);
 
         assertEquals(1, rsp.size());
         assertEquals("PODID", rsp.get(0).id);

@@ -13,10 +13,8 @@
 package org.openhab.binding.sensibo.internal.handler;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,8 +48,8 @@ import org.openhab.binding.sensibo.internal.dto.poddetails.GetPodsDetailsRequest
 import org.openhab.binding.sensibo.internal.dto.poddetails.PodDetails;
 import org.openhab.binding.sensibo.internal.dto.pods.GetPodsRequest;
 import org.openhab.binding.sensibo.internal.dto.pods.Pod;
+import org.openhab.binding.sensibo.internal.dto.setacstate.SetAcStatePropertyRequest;
 import org.openhab.binding.sensibo.internal.dto.setacstate.SetAcStateReponse;
-import org.openhab.binding.sensibo.internal.dto.setacstate.SetAcStateRequest;
 import org.openhab.binding.sensibo.internal.model.AcState;
 import org.openhab.binding.sensibo.internal.model.SensiboModel;
 import org.openhab.binding.sensibo.internal.model.SensiboSky;
@@ -118,7 +116,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
     @Override
     public void handleCommand(final ChannelUID channelUID, final Command command) {
-        logger.debug("Bridge does not support any commands, but received command " + command + " for channelUID "
+        logger.info("Bridge does not support any commands, but received command " + command + " for channelUID "
                 + channelUID);
     }
 
@@ -131,18 +129,18 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
                 model = refreshModel();
                 updateStatus(ThingStatus.ONLINE);
                 initPolling();
+                logger.debug("Initialization of Sensibo account completed successfully for {}", config);
             } catch (final SensiboCommunicationException e) {
+                logger.info(String.format("Error initializing Sensibo data: %s", e.getMessage()));
                 model = new SensiboModel(0); // Empty model
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                         "Error fetching initial data: " + e.getMessage());
-            } catch (final Exception e) {
-                model = new SensiboModel(0); // Empty model
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                        "Error fetching initial data: " + e.getMessage());
-                logger.debug("Error initializing Sensibo data", e);
+                // Reschedule init
+                scheduler.schedule(() -> {
+                    initialize();
+                }, 30, TimeUnit.SECONDS);
             }
         });
-        logger.debug("Finished initializing!");
     }
 
     @Override
@@ -165,8 +163,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
         }, config.refreshInterval, config.refreshInterval, TimeUnit.SECONDS);
     }
 
-    protected SensiboModel refreshModel()
-            throws SensiboCommunicationException, NoSuchAlgorithmException, UnsupportedEncodingException {
+    protected SensiboModel refreshModel() throws SensiboCommunicationException {
         final SensiboModel model = new SensiboModel(System.currentTimeMillis());
 
         final GetPodsRequest getPodsRequest = new GetPodsRequest();
@@ -209,7 +206,8 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
                                 + " and payload " + responseJson);
             }
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
-            throw new SensiboCommunicationException("Error sending request to Sensibo server", e);
+            throw new SensiboCommunicationException(
+                    String.format("Error sending request to Sensibo server: %s", e.getMessage()));
         }
     }
 
@@ -234,7 +232,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
                     updateThingStatuses();
                     success = true;
                     updateStatus(ThingStatus.ONLINE);
-                } catch (SensiboCommunicationException | NoSuchAlgorithmException | UnsupportedEncodingException e) {
+                } catch (SensiboCommunicationException e) {
                     logger.debug("Error updating Sensibo model do to {}, retries left {}", e.getMessage(), retriesLeft);
                 }
             }
@@ -255,22 +253,20 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
         }
     }
 
-    private Request buildGetPodsRequest(final GetPodsRequest req)
-            throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    private Request buildGetPodsRequest(final GetPodsRequest req) {
         final Request request = buildRequest(req);
 
         return request;
     }
 
-    private Request buildGetPodDetailsRequest(final GetPodsDetailsRequest getPodsDetailsRequest)
-            throws NoSuchAlgorithmException {
+    private Request buildGetPodDetailsRequest(final GetPodsDetailsRequest getPodsDetailsRequest) {
         final Request req = buildRequest(getPodsDetailsRequest);
         req.param("fields", "*");
 
         return req;
     }
 
-    private Request buildSetAcStateRequest(SetAcStateRequest setAcStateRequest) {
+    private Request buildSetAcStatePropertyRequest(SetAcStatePropertyRequest setAcStateRequest) {
         final Request req = buildRequest(setAcStateRequest);
 
         return req;
@@ -280,7 +276,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
         Request request = httpClient.newRequest(API_ENDPOINT + req.getRequestUrl()).param("apiKey", config.apiKey)
                 .method(req.getMethod());
 
-        if (req.getMethod() == HttpMethod.POST) {
+        if (!req.getMethod().contentEquals(HttpMethod.GET.asString())) { // POST, PATCH
             final String reqJson = gson.toJson(req);
             request = request.content(new BytesContentProvider(reqJson.getBytes(StandardCharsets.UTF_8)),
                     "application/json");
@@ -291,17 +287,16 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
         return request;
     }
 
-    public void updateSensiboSkyAcState(@Nullable final String macAddress, final AcState newStateInternalModel,
+    public void updateSensiboSkyAcState(@Nullable final String macAddress, String property, Object value,
             SensiboBaseThingHandler handler) {
         Optional<SensiboSky> optionalHeater = model.findSensiboSkyByMacAddress(macAddress);
         if (optionalHeater.isPresent()) {
             SensiboSky sensiboSky = optionalHeater.get();
             try {
-                org.openhab.binding.sensibo.internal.dto.poddetails.AcState acStateDto = new org.openhab.binding.sensibo.internal.dto.poddetails.AcState(
-                        newStateInternalModel);
-                SetAcStateRequest setAcStateRequest = new SetAcStateRequest(sensiboSky.getId(), acStateDto);
-                Request request = buildSetAcStateRequest(setAcStateRequest);
-                SetAcStateReponse response = sendRequest(request, setAcStateRequest,
+                SetAcStatePropertyRequest setAcStatePropertyRequest = new SetAcStatePropertyRequest(sensiboSky.getId(),
+                        property, value);
+                Request request = buildSetAcStatePropertyRequest(setAcStatePropertyRequest);
+                SetAcStateReponse response = sendRequest(request, setAcStatePropertyRequest,
                         new TypeToken<SetAcStateReponse>() {
                         }.getType());
 
@@ -312,4 +307,5 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
             }
         }
     }
+
 }

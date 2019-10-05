@@ -12,29 +12,27 @@
  */
 package org.openhab.binding.sensibo.internal;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
 import org.junit.Test;
-import org.openhab.binding.sensibo.internal.dto.poddetails.AcState;
-import org.openhab.binding.sensibo.internal.dto.setacstate.SetAcStateRequest;
+import org.openhab.binding.sensibo.internal.dto.setacstate.SetAcStatePropertyRequest;
 
 /**
  * @author Arne Seime - Initial contribution
  */
-public class SetAcStateRequestTest extends AbstractSerializationDeserializationTest {
+public class SetAcStatePropertyRequestTest extends AbstractSerializationDeserializationTest {
 
     @Test
     public void testSerializeDeserialize() throws IOException {
-        AcState acState = new AcState(true, "fanLevel", "C", 21, "mode", "swing");
-        SetAcStateRequest req = new SetAcStateRequest("PODID", acState);
+        SetAcStatePropertyRequest req = new SetAcStatePropertyRequest("PODID", "targetTemperature", "mode");
         String serializedJson = wireHelper.serialize(req);
 
-        final SetAcStateRequest deSerializedRequest = wireHelper.deSerializeFromString(serializedJson,
-                SetAcStateRequest.class);
-        assertNotNull(deSerializedRequest.acState);
-        assertTrue(deSerializedRequest.acState.on);
+        final SetAcStatePropertyRequest deSerializedRequest = wireHelper.deSerializeFromString(serializedJson,
+                SetAcStatePropertyRequest.class);
+
+        assertEquals("mode", deSerializedRequest.newValue);
     }
 
 }

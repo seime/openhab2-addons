@@ -25,7 +25,7 @@ import org.eclipse.smarthome.core.library.unit.SIUnits;
 public class AcState {
     private boolean on;
     private String fanLevel;
-    private Unit<@NonNull Temperature> temperatureUnit = SIUnits.CELSIUS;
+    private @NonNull Unit<Temperature> temperatureUnit = SIUnits.CELSIUS;
     private int targetTemperature;
     private String mode;
     private String swing;

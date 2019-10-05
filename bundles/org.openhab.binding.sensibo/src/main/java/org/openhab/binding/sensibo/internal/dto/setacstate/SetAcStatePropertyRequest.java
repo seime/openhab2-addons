@@ -12,29 +12,29 @@
  */
 package org.openhab.binding.sensibo.internal.dto.setacstate;
 
-import org.eclipse.jetty.http.HttpMethod;
 import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
-import org.openhab.binding.sensibo.internal.dto.poddetails.AcState;
 
 /**
  * @author Arne Seime - Initial contribution
  */
-public class SetAcStateRequest extends AbstractRequest {
-    public SetAcStateRequest(String podId, AcState acState) {
+public class SetAcStatePropertyRequest extends AbstractRequest {
+    public SetAcStatePropertyRequest(String podId, String property, Object value) {
         this.podId = podId;
-        this.acState = acState;
+        this.property = property;
+        this.newValue = value;
     }
 
     public transient String podId; // Transient fields are ignored by gson
-    public AcState acState;
+    public transient String property;
+    public Object newValue;
 
     @Override
     public String getRequestUrl() {
-        return String.format("/pods/%s/acStates", podId);
+        return String.format("/pods/%s/acStates/%s", podId, property);
     }
 
     @Override
     public String getMethod() {
-        return HttpMethod.POST.asString();
+        return "PATCH";
     }
 }

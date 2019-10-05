@@ -20,7 +20,6 @@ import javax.measure.Unit;
 import javax.measure.quantity.Temperature;
 
 import org.apache.commons.lang.StringUtils;
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.smarthome.core.library.unit.ImperialUnits;
 import org.eclipse.smarthome.core.library.unit.SIUnits;
 import org.openhab.binding.sensibo.internal.dto.poddetails.Measurement;
@@ -38,7 +37,7 @@ public class SensiboSky extends Pod {
     private final String firmwareVersion;
     private final String firmwareType;
     private final String serialNumber;
-    private Unit<@NonNull Temperature> temperatureUnit;
+    private Unit<Temperature> temperatureUnit;
     private final String originalTemperatureUnit;
     private final String productModel;
     private Boolean smartMode;
@@ -71,7 +70,9 @@ public class SensiboSky extends Pod {
         }
         this.productModel = dto.productModel;
 
-        this.acState = new AcState(dto.acState);
+        if (dto.acState != null) {
+            this.acState = new AcState(dto.acState);
+        }
 
         final Measurement lastMeasurement = dto.lastMeasurement;
         if (lastMeasurement != null) {
@@ -141,13 +142,18 @@ public class SensiboSky extends Pod {
         return remoteCapabilities;
     }
 
-    public ModeCapability getModeCapabilities() {
-        return remoteCapabilities.get(acState.getMode());
+    public ModeCapability getCurrentModeCapabilities() {
+        if (remoteCapabilities != null && acState != null && acState.getMode() != null) {
+            return remoteCapabilities.get(acState.getMode());
+        } else {
+            return null;
+        }
+
     }
 
     public List<Integer> getTargetTemperatures() {
         if (getRemoteCapabilities() != null && originalTemperatureUnit != null) {
-            return getModeCapabilities().temperatures.get(originalTemperatureUnit).validValues;
+            return getCurrentModeCapabilities().temperatures.get(originalTemperatureUnit).validValues;
         } else {
             return Collections.emptyList();
         }
