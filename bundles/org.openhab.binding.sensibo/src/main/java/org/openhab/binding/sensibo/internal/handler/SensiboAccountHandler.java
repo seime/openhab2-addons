@@ -44,6 +44,7 @@ import org.openhab.binding.sensibo.internal.SensiboCommunicationException;
 import org.openhab.binding.sensibo.internal.client.RequestLogger;
 import org.openhab.binding.sensibo.internal.config.SensiboAccountConfiguration;
 import org.openhab.binding.sensibo.internal.dto.AbstractRequest;
+import org.openhab.binding.sensibo.internal.dto.deletetimer.DeleteTimerRequest;
 import org.openhab.binding.sensibo.internal.dto.poddetails.GetPodsDetailsRequest;
 import org.openhab.binding.sensibo.internal.dto.poddetails.PodDetails;
 import org.openhab.binding.sensibo.internal.dto.pods.GetPodsRequest;
@@ -278,6 +279,11 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
         return req;
     }
 
+    private Request buildDeleteTimerRequest(DeleteTimerRequest deleteTimerRequest) {
+        final Request req = buildRequest(deleteTimerRequest);
+        return req;
+    }
+
     private Request buildRequest(final AbstractRequest req) {
         Request request = httpClient.newRequest(API_ENDPOINT + req.getRequestUrl()).param("apiKey", config.apiKey)
                 .method(req.getMethod());
@@ -314,22 +320,32 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
         }
     }
 
-    public void updateSensiboSkyTimer(@Nullable final String macAddress, int secondsFromNow) {
+    public void updateSensiboSkyTimer(@Nullable final String macAddress, @Nullable Integer secondsFromNow) {
         Optional<SensiboSky> optionalHeater = model.findSensiboSkyByMacAddress(macAddress);
         if (optionalHeater.isPresent()) {
             SensiboSky sensiboSky = optionalHeater.get();
             try {
+                if (secondsFromNow != null && secondsFromNow >= 60) {
+                    org.openhab.binding.sensibo.internal.dto.poddetails.AcState offState = new org.openhab.binding.sensibo.internal.dto.poddetails.AcState(
+                            sensiboSky.getAcState());
+                    offState.on = false;
 
-                org.openhab.binding.sensibo.internal.dto.poddetails.AcState offState = new org.openhab.binding.sensibo.internal.dto.poddetails.AcState(
-                        sensiboSky.getAcState());
-                offState.on = false;
+                    SetTimerRequest setTimerRequest = new SetTimerRequest(sensiboSky.getId(), secondsFromNow / 60,
+                            offState);
+                    Request request = buildSetTimerRequest(setTimerRequest);
+                    // No data in response
+                    sendRequest(request, setTimerRequest, new TypeToken<SetTimerReponse>() {
+                    }.getType());
 
-                SetTimerRequest setAcStatePropertyRequest = new SetTimerRequest(sensiboSky.getId(), secondsFromNow / 60,
-                        offState);
-                Request request = buildSetTimerRequest(setAcStatePropertyRequest);
-                // No data in response
-                sendRequest(request, setAcStatePropertyRequest, new TypeToken<SetTimerReponse>() {
-                }.getType());
+                } else {
+                    DeleteTimerRequest setTimerRequest = new DeleteTimerRequest(sensiboSky.getId());
+                    Request request = buildDeleteTimerRequest(setTimerRequest);
+                    // No data in response
+                    sendRequest(request, setTimerRequest, new TypeToken<SetTimerReponse>() {
+                    }.getType());
+
+                }
+
             } catch (SensiboCommunicationException e) {
                 logger.debug("Error setting timer for {}", macAddress, e);
             }

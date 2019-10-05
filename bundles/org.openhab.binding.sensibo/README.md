@@ -43,7 +43,7 @@ Or you can find it during discovery.
 | mode                | R/W           | String                | Current mode (cool, heat, etc, actual modes provided provided by the API) being active |
 | fanLevel            | R/W           | String                | Current fan level (low, auto etc, actual levels provided provided by the API |
 | swingMode           | R/W           | String                | Current swing mode (actual modes provided provided by the API |
-| timer               | R/W           | Number                | Number of seconds until AC is switched off automatically |
+| timer               | R/W           | Number                | Number of seconds until AC is switched off automatically. Setting to a value less than 60 seconds will cancel timer |
 
 ## Full Example
 

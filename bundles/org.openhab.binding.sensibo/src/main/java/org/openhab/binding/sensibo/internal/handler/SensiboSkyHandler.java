@@ -102,7 +102,7 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
         }
     }
 
-    private void updateTimer(SensiboSky sensiboSky, int secondsFromNowUntilSwitchOff) {
+    private void updateTimer(SensiboSky sensiboSky, @Nullable Integer secondsFromNowUntilSwitchOff) {
         final SensiboAccountHandler accountHandler = getAccountHandler();
         if (accountHandler != null) {
             accountHandler.updateSensiboSkyTimer(config.macAddress, secondsFromNowUntilSwitchOff);
@@ -169,7 +169,7 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
                     }
                 } else if (CHANNEL_TIMER.equals(channelUID.getId())) {
                     if (command instanceof RefreshType) {
-                        if (unit.getTimer() != null && unit.getTimer().secondsRemaining >= 60) {
+                        if (unit.getTimer() != null && unit.getTimer().secondsRemaining > 0) {
                             updateState(channelUID, new DecimalType(unit.getTimer().secondsRemaining));
                         } else {
                             updateState(channelUID, UnDefType.UNDEF);
@@ -177,6 +177,8 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
                     } else if (command instanceof DecimalType) {
                         final DecimalType newValue = (DecimalType) command;
                         updateTimer(unit, newValue.intValue());
+                    } else {
+                        updateTimer(unit, null);
                     }
                 }
             } else {
