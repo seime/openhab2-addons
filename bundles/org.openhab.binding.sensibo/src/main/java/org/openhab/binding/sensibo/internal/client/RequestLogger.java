@@ -71,7 +71,8 @@ public final class RequestLogger {
                 if (contentBuffer.length() > 0) {
                     group.append("\n" + contentBuffer.toString());
                 }
-                logger.debug(group.toString());
+                String debugStatement = group.toString();
+                logger.debug(debugStatement);
                 contentBuffer.delete(0, contentBuffer.length());
                 group.delete(0, group.length());
             });
@@ -94,7 +95,8 @@ public final class RequestLogger {
                 if (contentBuffer.length() > 0) {
                     group.append("\n" + contentBuffer.toString());
                 }
-                logger.debug(group.toString());
+                String debugStatement = group.toString();
+                logger.debug(debugStatement);
             });
         }
     }

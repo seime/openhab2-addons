@@ -118,8 +118,8 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
 
     @Override
     public void handleCommand(final ChannelUID channelUID, final Command command) {
-        logger.info("Bridge does not support any commands, but received command " + command + " for channelUID "
-                + channelUID);
+        logger.info("Bridge does not support any commands, but received command {} for channelUID {}", command,
+                channelUID);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class SensiboAccountHandler extends BaseBridgeHandler {
                 initPolling();
                 logger.debug("Initialization of Sensibo account completed successfully for {}", config);
             } catch (final SensiboCommunicationException e) {
-                logger.info(String.format("Error initializing Sensibo data: %s", e.getMessage()));
+                logger.info("Error initializing Sensibo data: {}", e.getMessage());
                 model = new SensiboModel(0); // Empty model
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                         "Error fetching initial data: " + e.getMessage());
