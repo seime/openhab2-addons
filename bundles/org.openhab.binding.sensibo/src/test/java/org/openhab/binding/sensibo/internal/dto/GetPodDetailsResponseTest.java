@@ -96,7 +96,7 @@ public class GetPodDetailsResponseTest extends AbstractSerializationDeserializat
         assertTrue(acState.on);
         assertEquals("medium_high", acState.fanLevel);
         assertEquals("C", acState.temperatureUnit);
-        assertEquals(21, acState.targetTemperature);
+        assertEquals(21, acState.targetTemperature.intValue());
         assertEquals("heat", acState.mode);
         assertEquals("rangeFull", acState.swing);
 

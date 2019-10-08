@@ -26,11 +26,11 @@ public class AcState {
     public boolean on;
     public String fanLevel;
     public String temperatureUnit;
-    public int targetTemperature;
+    public Integer targetTemperature;
     public String mode;
     public String swing;
 
-    public AcState(boolean on, String fanLevel, String temperatureUnit, int targetTemperature, String mode,
+    public AcState(boolean on, String fanLevel, String temperatureUnit, Integer targetTemperature, String mode,
             String swing) {
         this.on = on;
         this.fanLevel = fanLevel;

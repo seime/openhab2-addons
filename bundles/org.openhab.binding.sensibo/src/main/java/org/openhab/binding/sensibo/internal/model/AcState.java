@@ -26,7 +26,7 @@ public class AcState {
     private boolean on;
     private String fanLevel;
     private @NonNull Unit<Temperature> temperatureUnit = SIUnits.CELSIUS;
-    private int targetTemperature;
+    private Integer targetTemperature;
     private String mode;
     private String swing;
 
@@ -77,7 +77,7 @@ public class AcState {
         return temperatureUnit;
     }
 
-    public int getTargetTemperature() {
+    public Integer getTargetTemperature() {
         return targetTemperature;
     }
 
@@ -101,7 +101,7 @@ public class AcState {
         this.temperatureUnit = temperatureUnit;
     }
 
-    public void setTargetTemperature(final int targetTemperature) {
+    public void setTargetTemperature(final Integer targetTemperature) {
         this.targetTemperature = targetTemperature;
     }
 
