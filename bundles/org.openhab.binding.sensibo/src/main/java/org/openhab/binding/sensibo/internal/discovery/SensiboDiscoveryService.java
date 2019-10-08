@@ -82,7 +82,7 @@ public class SensiboDiscoveryService extends AbstractDiscoveryService {
             } catch (final Exception e) {
                 logger.debug("Error during discovery: {}", e.getMessage());
             } finally {
-                removeOlderResults(getTimestampOfLastScan());
+                removeOlderResults(getTimestampOfLastScan(), null, accountHandler.getThing().getUID());
             }
         }
     }
