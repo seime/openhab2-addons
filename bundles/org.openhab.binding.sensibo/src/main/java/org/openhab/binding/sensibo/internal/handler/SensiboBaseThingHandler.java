@@ -40,7 +40,7 @@ public abstract class SensiboBaseThingHandler extends BaseThingHandler {
         }
     }
 
-    protected SensiboModel getSensiboModel() {
+    public SensiboModel getSensiboModel() {
         final SensiboAccountHandler accountHandler = getAccountHandler();
         if (accountHandler != null) {
             return accountHandler.getModel();

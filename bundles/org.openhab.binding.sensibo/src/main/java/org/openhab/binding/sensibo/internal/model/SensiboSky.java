@@ -172,11 +172,14 @@ public class SensiboSky extends Pod {
     }
 
     public List<Integer> getTargetTemperatures() {
-        if (getRemoteCapabilities() != null && originalTemperatureUnit != null) {
-            return getCurrentModeCapabilities().temperatures.get(originalTemperatureUnit).validValues;
-        } else {
-            return Collections.emptyList();
+        if (getCurrentModeCapabilities() != null && originalTemperatureUnit != null) {
+            org.openhab.binding.sensibo.internal.dto.poddetails.Temperature selectedTemperatureRange = getCurrentModeCapabilities().temperatures
+                    .get(originalTemperatureUnit);
+            if (selectedTemperatureRange != null) {
+                return selectedTemperatureRange.validValues;
+            }
         }
+        return Collections.emptyList();
     }
 
     /**

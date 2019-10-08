@@ -229,42 +229,7 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
 
         generatedChannelTypes.clear();
 
-        final ModeCapability capabilities = sensiboSky.getCurrentModeCapabilities();
-        if (capabilities != null) {
-
-            final List<Integer> targetTemperatures = sensiboSky.getTargetTemperatures();
-
-            final ChannelTypeUID modeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_MODE, "Mode",
-                    "String", sensiboSky.getRemoteCapabilities().keySet(), null, null);
-            newChannels.add(ChannelBuilder
-                    .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_MODE), "String")
-                    .withType(modeChannelType).build());
-
-            final ChannelTypeUID swingModeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_SWING_MODE,
-                    "Swing Mode", "String", capabilities.swingModes, null, null);
-            newChannels.add(ChannelBuilder
-                    .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_SWING_MODE), "String")
-                    .withType(swingModeChannelType).build());
-
-            final ChannelTypeUID fanLevelChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_FAN_LEVEL,
-                    "Fan Level", "String", capabilities.fanLevels, null, null);
-            newChannels.add(ChannelBuilder
-                    .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_FAN_LEVEL), "String")
-                    .withType(fanLevelChannelType).build());
-
-            final ChannelTypeUID targetTemperatureChannelType = addChannelType(
-                    SensiboBindingConstants.CHANNEL_TYPE_TARGET_TEMPERATURE, "Target Temperature", "Number:Temperature",
-                    targetTemperatures, "%d %unit%", "TargetTemperature");
-            newChannels
-                    .add(ChannelBuilder
-                            .create(new ChannelUID(getThing().getUID(),
-                                    SensiboBindingConstants.CHANNEL_TARGET_TEMPERATURE), "Number:Temperature")
-                            .withType(targetTemperatureChannelType).build());
-
-            dynamicChannelsInitialized = true;
-        } else {
-            dynamicChannelsInitialized = false;
-        }
+        newChannels.addAll(createDynamicChannels(sensiboSky));
 
         // Add properties
         final Map<String, String> properties = new HashMap<>();
@@ -277,6 +242,38 @@ public class SensiboSkyHandler extends SensiboBaseThingHandler implements Channe
         updateThing(editThing().withChannels(newChannels).withProperties(properties).build());
 
         return dynamicChannelsInitialized;
+    }
+
+    public List<Channel> createDynamicChannels(final SensiboSky sensiboSky) {
+        final List<Channel> newChannels = new ArrayList<>();
+        final ModeCapability capabilities = sensiboSky.getCurrentModeCapabilities();
+        final ChannelTypeUID modeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_MODE, "Mode",
+                "String", sensiboSky.getRemoteCapabilities().keySet(), null, null);
+        newChannels.add(ChannelBuilder
+                .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_MODE), "String")
+                .withType(modeChannelType).build());
+
+        final ChannelTypeUID swingModeChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_SWING_MODE,
+                "Swing Mode", "String", capabilities.swingModes, null, null);
+        newChannels.add(ChannelBuilder
+                .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_SWING_MODE), "String")
+                .withType(swingModeChannelType).build());
+
+        final ChannelTypeUID fanLevelChannelType = addChannelType(SensiboBindingConstants.CHANNEL_TYPE_FAN_LEVEL,
+                "Fan Level", "String", capabilities.fanLevels, null, null);
+        newChannels.add(ChannelBuilder
+                .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_FAN_LEVEL), "String")
+                .withType(fanLevelChannelType).build());
+
+        final ChannelTypeUID targetTemperatureChannelType = addChannelType(
+                SensiboBindingConstants.CHANNEL_TYPE_TARGET_TEMPERATURE, "Target Temperature", "Number:Temperature",
+                sensiboSky.getTargetTemperatures(), "%d %unit%", "TargetTemperature");
+        newChannels.add(ChannelBuilder
+                .create(new ChannelUID(getThing().getUID(), SensiboBindingConstants.CHANNEL_TARGET_TEMPERATURE),
+                        "Number:Temperature")
+                .withType(targetTemperatureChannelType).build());
+
+        return newChannels;
     }
 
     private ChannelTypeUID addChannelType(final String channelTypePrefix, final String label, final String itemType,

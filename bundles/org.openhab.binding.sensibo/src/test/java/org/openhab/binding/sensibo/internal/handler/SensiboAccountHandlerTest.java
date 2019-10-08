@@ -70,20 +70,29 @@ public class SensiboAccountHandlerTest {
     }
 
     @Test
-    public void testInitialize() throws InterruptedException, IOException {
+    public void testInitialize1() throws InterruptedException, IOException {
+        testInitialize("/get_pods_response.json", "/get_pod_details_response.json");
+    }
+
+    @Test
+    public void testInitializeMarco() throws InterruptedException, IOException {
+        testInitialize("/get_pods_response.json", "/get_pod_details_response_marco.json");
+    }
+
+    private void testInitialize(String podsResponse, String podDetailsResponse)
+            throws InterruptedException, IOException {
         // Setup account
         final SensiboAccountConfiguration accountConfig = new SensiboAccountConfiguration();
         accountConfig.apiKey = "APIKEY";
         when(configuration.as(eq(SensiboAccountConfiguration.class))).thenReturn(accountConfig);
 
         // Setup initial response
-        final String getPodsResponse = IOUtils.toString(getClass().getResourceAsStream("/get_pods_response.json"));
+        final String getPodsResponse = IOUtils.toString(getClass().getResourceAsStream(podsResponse));
         stubFor(get(urlEqualTo("/api/v2/users/me/pods?apiKey=APIKEY"))
                 .willReturn(aResponse().withStatus(200).withBody(getPodsResponse)));
 
         // Setup 2nd response with details
-        final String getPodDetailsResponse = IOUtils
-                .toString(getClass().getResourceAsStream("/get_pod_details_response.json"));
+        final String getPodDetailsResponse = IOUtils.toString(getClass().getResourceAsStream(podDetailsResponse));
         stubFor(get(urlEqualTo("/api/v2/pods/PODID?apiKey=APIKEY&fields=*"))
                 .willReturn(aResponse().withStatus(200).withBody(getPodDetailsResponse)));
 

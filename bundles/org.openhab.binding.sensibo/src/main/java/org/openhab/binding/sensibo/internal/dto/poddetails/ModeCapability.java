@@ -12,6 +12,8 @@
  */
 package org.openhab.binding.sensibo.internal.dto.poddetails;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +24,7 @@ import com.google.gson.annotations.SerializedName;
  */
 public class ModeCapability {
     @SerializedName("swing")
-    public List<String> swingModes;
-    public Map<String, Temperature> temperatures;
-    public List<String> fanLevels;
+    public List<String> swingModes = new ArrayList<>();
+    public Map<String, Temperature> temperatures = new HashMap<String, Temperature>();
+    public List<String> fanLevels = new ArrayList<>();
 }
