@@ -64,6 +64,7 @@ import org.openhab.binding.millheat.internal.dto.SelectDeviceByRoomResponse;
 import org.openhab.binding.millheat.internal.dto.SelectRoomByHomeRequest;
 import org.openhab.binding.millheat.internal.dto.SelectRoomByHomeResponse;
 import org.openhab.binding.millheat.internal.dto.SetDeviceTempRequest;
+import org.openhab.binding.millheat.internal.dto.SetDeviceTempResponse;
 import org.openhab.binding.millheat.internal.dto.SetHolidayParameterRequest;
 import org.openhab.binding.millheat.internal.dto.SetHolidayParameterResponse;
 import org.openhab.binding.millheat.internal.dto.SetRoomTempRequest;
@@ -418,7 +419,7 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
             }
             final SetDeviceTempRequest req = new SetDeviceTempRequest(heater, setTemp, masterOnOff, fanActive);
             try {
-                sendLoggedInRequest(req, SetRoomTempResponse.class);
+                sendLoggedInRequest(req, SetDeviceTempResponse.class);
                 heater.setTargetTemp(setTemp);
                 heater.setPowerStatus(masterOnOff);
                 heater.setFanActive(fanActive);
