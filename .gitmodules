@@ -1,0 +1,3 @@
+[submodule "jrule"]
+	path = bundles/org.openhab.automation.jrule/
+	url = git@github.com:seime/jrule.git
