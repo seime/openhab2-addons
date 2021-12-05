@@ -25,3 +25,6 @@ features/**/src/main/feature
 .factorypath
 pom.xml.versionsBackup
 .openapi-generator
+
+bundles/org.openhab.automation.jrule/
+
