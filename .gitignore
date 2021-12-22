@@ -28,3 +28,7 @@ pom.xml.versionsBackup
 
 bundles/org.openhab.automation.jrule/
 
+.metals
+.vim
+shell.nix
+tags
