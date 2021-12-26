@@ -132,7 +132,7 @@
 		<state readOnly="true" pattern="%.1f %unit%"/>
 	</channel-type>
 	<channel-type id="waterconsumption">
-		<item-type>Number</item-type>
+		<item-type>Number:Volume</item-type>
 		<label>Water Consumption</label>
 		<description>The amount of water consumed in the given time period.</description>
 		<state readOnly="true"/>
