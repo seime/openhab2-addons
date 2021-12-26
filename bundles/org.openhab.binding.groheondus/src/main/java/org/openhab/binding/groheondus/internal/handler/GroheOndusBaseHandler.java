@@ -48,10 +48,7 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
         this.applianceType = applianceType;
     }
 
-    @Override
-    public void initialize() {
-        config = getConfigAs(GroheOndusApplianceConfiguration.class);
-
+    protected void schedulePolling() {
         OndusService ondusService = getOndusService();
         if (ondusService == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE,
@@ -67,7 +64,12 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
         }
         int pollingInterval = getPollingInterval(appliance);
         scheduler.scheduleWithFixedDelay(this::updateChannels, 0, pollingInterval, TimeUnit.SECONDS);
+        logger.debug("Scheduled polling every {}s for appliance {}", pollingInterval, appliance.toString());
+    }
 
+    @Override
+    public void initialize() {
+        config = getConfigAs(GroheOndusApplianceConfiguration.class);
         updateStatus(ThingStatus.UNKNOWN);
     }
 
@@ -91,6 +93,7 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
     }
 
     public void updateChannels() {
+        logger.debug("Updating channels for appliance");
         OndusService ondusService = getOndusService();
         if (ondusService == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE,
@@ -101,6 +104,7 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
         @Nullable
         T appliance = getAppliance(ondusService);
         if (appliance == null) {
+            logger.debug("Updating channels failed since appliance is null");
             return;
         }
 
@@ -142,12 +146,18 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
     protected @Nullable T getAppliance(OndusService ondusService) {
         try {
             BaseAppliance appliance = ondusService.getAppliance(getRoom(), config.applianceId).orElse(null);
-            if (appliance.getType() != getType()) {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                        "Thing is not a GROHE SENSE Guard device.");
-                return null;
+            if (appliance != null) {
+                if (appliance.getType() != getType()) {
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                            "Thing is not a GROHE SENSE Guard device.");
+                    return null;
+                }
+                return (T) appliance;
+            } else {
+                logger.debug("getAppliance {} in room {} returned null", config.applianceId, getRoom().getId());
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Error retrieving appliance data from service");
             }
-            return (T) appliance;
+
         } catch (IOException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
             logger.debug("Could not load appliance", e);

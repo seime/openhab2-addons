@@ -151,7 +151,7 @@ public class GroheOndusAccountHandler extends BaseBridgeHandler {
             scheduler.submit(() -> getThing().getThings().forEach(thing -> {
                 GroheOndusBaseHandler thingHandler = (GroheOndusBaseHandler) thing.getHandler();
                 if (thingHandler != null) {
-                    thingHandler.updateChannels();
+                    thingHandler.schedulePolling();
                 }
             }));
         } catch (LoginException e) {
