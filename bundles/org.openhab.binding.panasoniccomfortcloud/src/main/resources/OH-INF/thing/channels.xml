@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="panasoniccomfortcloud"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<channel-type id="masterSwitch">
+		<item-type>Switch</item-type>
+		<label>Master Switch</label>
+	</channel-type>
+	<channel-type id="currentIndoorTemperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Current Indoor Temperature</label>
+		<category>Temperature</category>
+		<state readOnly="true" pattern="%.1f %unit%"/>
+	</channel-type>
+	<channel-type id="currentOutdoorTemperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Current Outdoor Temperature</label>
+		<category>Temperature</category>
+		<state readOnly="true" pattern="%.1f %unit%"/>
+	</channel-type>
+	<channel-type id="targetTemperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Target Temperature</label>
+		<category>Temperature</category>
+		<state readOnly="false" pattern="%.1f %unit%"/>
+	</channel-type>
+	<channel-type id="operationMode">
+		<item-type>String</item-type>
+		<label>Operation mode</label>
+		<state readOnly="false" pattern="%s"/>
+	</channel-type>
+	<channel-type id="airSwingAutoMode">
+		<item-type>String</item-type>
+		<label>Auto air swing mode</label>
+		<state readOnly="false" pattern="%s"/>
+	</channel-type>
+	<channel-type id="airSwingHorizontal">
+		<item-type>String</item-type>
+		<label>Air swing horizontal (left/right)</label>
+		<state readOnly="false" pattern="%s"/>
+	</channel-type>
+	<channel-type id="airSwingVertical">
+		<item-type>String</item-type>
+		<label>Air swing vertical (up/down)</label>
+		<state readOnly="false" pattern="%s"/>
+	</channel-type>
+	<channel-type id="ecoMode">
+		<item-type>String</item-type>
+		<label>Eco mode</label>
+		<state readOnly="false" pattern="%s"/>
+	</channel-type>
+	<channel-type id="fanSpeed">
+		<item-type>String</item-type>
+		<label>Fan speed</label>
+		<state readOnly="false" pattern="%s"/>
+	</channel-type>
+	<channel-type id="nanoe">
+		<item-type>String</item-type>
+		<label>nanoe(TM) mode</label>
+		<state readOnly="false" pattern="%s"/>
+	</channel-type>
+	<channel-type id="actualNanoe">
+		<item-type>String</item-type>
+		<label>Actual nanoe(TM) mode</label>
+		<state readOnly="false" pattern="%s"/>
+	</channel-type>
+</thing:thing-descriptions>
