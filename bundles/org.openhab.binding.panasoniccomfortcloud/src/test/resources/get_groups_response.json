@@ -1,0 +1,153 @@
+{
+  "iaqStatus": {
+    "statusCode": 200
+  },
+  "uiFlg": false,
+  "groupCount": 1,
+  "groupList": [
+    {
+      "groupId": 235435,
+      "groupName": "Hjemme",
+      "deviceList": [
+        {
+          "deviceGuid": "CS-TZ25WKEW+4757824462",
+          "deviceType": "3",
+          "deviceName": "Soverom",
+          "permission": 3,
+          "deviceModuleNumber": "CS-TZ25WKEW",
+          "deviceHashGuid": "dc12a89e834a0693c04b6ac15a4dadb17840a32083d2af5b319bd6d55300d4cf",
+          "summerHouse": 0,
+          "iAutoX": false,
+          "nanoe": false,
+          "nanoeStandAlone": false,
+          "autoMode": true,
+          "heatMode": true,
+          "fanMode": false,
+          "dryMode": true,
+          "coolMode": true,
+          "ecoNavi": false,
+          "powerfulMode": true,
+          "quietMode": true,
+          "airSwingLR": true,
+          "autoSwingUD": false,
+          "ecoFunction": 0,
+          "temperatureUnit": 0,
+          "modeAvlList": {
+            "autoMode": 1,
+            "fanMode": 1
+          },
+          "coordinableFlg": false,
+          "parameters": {
+            "operate": 1,
+            "operationMode": 3,
+            "temperatureSet": 16.0,
+            "fanSpeed": 0,
+            "fanAutoMode": 3,
+            "airSwingLR": 2,
+            "airSwingUD": 0,
+            "ecoMode": 2,
+            "ecoNavi": 0,
+            "nanoe": 0,
+            "iAuto": 0,
+            "actualNanoe": 0,
+            "airDirection": 1,
+            "ecoFunctionData": 0,
+            "lastSettingMode": 0
+          }
+        },
+        {
+          "deviceGuid": "CS-TZ25WKEW+4757824248",
+          "deviceType": "3",
+          "deviceName": "Marie",
+          "permission": 3,
+          "deviceModuleNumber": "CS-TZ25WKEW",
+          "deviceHashGuid": "b9f941508811f834df42c921849f3a0c234ef05549e85f5b32e7ad668187702b",
+          "summerHouse": 0,
+          "iAutoX": false,
+          "nanoe": false,
+          "nanoeStandAlone": false,
+          "autoMode": true,
+          "heatMode": true,
+          "fanMode": false,
+          "dryMode": true,
+          "coolMode": true,
+          "ecoNavi": false,
+          "powerfulMode": true,
+          "quietMode": true,
+          "airSwingLR": true,
+          "autoSwingUD": false,
+          "ecoFunction": 0,
+          "temperatureUnit": 0,
+          "modeAvlList": {
+            "autoMode": 1,
+            "fanMode": 1
+          },
+          "coordinableFlg": false,
+          "parameters": {
+            "operate": 1,
+            "operationMode": 3,
+            "temperatureSet": 16.5,
+            "fanSpeed": 0,
+            "fanAutoMode": 3,
+            "airSwingLR": 2,
+            "airSwingUD": 1,
+            "ecoMode": 0,
+            "ecoNavi": 0,
+            "nanoe": 0,
+            "iAuto": 0,
+            "actualNanoe": 0,
+            "airDirection": 1,
+            "ecoFunctionData": 0,
+            "lastSettingMode": 0
+          }
+        },
+        {
+          "deviceGuid": "CS-TZ25WKEW+4757824637",
+          "deviceType": "3",
+          "deviceName": "Victoria",
+          "permission": 3,
+          "deviceModuleNumber": "CS-TZ25WKEW",
+          "deviceHashGuid": "e1f9f49cc23fd268817ff18b8b057455c98199dc7714ef55cbe1f9021c5e3337",
+          "summerHouse": 0,
+          "iAutoX": false,
+          "nanoe": false,
+          "nanoeStandAlone": false,
+          "autoMode": true,
+          "heatMode": true,
+          "fanMode": false,
+          "dryMode": true,
+          "coolMode": true,
+          "ecoNavi": false,
+          "powerfulMode": true,
+          "quietMode": true,
+          "airSwingLR": true,
+          "autoSwingUD": false,
+          "ecoFunction": 0,
+          "temperatureUnit": 0,
+          "modeAvlList": {
+            "autoMode": 1,
+            "fanMode": 1
+          },
+          "coordinableFlg": false,
+          "parameters": {
+            "operate": 1,
+            "operationMode": 3,
+            "temperatureSet": 20.0,
+            "fanSpeed": 0,
+            "fanAutoMode": 3,
+            "airSwingLR": 2,
+            "airSwingUD": 1,
+            "ecoMode": 0,
+            "ecoNavi": 0,
+            "nanoe": 0,
+            "iAuto": 0,
+            "actualNanoe": 0,
+            "airDirection": 1,
+            "ecoFunctionData": 0,
+            "lastSettingMode": 0
+          }
+        }
+      ]
+    }
+  ]
+}
