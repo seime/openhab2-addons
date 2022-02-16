@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2021 Contributors to the openHAB project
+ * Copyright (c) 2010-2022 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -106,8 +106,12 @@ abstract public class AbstractAirthingsHandler extends BeaconBluetoothHandler {
     }
 
     private void executePeridioc() {
-        sinceLastReadSec.addAndGet(CHECK_PERIOD_SEC);
-        execute();
+        try {
+            sinceLastReadSec.addAndGet(CHECK_PERIOD_SEC);
+            execute();
+        } catch (Exception e) { // catch all to avoid scheduleWithFixedDelay being suppressed
+            logger.warn("Failed to read Airthings device", e);
+        }
     }
 
     private synchronized void execute() {
