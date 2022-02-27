@@ -52,6 +52,7 @@ import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
 import org.openhab.core.types.State;
+import org.openhab.core.types.UnDefType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,45 +88,51 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
 
     @Override
     protected void handleCommand(final ChannelUID channelUID, final Command command, final Device device) {
-        switch (channelUID.getId()) {
-            case CHANNEL_CURRENT_INDOOR_TEMPERATURE:
-                handleCurrentIndoorTemperatureCommand(channelUID, command, device);
-                break;
-            case CHANNEL_CURRENT_OUTDOOR_TEMPERATURE:
-                handleCurrentOutdoorTemperatureCommand(channelUID, command, device);
-                break;
-            case CHANNEL_MASTER_SWITCH:
-                handleMasterSwitchCommand(channelUID, command, device);
-                break;
-            case CHANNEL_OPERATION_MODE:
-                handleOperatingModeCommand(channelUID, command, device);
-                break;
-            case CHANNEL_ECO_MODE:
-                handleEcoModeCommand(channelUID, command, device);
-                break;
-            case CHANNEL_FAN_SPEED:
-                handleFanLevelCommand(channelUID, command, device);
-                break;
-            case CHANNEL_AIR_SWING_AUTO_MODE:
-                handleFanAutoModeCommand(channelUID, command, device);
-                break;
-            case CHANNEL_TARGET_TEMPERATURE:
-                handleTargetTemperatureCommand(channelUID, command, device);
-                break;
-            case CHANNEL_AIR_SWING_HORIZONTAL:
-                handleHorizontalSwingCommand(channelUID, command, device);
-                break;
-            case CHANNEL_AIR_SWING_VERTICAL:
-                handleVerticalSwingCommand(channelUID, command, device);
-                break;
-            case CHANNEL_NANOE:
-                handleNanoeCommand(channelUID, command, device);
-                break;
-            case CHANNEL_ACTUAL_NANOE:
-                handleActualNanoeCommand(channelUID, command, device);
-                break;
-            default:
-                logger.debug("Received command on unknown channel {}, ignoring", channelUID.getId());
+        if (device.isInitialized()) {
+            switch (channelUID.getId()) {
+                case CHANNEL_CURRENT_INDOOR_TEMPERATURE:
+                    handleCurrentIndoorTemperatureCommand(channelUID, command, device);
+                    break;
+                case CHANNEL_CURRENT_OUTDOOR_TEMPERATURE:
+                    handleCurrentOutdoorTemperatureCommand(channelUID, command, device);
+                    break;
+                case CHANNEL_MASTER_SWITCH:
+                    handleMasterSwitchCommand(channelUID, command, device);
+                    break;
+                case CHANNEL_OPERATION_MODE:
+                    handleOperatingModeCommand(channelUID, command, device);
+                    break;
+                case CHANNEL_ECO_MODE:
+                    handleEcoModeCommand(channelUID, command, device);
+                    break;
+                case CHANNEL_FAN_SPEED:
+                    handleFanLevelCommand(channelUID, command, device);
+                    break;
+                case CHANNEL_AIR_SWING_AUTO_MODE:
+                    handleFanAutoModeCommand(channelUID, command, device);
+                    break;
+                case CHANNEL_TARGET_TEMPERATURE:
+                    handleTargetTemperatureCommand(channelUID, command, device);
+                    break;
+                case CHANNEL_AIR_SWING_HORIZONTAL:
+                    handleHorizontalSwingCommand(channelUID, command, device);
+                    break;
+                case CHANNEL_AIR_SWING_VERTICAL:
+                    handleVerticalSwingCommand(channelUID, command, device);
+                    break;
+                case CHANNEL_NANOE:
+                    handleNanoeCommand(channelUID, command, device);
+                    break;
+                case CHANNEL_ACTUAL_NANOE:
+                    handleActualNanoeCommand(channelUID, command, device);
+                    break;
+                default:
+                    logger.debug("Received command on unknown channel {}, ignoring", channelUID.getId());
+            }
+        } else {
+            logger.debug("Received command {} for device {} on channel {}, but devices is not yet initialized", command,
+                    device.getDeviceId(), channelUID);
+            updateState(channelUID, UnDefType.UNDEF);
         }
     }
 
