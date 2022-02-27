@@ -82,17 +82,17 @@ panasoniccomfortcloud.items:
 
 ```
 Switch masterSwitch "AC on/off" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:masterSwitch"}
-Number:Temperature currentIndoorTemperature "Inside temperature" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:currentIndoorTemperature"}
-Number:Temperature currentOutdoorTemperature "Outside temperature" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:currentOutdoorTemperature"}
-Number:Temperature targetTemperature "Target temperature" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:targetTemperature"}
-
 String operationMode "Mode" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:operationMode"}
+Number:Temperature targetTemperature "Target temperature" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:targetTemperature"}
+String ecoMode "Eco mode" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:ecoMode"}
+
 String airSwingAutoMode "Air swing auto mode" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:airSwingAutoMode"}
 String airSwingVertical "Vertical air direction" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:airSwingVertical"}
 String airSwingHorizontal "Horizontal air direction" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:airSwingHorizontal"}
-
-String ecoMode "Eco mode" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:ecoMode"}
 String fanSpeed "Fan speed" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:fanSpeed"}
+
+Number:Temperature currentIndoorTemperature "Inside temperature" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:currentIndoorTemperature"}
+Number:Temperature currentOutdoorTemperature "Outside temperature" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:currentOutdoorTemperature"}
 
 String nanoe "Nanoe" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:nanoe"}
 String actualNanoe "Actual Nanoe" {channel="panasoniccomfortcloud:aircondition:accountName:bedroom1:actualNanoe"}
