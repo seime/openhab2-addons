@@ -58,6 +58,8 @@ public class Device {
 
     private Parameters currentParameters;
 
+    private boolean isInitialized = false;
+
     public Device(Group group) {
         this.group = group;
     }
@@ -84,6 +86,7 @@ public class Device {
         this.coolRange = new TemperatureRange(dto.coolTempMin, dto.coolTempMax);
 
         this.lastUpdated = Instant.ofEpochMilli(dto.timestamp);
+        this.isInitialized = true;
     }
 
     public boolean isAlive() {
@@ -186,5 +189,9 @@ public class Device {
             properties.put("allowedTemperatureRangeCoolMode", coolRange.toString());
 
         return properties;
+    }
+
+    public boolean isInitialized() {
+        return isInitialized;
     }
 }

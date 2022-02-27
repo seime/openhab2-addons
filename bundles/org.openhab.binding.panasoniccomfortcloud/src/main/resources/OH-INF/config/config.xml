@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config-description:config-descriptions
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
-	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
+        xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0
 https://openhab.org/schemas/config-description-1.0.0.xsd">
 
-	<config-description uri="thing-type:panasoniccomfortcloud:account">
-		<parameter name="username" type="text" required="true">
-			<label>Username</label>
-			<description>Your Panasonic Comfort Cloud app username</description>
-		</parameter>
-		<parameter name="password" type="text" required="true">
-			<label>Password</label>
-			<description>Your Panasonic Comfort Cloud app password</description>
-		</parameter>
+  <config-description uri="thing-type:panasoniccomfortcloud:account">
+    <parameter name="username" type="text" required="true">
+      <label>Username</label>
+      <description>Your Panasonic Comfort Cloud app username</description>
+    </parameter>
+    <parameter name="password" type="text" required="true">
+      <label>Password</label>
+      <description>Your Panasonic Comfort Cloud app password</description>
+    </parameter>
 
-		<parameter name="refreshInterval" type="integer" min="30" unit="s">
-			<label>Refresh Interval</label>
-			<description>How often in seconds to fetch updates from Panasonic Comfort Cloud service (polling interval)</description>
-			<default>120</default>
-		</parameter>
-	</config-description>
+    <parameter name="refreshInterval" type="integer" min="30" unit="s">
+      <label>Refresh Interval</label>
+      <description>How often in seconds to fetch updates from Panasonic Comfort Cloud service (polling interval)</description>
+      <default>120</default>
+    </parameter>
+  </config-description>
 
-	<config-description uri="thing-type:panasoniccomfortcloud:airconditioner">
-		<parameter name="deviceId" type="text" required="true">
-			<label>DeviceId</label>
-			<description>Typically in the form MODEL+SERIAL, ie</description>
-		</parameter>
-	</config-description>
+  <config-description uri="thing-type:panasoniccomfortcloud:airconditioner">
+    <parameter name="deviceId" type="text" required="true">
+      <label>DeviceId</label>
+      <description>Typically in the form MODEL+SERIAL, ie CS-TZ25WKEW+123456789</description>
+    </parameter>
+  </config-description>
 
 </config-description:config-descriptions>
