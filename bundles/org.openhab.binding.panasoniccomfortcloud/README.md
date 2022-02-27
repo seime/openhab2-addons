@@ -28,27 +28,45 @@ See full example below for how to configure using thing files.
 
 * `deviceId` = id of aircondition device
 
-Can be found printed on the back of the device. Or you can find it during discovery.
+DeviceId can be found printed on side or back of the device. Or you can find it during discovery.
+
+Devices with built-in WIFI support appears to use format 'MODEL+SERIAL' while devices with a separate WIFI dongle only
+uses the 'SERIAL' part.
+
+Note: If you are using *thing* files; Device discovery will create a deviceId with '+' replaced with '-'. Check
+discovered thing properties to find the correct value for your device.
+
+#### Tested devices
+
+* CS-TZ25WKEW & CU-3Z68TBE (multisplit: 3 indoor units with 1 outdoor unit)
+* CS-NZ9SKE with CZ-TACG1 dongle
+* CS-TZ35WKEW & CU-TZ35WKE
+* CS-TZ20WKEW
 
 ## Channels
 
-Note: Supported values for most String channels are reported as a thing property!
+Note: Possible values for most `String` channels are reported as a thing property!
 
-| Channel                   | Read/write | Item type            | Description                                                                |
-|---------------------------|------------|----------------------|----------------------------------------------------------------------------|
-| masterSwitch              | R/W        | Switch               | Switch AC ON or OFF                                                        |
-| currentIndoorTemperature  | R          | Number:Temperature   | Measured indoor temperature                                                |
-| currentOutdoorTemperature | R          | Number:Temperature   | Measured outdoor temperature                                               |
-| targetTemperature         | R/W        | Number:Temperature   | Target temperature for this room / setpoint                                |
-| operationMode             | R/W        | String               | Current mode (COOL, HEAT, etc, actual modes provided provided by the API)  |
-| airSwingAutoMode          | R/W        | String               | Current auto air swing mode (AUTO, LEFT_RIGHT etc, see thing properties)   |
-| airSwingHorizontal        | R/W        | String               | Current horizontal air swing mode (LEFT, CENTER etc, see thing properties) |
-| airSwingVertical          | R/W        | String               | Current vertical air swing mode (TOP, BOTTOM etc, see thing properties)    |
-| ecoMode                   | R/W        | String               | Current eco mode (AUTO, POWERFUL, QUIET)                                   |
-| nanoe                     | R          | String               | Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL)                             |
-| actualNanoe               | R          | String               | Actual Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL)                      |
+| Channel                   | Read/write | Item type            | Description                                                                 |
+|---------------------------|------------|----------------------|-----------------------------------------------------------------------------|
+| masterSwitch              | R/W        | Switch               | Switch AC ON or OFF                                                         |
+| currentIndoorTemperature  | R          | Number:Temperature   | Measured indoor temperature                                                 |
+| currentOutdoorTemperature | R          | Number:Temperature   | Measured outdoor temperature                                                |
+| targetTemperature         | R/W        | Number:Temperature   | Target temperature / setpoint                                               |
+| operationMode             | R/W        | String               | Current mode (COOL, HEAT, etc, see thing properties)                        |
+| airSwingAutoMode          | R/W        | String               | Current auto air swing mode (AUTO, LEFT_RIGHT etc, see thing properties)    |
+| airSwingHorizontal        | R/W        | String               | Current horizontal air swing mode (LEFT, CENTER etc, see thing properties)  |
+| airSwingVertical          | R/W        | String               | Current vertical air swing mode (TOP, BOTTOM etc, see thing properties)     |
+| ecoMode                   | R/W        | String               | Current eco mode (AUTO, POWERFUL, QUIET, see thing properties)              |
+| nanoe                     | R          | String               | Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL, see thing properties)        |
+| actualNanoe               | R          | String               | Actual Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL, see thing properties) |
 
 Some channels are still missing like iAutoX and ecoNavi.
+
+## Reported issues
+
+* Temperature measurements (outdoor/indoor) *may* report false values when AC is off.
+* Not all units supports
 
 ## Full Example
 
