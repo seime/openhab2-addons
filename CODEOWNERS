@@ -82,6 +82,7 @@
 /bundles/org.openhab.binding.ekey/ @hmerk
 /bundles/org.openhab.binding.electroluxair/ @jannegpriv
 /bundles/org.openhab.binding.elerotransmitterstick/ @vbier
+/bundles/org.openhab.binding.elroconnects/ @mherwege
 /bundles/org.openhab.binding.energenie/ @hmerk
 /bundles/org.openhab.binding.enigma2/ @gdolfen
 /bundles/org.openhab.binding.enocean/ @fruggy83
@@ -168,6 +169,7 @@
 /bundles/org.openhab.binding.loxone/ @ppieczul
 /bundles/org.openhab.binding.luftdateninfo/ @weymann
 /bundles/org.openhab.binding.lutron/ @actong @bobadair
+/bundles/org.openhab.binding.luxom/ @jesperskriasoft
 /bundles/org.openhab.binding.luxtronikheatpump/ @sgiehl
 /bundles/org.openhab.binding.magentatv/ @markus7017
 /bundles/org.openhab.binding.mail/ @openhab/add-ons-maintainers
@@ -250,6 +252,7 @@
 /bundles/org.openhab.binding.plugwiseha/ @lsiepel
 /bundles/org.openhab.binding.powermax/ @lolodomo
 /bundles/org.openhab.binding.proteusecometer/ @2chilled
+/bundles/org.openhab.binding.prowl/ @octa22
 /bundles/org.openhab.binding.publictransportswitzerland/ @jeremystucki
 /bundles/org.openhab.binding.pulseaudio/ @peuter
 /bundles/org.openhab.binding.pushbullet/ @hakan42
@@ -391,6 +394,7 @@
 /itests/org.openhab.binding.feed.tests/ @svilenvul
 /itests/org.openhab.binding.hue.tests/ @cweitkamp
 /itests/org.openhab.binding.max.tests/ @marcelrv
+/itests/org.openhab.binding.mielecloud.tests/ @BjoernLange
 /itests/org.openhab.binding.modbus.tests/ @ssalonen
 /itests/org.openhab.binding.mqtt.homeassistant.tests/ @davidgraeff
 /itests/org.openhab.binding.mqtt.homie.tests/ @davidgraeff

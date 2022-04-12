@@ -114,6 +114,7 @@
     <module>org.openhab.binding.ekey</module>
     <module>org.openhab.binding.electroluxair</module>
     <module>org.openhab.binding.elerotransmitterstick</module>
+    <module>org.openhab.binding.elroconnects</module>
     <module>org.openhab.binding.energenie</module>
     <module>org.openhab.binding.enigma2</module>
     <module>org.openhab.binding.enocean</module>
@@ -200,6 +201,7 @@
     <module>org.openhab.binding.loxone</module>
     <module>org.openhab.binding.luftdateninfo</module>
     <module>org.openhab.binding.lutron</module>
+    <module>org.openhab.binding.luxom</module>
     <module>org.openhab.binding.luxtronikheatpump</module>
     <module>org.openhab.binding.magentatv</module>
     <module>org.openhab.binding.mail</module>
@@ -282,6 +284,7 @@
     <module>org.openhab.binding.plugwiseha</module>
     <module>org.openhab.binding.powermax</module>
     <module>org.openhab.binding.proteusecometer</module>
+    <module>org.openhab.binding.prowl</module>
     <module>org.openhab.binding.publictransportswitzerland</module>
     <module>org.openhab.binding.pulseaudio</module>
     <module>org.openhab.binding.pushbullet</module>
