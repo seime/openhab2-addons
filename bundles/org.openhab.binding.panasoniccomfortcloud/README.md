@@ -42,6 +42,9 @@ discovered thing properties to find the correct value for your device.
 * CS-NZ9SKE with CZ-TACG1 dongle
 * CS-TZ35WKEW & CU-TZ35WKE
 * CS-TZ20WKEW
+* CS-Z20XKEW (multisplit)
+* CS-Z25XKEW (multisplit)
+* CS-Z35XKEW (multisplit)
 
 ## Channels
 
