@@ -83,8 +83,9 @@ public class PanasonicComfortCloudDiscoveryService extends AbstractDiscoveryServ
                     stringObjectProperties.putAll(properties);
 
                     final DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(deviceUID)
-                            .withBridge(accountUID).withLabel(device.getName()).withRepresentationProperty("deviceId")
-                            .withProperties(stringObjectProperties).build();
+                            .withBridge(accountUID)
+                            .withLabel(String.format("%s / %s", device.getGroup().getName(), device.getName()))
+                            .withRepresentationProperty("deviceId").withProperties(stringObjectProperties).build();
                     thingDiscovered(discoveryResult);
                 } else {
                     logger.debug(
