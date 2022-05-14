@@ -198,4 +198,8 @@ public class Device {
     public boolean isInitialized() {
         return isInitialized;
     }
+
+    public Group getGroup() {
+        return group;
+    }
 }
