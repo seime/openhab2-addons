@@ -14,6 +14,7 @@ package org.openhab.binding.panasoniccomfortcloud.internal.config;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.core.config.core.Configuration;
 
 /**
  * The {@link AccountConfiguration} class contains fields mapping thing configuration parameters.
@@ -21,10 +22,8 @@ import org.eclipse.jdt.annotation.Nullable;
  * @author Arne Seime - Initial contribution
  */
 @NonNullByDefault
-public class AccountConfiguration {
-    /**
-     * API key from https://home.sensibo.com/me/api
-     */
+public class AccountConfiguration extends Configuration {
+
     @Nullable
     public String username;
     @Nullable
