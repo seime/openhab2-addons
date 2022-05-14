@@ -10,7 +10,7 @@
 		</supported-bridge-type-refs>
 
 		<label>Air Conditioner</label>
-		<description>Air Conditioner</description>
+		<description>Air Conditioner with builtin or separate WiFi dongle</description>
 
 		<channels>
 			<channel id="masterSwitch" typeId="masterSwitch"/>
