@@ -162,7 +162,11 @@ public class Device {
         properties.put("deviceId", deviceId);
         properties.put("name", name);
         properties.put("group", group.getName());
-        properties.put("model", deviceModel);
+        if (deviceModel != null) {
+            properties.put("model", deviceModel);
+        } else {
+            properties.put("model", "(Unknown)");
+        }
         if (featureSet != null) {
             properties.put("nanoe", String.valueOf(featureSet.isNanoe()));
             properties.put("iAutoX", String.valueOf(featureSet.isiAutoX()));

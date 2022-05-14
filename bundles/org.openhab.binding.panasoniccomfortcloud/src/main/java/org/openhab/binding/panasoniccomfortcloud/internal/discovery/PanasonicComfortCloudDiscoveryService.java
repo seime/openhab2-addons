@@ -119,6 +119,7 @@ public class PanasonicComfortCloudDiscoveryService extends AbstractDiscoveryServ
     @Nullable
     private ThingTypeUID getThingType(Device device) {
         switch (device.getType()) {
+            case "1":
             case "3":
                 return BindingConstants.THING_TYPE_AIRCONDITION;
 
