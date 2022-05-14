@@ -74,7 +74,7 @@ public class PanasonicComfortCloudDiscoveryService extends AbstractDiscoveryServ
                 if (thingType != null) {
 
                     final ThingUID deviceUID = new ThingUID(thingType, accountUID,
-                            device.getDeviceId().replace('+', '-'));
+                            createCleanDeviceId(device.getDeviceId()));
                     Map<String, String> properties = device.getThingProperties();
 
                     // DiscoveryResult result uses Map<String,Object> as properties while ThingBuilder uses
@@ -93,6 +93,10 @@ public class PanasonicComfortCloudDiscoveryService extends AbstractDiscoveryServ
                 }
             }
         }
+    }
+
+    static String createCleanDeviceId(String deviceId) {
+        return deviceId.replaceAll("[^\\w-]+", "-");
     }
 
     @Override
