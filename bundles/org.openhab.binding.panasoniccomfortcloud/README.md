@@ -8,7 +8,7 @@ This binding supports Panasonic Air Conditioners that are connected to the inter
 the Panasonic Comfort Cloud app.
 
 * `account` = Panasonic Comfort Cloud Account - the account bridge
-* `aircondition` = An air conditioner
+* `aircondition` = An air conditioner or WiFi dongle
 
 ## Discovery
 
@@ -30,11 +30,15 @@ See full example below for how to configure using thing files.
 
 DeviceId can be found printed on side or back of the device. Or you can find it during discovery.
 
-Devices with built-in WIFI support appears to use format 'MODEL+SERIAL' while devices with a separate WIFI dongle only
+Devices with built-in WIFI support appears to use format 'MODEL+SERIAL' while devices with a separate WIFI dongle
+usually only
 uses the 'SERIAL' part.
 
-Note: If you are using *thing* files; Device discovery will create a deviceId with '+' replaced with '-'. Check
-discovered thing properties to find the correct value for your device.
+#### Finding the correct deviceId for use in thing files
+
+If you are using *thing* files; Device discovery will create a modified thingUID that follows the openHAB
+requirements.
+In order to find the correct deviceId to use in thing files, _check discovered thing properties_.
 
 #### Tested devices
 
@@ -45,6 +49,8 @@ discovered thing properties to find the correct value for your device.
 * CS-Z20XKEW (multisplit)
 * CS-Z25XKEW (multisplit)
 * CS-Z35XKEW (multisplit)
+* CS-MTZ16WKE
+* CS-Z50VKEW (under test)
 
 ## Channels
 
