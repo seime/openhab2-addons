@@ -41,6 +41,6 @@ public class TemperatureRange {
 
     @Override
     public String toString() {
-        return "TemperatureRange{" + "max=" + max + ", min=" + min + '}';
+        return "TemperatureRange{" + "min=" + min + ", max=" + max + '}';
     }
 }
