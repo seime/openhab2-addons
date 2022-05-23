@@ -73,7 +73,7 @@ public class PanasonicComfortCloudDiscoveryService extends AbstractDiscoveryServ
                 ThingTypeUID thingType = getThingType(device);
                 if (thingType != null) {
 
-                    final ThingUID deviceUID = new ThingUID(thingType, accountUID,
+                    final ThingUID thingUID = new ThingUID(thingType, accountUID,
                             createCleanDeviceId(device.getDeviceId()));
                     Map<String, String> properties = device.getThingProperties();
 
@@ -82,7 +82,7 @@ public class PanasonicComfortCloudDiscoveryService extends AbstractDiscoveryServ
                     Map<String, Object> stringObjectProperties = new HashMap<>();
                     stringObjectProperties.putAll(properties);
 
-                    final DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(deviceUID)
+                    final DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID)
                             .withBridge(accountUID)
                             .withLabel(String.format("%s / %s", device.getGroup().getName(), device.getName()))
                             .withRepresentationProperty("deviceId").withProperties(stringObjectProperties).build();
