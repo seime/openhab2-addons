@@ -32,6 +32,6 @@ public class GetDeviceRequest extends AbstractRequest {
     @Override
     public String getRequestUrl() {
         return String.format("/deviceStatus/%s",
-                URLEncoder.encode(deviceId.substring(0, deviceId.indexOf('/')), Charset.defaultCharset()));
+                URLEncoder.encode(deviceId.replaceAll("/", "f"), Charset.defaultCharset()));
     }
 }
