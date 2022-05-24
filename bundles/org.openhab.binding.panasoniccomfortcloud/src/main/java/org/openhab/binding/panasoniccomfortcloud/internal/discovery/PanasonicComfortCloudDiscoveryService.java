@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 @NonNullByDefault
 public class PanasonicComfortCloudDiscoveryService extends AbstractDiscoveryService {
+
     public static final Set<ThingTypeUID> DISCOVERABLE_THING_TYPES_UIDS = Collections
             .singleton(BindingConstants.THING_TYPE_AIRCONDITION);
     private static final long REFRESH_INTERVAL_MINUTES = 60;
@@ -120,8 +121,8 @@ public class PanasonicComfortCloudDiscoveryService extends AbstractDiscoveryServ
     @Nullable
     private ThingTypeUID getThingType(Device device) {
         switch (device.getType()) {
-            case "1":
-            case "3":
+            case BindingConstants.DEVICE_TYPE_WIFI_DONGLE:
+            case BindingConstants.DEVICE_TYPE_WIFI_BUILTIN:
                 return BindingConstants.THING_TYPE_AIRCONDITION;
 
             default:

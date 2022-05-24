@@ -351,8 +351,12 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
 
     private void handleCurrentIndoorTemperatureCommand(ChannelUID channelUID, Command command, Device device) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, new QuantityType<Temperature>(device.getCurrentParameters().getInsideTemperature(),
-                    device.getTemperatureUnit()));
+            if (device.getCurrentParameters().getInsideTemperature() == null) {
+                updateState(channelUID, UnDefType.UNDEF);
+            } else {
+                updateState(channelUID, new QuantityType<Temperature>(
+                        device.getCurrentParameters().getInsideTemperature(), device.getTemperatureUnit()));
+            }
         } else {
             logger.debug("Unsupported command {} for channel {}", command, channelUID);
         }
