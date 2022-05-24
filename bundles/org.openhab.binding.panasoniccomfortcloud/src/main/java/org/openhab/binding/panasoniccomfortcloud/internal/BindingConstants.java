@@ -40,4 +40,6 @@ public class BindingConstants {
     public static final String CHANNEL_TARGET_TEMPERATURE = "targetTemperature";
     public static final String CHANNEL_NANOE = "nanoe";
     public static final String CHANNEL_ACTUAL_NANOE = "actualNanoe";
+    public static final String DEVICE_TYPE_WIFI_DONGLE = "1";
+    public static final String DEVICE_TYPE_WIFI_BUILTIN = "3";
 }

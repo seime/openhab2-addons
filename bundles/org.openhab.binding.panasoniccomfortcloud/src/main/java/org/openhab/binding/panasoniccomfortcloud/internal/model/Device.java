@@ -78,7 +78,7 @@ public class Device {
         this.summerhouse = dto.summerHouse;
         this.temperatureUnit = dto.temperatureUnit == 0 ? SIUnits.CELSIUS : ImperialUnits.FAHRENHEIT;
 
-        currentParameters = new Parameters(dto.parameters);
+        currentParameters = new Parameters(dto.parameters, this);
 
         this.dryRange = new TemperatureRange(dto.dryTempMin, dto.dryTempMax);
         this.heatRange = new TemperatureRange(dto.heatTempMin, dto.heatTempMax);
@@ -201,5 +201,9 @@ public class Device {
 
     public Group getGroup() {
         return group;
+    }
+
+    public void setType(String deviceType) {
+        this.type = deviceType;
     }
 }

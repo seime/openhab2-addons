@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.panasoniccomfortcloud.internal.model;
 
+import org.openhab.binding.panasoniccomfortcloud.internal.BindingConstants;
 import org.openhab.binding.panasoniccomfortcloud.internal.dto.ParametersDTO;
 
 /**
@@ -42,7 +43,7 @@ public class Parameters {
     /**
      * Parse from wire format
      */
-    public Parameters(ParametersDTO dto) {
+    public Parameters(ParametersDTO dto, Device device) {
         swingUpDown = AirSwingUpDown.parseValue(dto.airSwingUD);
         airSwingSideways = AirSwingSideways.parseValue(dto.airSwingLR);
         mode = OperationMode.parseValue(dto.operationMode);
@@ -54,6 +55,10 @@ public class Parameters {
         masterSwitch = dto.operate == null || dto.operate == 0 ? false : true;
         targetTemperature = dto.temperatureSet;
         insideTemperature = dto.insideTemperature;
+        if (!masterSwitch && BindingConstants.DEVICE_TYPE_WIFI_DONGLE.equals(device.getType())
+                && dto.insideTemperature == 126) { // Bug in separate wifi dongles if power is off
+            insideTemperature = null;
+        }
         outsideTemperature = dto.outTemperature;
 
         this.airQuality = dto.airQuality;
