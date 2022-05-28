@@ -364,8 +364,13 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
 
     private void handleCurrentOutdoorTemperatureCommand(ChannelUID channelUID, Command command, Device device) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, new QuantityType<Temperature>(device.getCurrentParameters().getOutsideTemperature(),
-                    device.getTemperatureUnit()));
+
+            if (device.getCurrentParameters().getOutsideTemperature() == null) {
+                updateState(channelUID, UnDefType.UNDEF);
+            } else {
+                updateState(channelUID, new QuantityType<Temperature>(
+                        device.getCurrentParameters().getOutsideTemperature(), device.getTemperatureUnit()));
+            }
         } else {
             logger.debug("Unsupported command {} for channel {}", command, channelUID);
         }
