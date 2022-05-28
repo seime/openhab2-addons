@@ -87,7 +87,7 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
     }
 
     @Override
-    protected void handleCommand(final ChannelUID channelUID, final Command command, final Device device) {
+    protected synchronized void handleCommand(final ChannelUID channelUID, final Command command, final Device device) {
         if (device.isInitialized()) {
             switch (channelUID.getId()) {
                 case CHANNEL_CURRENT_INDOOR_TEMPERATURE:
