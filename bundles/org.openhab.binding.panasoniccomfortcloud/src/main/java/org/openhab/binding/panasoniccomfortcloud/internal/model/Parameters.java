@@ -20,6 +20,7 @@ import org.openhab.binding.panasoniccomfortcloud.internal.dto.ParametersDTO;
  */
 public class Parameters {
 
+    public static final int INVALID_TEMPERATURE_READING = 126;
     private AirSwingUpDown swingUpDown;
     private AirSwingSideways airSwingSideways;
     private OperationMode mode;
@@ -54,12 +55,19 @@ public class Parameters {
         actualNanoeMode = NanoeMode.parseValue(dto.actualNanoe);
         masterSwitch = dto.operate == null || dto.operate == 0 ? false : true;
         targetTemperature = dto.temperatureSet;
-        insideTemperature = dto.insideTemperature;
-        if (!masterSwitch && BindingConstants.DEVICE_TYPE_WIFI_DONGLE.equals(device.getType())
-                && dto.insideTemperature == 126) { // Bug in separate wifi dongles if power is off
-            insideTemperature = null;
+
+        if (BindingConstants.DEVICE_TYPE_WIFI_DONGLE.equals(device.getType())) {
+            // Bug in WiFi dongles reporting invalid temperature
+            if (dto.insideTemperature != INVALID_TEMPERATURE_READING) {
+                insideTemperature = dto.insideTemperature;
+            }
+            if (dto.outTemperature != INVALID_TEMPERATURE_READING) {
+                outsideTemperature = dto.outTemperature;
+            }
+        } else {
+            insideTemperature = dto.insideTemperature;
+            outsideTemperature = dto.outTemperature;
         }
-        outsideTemperature = dto.outTemperature;
 
         this.airQuality = dto.airQuality;
         this.ecoNavi = dto.ecoNavi;
