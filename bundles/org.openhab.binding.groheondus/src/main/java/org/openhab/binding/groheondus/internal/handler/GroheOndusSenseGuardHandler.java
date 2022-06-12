@@ -105,14 +105,14 @@ public class GroheOndusSenseGuardHandler<T, M> extends GroheOndusBaseHandler<App
                 if (lastMeasurement != null) {
                     newState = new QuantityType<>(lastMeasurement.getPressure(), Units.BAR);
                     // Persist older values
-                    persistOlderMeasurements(channelUID, dataPoint.getMeasurement(),
+                    persistOfflineMeasurements(channelUID, dataPoint.getMeasurement(),
                             measurement -> new QuantityType<>(measurement.getPressure(), Units.BAR));
                 }
                 break;
             case CHANNEL_TEMPERATURE_GUARD:
                 if (lastMeasurement != null) {
                     newState = new QuantityType<>(lastMeasurement.getTemperatureGuard(), SIUnits.CELSIUS);
-                    persistOlderMeasurements(channelUID, dataPoint.getMeasurement(),
+                    persistOfflineMeasurements(channelUID, dataPoint.getMeasurement(),
                             measurement -> new QuantityType<>(measurement.getTemperatureGuard(), SIUnits.CELSIUS));
                 }
                 break;
@@ -137,7 +137,7 @@ public class GroheOndusSenseGuardHandler<T, M> extends GroheOndusBaseHandler<App
         }
     }
 
-    protected void persistOlderMeasurements(ChannelUID channelUID, List<ApplianceData.Measurement> measurements,
+    protected void persistOfflineMeasurements(ChannelUID channelUID, List<ApplianceData.Measurement> measurements,
             Function<Measurement, QuantityType> mappingFunction) {
         @Nullable
         PersistenceService defaultPersistenceService = persistenceServiceRegistry.getDefault();
@@ -146,9 +146,11 @@ public class GroheOndusSenseGuardHandler<T, M> extends GroheOndusBaseHandler<App
             // Find all items that are linked via the channel
             Set<Item> linkedItems = itemChannelLinkRegistry.getLinkedItems(channelUID);
             linkedItems.forEach(item -> {
-                // Check that item linked does not have any profiles
-                // Delete older data
-                // Persist new
+                // TODO Check that item linked does not have any profiles (or figure a way to process the data through
+                // the profile before persisting)
+                // Delete existing data for same datapoints (if necessary, ie InfluxDB handles this as duplicates
+                // automatically)
+                // Persist value for item
                 measurements.forEach(measurement -> {
                     QuantityType state = mappingFunction.apply(measurement);
                     persistenceService.store(item, ZonedDateTime.parse(measurement.timestamp), state);

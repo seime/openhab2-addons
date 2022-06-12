@@ -93,7 +93,7 @@ public class GroheOndusSenseHandler<T, M> extends GroheOndusBaseHandler<Applianc
             case CHANNEL_TEMPERATURE:
                 if (lastMeasurement.getTemperature() != null) {
                     newState = new QuantityType<>(lastMeasurement.getTemperature(), SIUnits.CELSIUS);
-                    persistOlderMeasurements(channelUID, data.getMeasurement(),
+                    persistOfflineMeasurements(channelUID, data.getMeasurement(),
                             measurement -> new QuantityType<>(measurement.getTemperature(), SIUnits.CELSIUS));
 
                 }
@@ -101,7 +101,7 @@ public class GroheOndusSenseHandler<T, M> extends GroheOndusBaseHandler<Applianc
             case CHANNEL_HUMIDITY:
                 if (lastMeasurement.getHumidity() != null) {
                     newState = new QuantityType<>(lastMeasurement.getHumidity(), Units.PERCENT);
-                    persistOlderMeasurements(channelUID, data.getMeasurement(),
+                    persistOfflineMeasurements(channelUID, data.getMeasurement(),
                             measurement -> new QuantityType<>(measurement.getHumidity(), Units.PERCENT));
                 }
                 break;
@@ -117,7 +117,7 @@ public class GroheOndusSenseHandler<T, M> extends GroheOndusBaseHandler<Applianc
         updateState(channelUID, newState);
     }
 
-    protected void persistOlderMeasurements(ChannelUID channelUID, List<Measurement> measurements,
+    protected void persistOfflineMeasurements(ChannelUID channelUID, List<Measurement> measurements,
             Function<Measurement, QuantityType> mappingFunction) {
         @Nullable
         PersistenceService defaultPersistenceService = persistenceServiceRegistry.getDefault();
