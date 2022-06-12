@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.groheondus.internal.GroheOndusApplianceConfiguration;
+import org.openhab.core.persistence.PersistenceServiceRegistry;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -26,6 +27,7 @@ import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.thing.binding.BridgeHandler;
+import org.openhab.core.thing.link.ItemChannelLinkRegistry;
 import org.openhab.core.types.UnDefType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,10 +53,16 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
     // Used to space scheduled updates apart by 1 second to avoid rate limiting from service
     private int thingCounter = 0;
 
-    public GroheOndusBaseHandler(Thing thing, int applianceType, int thingCounter) {
+    protected PersistenceServiceRegistry persistenceServiceRegistry;
+    protected ItemChannelLinkRegistry itemChannelLinkRegistry;
+
+    public GroheOndusBaseHandler(Thing thing, int applianceType, int thingCounter,
+            PersistenceServiceRegistry persistenceServiceRegistry, ItemChannelLinkRegistry itemChannelLinkRegistry) {
         super(thing);
         this.applianceType = applianceType;
         this.thingCounter = thingCounter;
+        this.persistenceServiceRegistry = persistenceServiceRegistry;
+        this.itemChannelLinkRegistry = itemChannelLinkRegistry;
     }
 
     protected void schedulePolling() {

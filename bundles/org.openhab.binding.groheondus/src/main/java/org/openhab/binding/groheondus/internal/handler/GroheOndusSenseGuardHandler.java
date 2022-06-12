@@ -30,21 +30,28 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 
 import javax.measure.quantity.Volume;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.core.items.Item;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.library.unit.SIUnits;
 import org.openhab.core.library.unit.Units;
+import org.openhab.core.persistence.ModifiablePersistenceService;
+import org.openhab.core.persistence.PersistenceService;
+import org.openhab.core.persistence.PersistenceServiceRegistry;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.link.ItemChannelLinkRegistry;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
 import org.openhab.core.types.State;
@@ -72,8 +79,9 @@ public class GroheOndusSenseGuardHandler<T, M> extends GroheOndusBaseHandler<App
 
     private final Logger logger = LoggerFactory.getLogger(GroheOndusSenseGuardHandler.class);
 
-    public GroheOndusSenseGuardHandler(Thing thing, int thingCounter) {
-        super(thing, Appliance.TYPE, thingCounter);
+    public GroheOndusSenseGuardHandler(Thing thing, int thingCounter,
+            PersistenceServiceRegistry persistenceServiceRegistry, ItemChannelLinkRegistry itemRegistry) {
+        super(thing, Appliance.TYPE, thingCounter, persistenceServiceRegistry, itemRegistry);
     }
 
     @Override
@@ -96,11 +104,16 @@ public class GroheOndusSenseGuardHandler<T, M> extends GroheOndusBaseHandler<App
             case CHANNEL_PRESSURE:
                 if (lastMeasurement != null) {
                     newState = new QuantityType<>(lastMeasurement.getPressure(), Units.BAR);
+                    // Persist older values
+                    persistOlderMeasurements(channelUID, dataPoint.getMeasurement(),
+                            measurement -> new QuantityType<>(measurement.getPressure(), Units.BAR));
                 }
                 break;
             case CHANNEL_TEMPERATURE_GUARD:
                 if (lastMeasurement != null) {
                     newState = new QuantityType<>(lastMeasurement.getTemperatureGuard(), SIUnits.CELSIUS);
+                    persistOlderMeasurements(channelUID, dataPoint.getMeasurement(),
+                            measurement -> new QuantityType<>(measurement.getTemperatureGuard(), SIUnits.CELSIUS));
                 }
                 break;
             case CHANNEL_VALVE_OPEN:
@@ -121,6 +134,32 @@ public class GroheOndusSenseGuardHandler<T, M> extends GroheOndusBaseHandler<App
         }
         if (newState != null) {
             updateState(channelUID, newState);
+        }
+    }
+
+    protected void persistOlderMeasurements(ChannelUID channelUID, List<ApplianceData.Measurement> measurements,
+            Function<Measurement, QuantityType> mappingFunction) {
+        @Nullable
+        PersistenceService defaultPersistenceService = persistenceServiceRegistry.getDefault();
+        if (defaultPersistenceService != null && defaultPersistenceService instanceof ModifiablePersistenceService) {
+            ModifiablePersistenceService persistenceService = (ModifiablePersistenceService) defaultPersistenceService;
+            // Find all items that are linked via the channel
+            Set<Item> linkedItems = itemChannelLinkRegistry.getLinkedItems(channelUID);
+            linkedItems.forEach(item -> {
+                // Check that item linked does not have any profiles
+                // Delete older data
+                // Persist new
+                measurements.forEach(measurement -> {
+                    QuantityType state = mappingFunction.apply(measurement);
+                    persistenceService.store(item, ZonedDateTime.parse(measurement.timestamp), state);
+                    logger.info("Persisting previous reading {} for item {} at {}", state, item.getName(),
+                            measurement.timestamp);
+                });
+
+            });
+
+        } else {
+            logger.info("Persistence service not capable: {}", defaultPersistenceService);
         }
     }
 

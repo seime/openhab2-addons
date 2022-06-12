@@ -25,18 +25,25 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.core.items.Item;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.library.unit.SIUnits;
 import org.openhab.core.library.unit.Units;
+import org.openhab.core.persistence.ModifiablePersistenceService;
+import org.openhab.core.persistence.PersistenceService;
+import org.openhab.core.persistence.PersistenceServiceRegistry;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.link.ItemChannelLinkRegistry;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
 import org.openhab.core.types.State;
@@ -55,14 +62,15 @@ import io.github.floriansw.ondus.api.model.sense.ApplianceData.Measurement;
  * @author Florian Schmidt - Initial contribution
  */
 @NonNullByDefault
-public class GroheOndusSenseHandler<T, M> extends GroheOndusBaseHandler<Appliance, Measurement> {
+public class GroheOndusSenseHandler<T, M> extends GroheOndusBaseHandler<Appliance, ApplianceData.Data> {
 
     private static final int DEFAULT_POLLING_INTERVAL = 900;
 
     private final Logger logger = LoggerFactory.getLogger(GroheOndusSenseHandler.class);
 
-    public GroheOndusSenseHandler(Thing thing, int thingCounter) {
-        super(thing, Appliance.TYPE, thingCounter);
+    public GroheOndusSenseHandler(Thing thing, int thingCounter, PersistenceServiceRegistry persistenceServiceRegistry,
+            ItemChannelLinkRegistry itemChannelLinkRegistry) {
+        super(thing, Appliance.TYPE, thingCounter, persistenceServiceRegistry, itemChannelLinkRegistry);
     }
 
     @Override
@@ -74,21 +82,27 @@ public class GroheOndusSenseHandler<T, M> extends GroheOndusBaseHandler<Applianc
     }
 
     @Override
-    protected void updateChannel(ChannelUID channelUID, Appliance appliance, Measurement measurement) {
+    protected void updateChannel(ChannelUID channelUID, Appliance appliance, ApplianceData.Data data) {
         String channelId = channelUID.getIdWithoutGroup();
+        Measurement lastMeasurement = data.getMeasurement().get(data.getMeasurement().size() - 1);
         State newState = UnDefType.UNDEF;
         switch (channelId) {
             case CHANNEL_NAME:
                 newState = new StringType(appliance.getName());
                 break;
             case CHANNEL_TEMPERATURE:
-                if (measurement.getTemperature() != null) {
-                    newState = new QuantityType<>(measurement.getTemperature(), SIUnits.CELSIUS);
+                if (lastMeasurement.getTemperature() != null) {
+                    newState = new QuantityType<>(lastMeasurement.getTemperature(), SIUnits.CELSIUS);
+                    persistOlderMeasurements(channelUID, data.getMeasurement(),
+                            measurement -> new QuantityType<>(measurement.getTemperature(), SIUnits.CELSIUS));
+
                 }
                 break;
             case CHANNEL_HUMIDITY:
-                if (measurement.getHumidity() != null) {
-                    newState = new QuantityType<>(measurement.getHumidity(), Units.PERCENT);
+                if (lastMeasurement.getHumidity() != null) {
+                    newState = new QuantityType<>(lastMeasurement.getHumidity(), Units.PERCENT);
+                    persistOlderMeasurements(channelUID, data.getMeasurement(),
+                            measurement -> new QuantityType<>(measurement.getHumidity(), Units.PERCENT));
                 }
                 break;
             case CHANNEL_BATTERY:
@@ -103,21 +117,50 @@ public class GroheOndusSenseHandler<T, M> extends GroheOndusBaseHandler<Applianc
         updateState(channelUID, newState);
     }
 
+    protected void persistOlderMeasurements(ChannelUID channelUID, List<Measurement> measurements,
+            Function<Measurement, QuantityType> mappingFunction) {
+        @Nullable
+        PersistenceService defaultPersistenceService = persistenceServiceRegistry.getDefault();
+        if (defaultPersistenceService != null && defaultPersistenceService instanceof ModifiablePersistenceService) {
+            ModifiablePersistenceService persistenceService = (ModifiablePersistenceService) defaultPersistenceService;
+            // Find all items that are linked via the channel
+            Set<Item> linkedItems = itemChannelLinkRegistry.getLinkedItems(channelUID);
+            linkedItems.forEach(item -> {
+                // Check that item linked does not have any profiles
+                // Delete older data
+                // Persist new
+                measurements.forEach(measurement -> {
+                    QuantityType state = mappingFunction.apply(measurement);
+                    persistenceService.store(item, ZonedDateTime.parse(measurement.timestamp), state);
+                    logger.info("Persisting previous reading {} for item {} at {}", state, item.getName(),
+                            measurement.timestamp);
+                });
+
+            });
+
+        } else {
+            logger.info("Persistence service not capable: {}", defaultPersistenceService);
+        }
+    }
+
     @Override
-    protected Measurement getLastDataPoint(Appliance appliance) {
+    protected ApplianceData.Data getLastDataPoint(Appliance appliance) {
         if (getOndusService() == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE, "@text/error.noservice");
-            return new Measurement();
+            return new ApplianceData.Data();
         }
 
         ApplianceData applianceData = getApplianceData(appliance);
         if (applianceData == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "@text/error.empty.response");
-            return new Measurement();
+            return new ApplianceData.Data();
         }
-        List<Measurement> measurementList = applianceData.getData().getMeasurement();
+
+        ApplianceData.Data data = applianceData.getData();
+
+        List<Measurement> measurementList = data.getMeasurement();
         Collections.sort(measurementList, Comparator.comparing(e -> ZonedDateTime.parse(e.timestamp)));
-        return measurementList.isEmpty() ? new Measurement() : measurementList.get(measurementList.size() - 1);
+        return data;
     }
 
     private @Nullable Integer getBatteryStatus(Appliance appliance) {
