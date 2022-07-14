@@ -18,7 +18,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jetty.client.HttpClient;
 import org.openhab.binding.panasoniccomfortcloud.internal.ApiBridge;
 import org.openhab.binding.panasoniccomfortcloud.internal.ConfigurationException;
 import org.openhab.binding.panasoniccomfortcloud.internal.PanasonicComfortCloudException;
@@ -57,9 +56,9 @@ public class PanasonicComfortCloudAccountHandler extends BaseBridgeHandler {
     AccountConfiguration config;
     private ApiBridge apiBridge;
 
-    public PanasonicComfortCloudAccountHandler(final Bridge bridge, HttpClient httpClient) {
+    public PanasonicComfortCloudAccountHandler(final Bridge bridge) {
         super(bridge);
-        this.apiBridge = new ApiBridge(httpClient);
+        this.apiBridge = new ApiBridge();
         this.model = new GroupModel(0);
     }
 
