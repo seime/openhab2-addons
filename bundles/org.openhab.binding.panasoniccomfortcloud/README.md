@@ -31,8 +31,7 @@ See full example below for how to configure using thing files.
 DeviceId can be found printed on side or back of the device. Or you can find it during discovery.
 
 Devices with built-in WIFI support appears to use format 'MODEL+SERIAL' while devices with a separate WIFI dongle
-usually only
-uses the 'SERIAL' part.
+usually only uses the 'SERIAL' part.
 
 #### Finding the correct deviceId for use in thing files
 
@@ -42,14 +41,21 @@ In order to find the correct deviceId to use in thing files, _check discovered t
 
 #### Tested devices
 
-* CS-TZ25WKEW & CU-3Z68TBE (multisplit: 3 indoor units with 1 outdoor unit)
+The following devices have been *tested* by users and found to be working. Currently no devices are *not* know to work.
+
+If your device is *not* listed, please report back so I can add it to the list.
+
+* CS-MTZ16WKE
+* CS-HZ35XKE
 * CS-NZ9SKE with CZ-TACG1 dongle
-* CS-TZ35WKEW & CU-TZ35WKE
 * CS-TZ20WKEW
+* CS-TZ25WKEW & CU-3Z68TBE (multisplit: 3 indoor units with 1 outdoor unit)
+* CS-TZ35WKEW & CU-TZ35WKE
 * CS-Z20XKEW (multisplit)
+* CS-Z25VKEW
 * CS-Z25XKEW (multisplit)
 * CS-Z35XKEW (multisplit)
-* CS-MTZ16WKE
+* CS-Z42VKEW
 * CS-Z50VKEW (under test)
 
 ## Channels
@@ -75,7 +81,6 @@ Some channels are still missing like iAutoX and ecoNavi.
 ## Reported issues
 
 * Temperature measurements (outdoor/indoor) *may* report false values when AC is off.
-* Not all units supports
 
 ## Full Example
 
