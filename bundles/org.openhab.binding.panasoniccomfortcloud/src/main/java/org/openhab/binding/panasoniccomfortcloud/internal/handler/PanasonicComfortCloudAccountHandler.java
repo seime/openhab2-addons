@@ -29,6 +29,7 @@ import org.openhab.binding.panasoniccomfortcloud.internal.dto.GroupDTO;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.Device;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.Group;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.GroupModel;
+import org.openhab.core.storage.StorageService;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.ThingStatus;
@@ -48,7 +49,7 @@ import com.google.gson.reflect.TypeToken;
  */
 @NonNullByDefault
 public class PanasonicComfortCloudAccountHandler extends BaseBridgeHandler {
-    private static final int MIN_TIME_BETWEEEN_MODEL_UPDATES_MS = 30_000;
+    private static final int MIN_TIME_BETWEEEN_MODEL_UPDATES = 30;
     private final Logger logger = LoggerFactory.getLogger(PanasonicComfortCloudAccountHandler.class);
     private Optional<ScheduledFuture<?>> statusFuture = Optional.empty();
     private GroupModel model;
@@ -56,9 +57,11 @@ public class PanasonicComfortCloudAccountHandler extends BaseBridgeHandler {
     AccountConfiguration config;
     private ApiBridge apiBridge;
 
-    public PanasonicComfortCloudAccountHandler(final Bridge bridge) {
+    private static final String STORAGE_KEY = "PanasonicComfortCloud-Storage";
+
+    public PanasonicComfortCloudAccountHandler(final Bridge bridge, StorageService storageService) {
         super(bridge);
-        this.apiBridge = new ApiBridge();
+        this.apiBridge = new ApiBridge(storageService.getStorage(STORAGE_KEY));
         this.model = new GroupModel(0);
     }
 
@@ -74,14 +77,16 @@ public class PanasonicComfortCloudAccountHandler extends BaseBridgeHandler {
 
         updateStatus(ThingStatus.UNKNOWN);
         AccountConfiguration loadedConfig = getConfigAs(AccountConfiguration.class);
-        if (loadedConfig == null) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR);
-        } else {
-            config = loadedConfig;
-            apiBridge.init(thing.getUID(), loadedConfig.username, loadedConfig.password, loadedConfig.refreshInterval);
-            statusFuture = Optional.of(scheduler.scheduleWithFixedDelay(this::doPollInternal, 0, config.refreshInterval,
-                    TimeUnit.SECONDS));
+        config = loadedConfig;
+        apiBridge.init(loadedConfig.username, loadedConfig.password);
+        int refreshInterval = config.refreshInterval;
+        if (refreshInterval < MIN_TIME_BETWEEEN_MODEL_UPDATES) {
+            logger.warn("Refresh interval too short, setting minimum value of {}", MIN_TIME_BETWEEEN_MODEL_UPDATES);
+            refreshInterval = MIN_TIME_BETWEEEN_MODEL_UPDATES;
         }
+
+        statusFuture = Optional
+                .of(scheduler.scheduleWithFixedDelay(this::doPollInternal, 0, refreshInterval, TimeUnit.SECONDS));
     }
 
     @Override

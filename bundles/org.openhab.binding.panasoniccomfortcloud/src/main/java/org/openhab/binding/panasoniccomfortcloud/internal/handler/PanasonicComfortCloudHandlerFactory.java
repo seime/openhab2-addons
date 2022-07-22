@@ -25,6 +25,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.panasoniccomfortcloud.internal.BindingConstants;
 import org.openhab.binding.panasoniccomfortcloud.internal.discovery.PanasonicComfortCloudDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryService;
+import org.openhab.core.storage.StorageService;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
@@ -33,7 +34,9 @@ import org.openhab.core.thing.binding.BaseThingHandlerFactory;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerFactory;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * The {@link PanasonicComfortCloudHandlerFactory} is responsible for creating things and thing
@@ -48,6 +51,12 @@ public class PanasonicComfortCloudHandlerFactory extends BaseThingHandlerFactory
             .unmodifiableSet(Stream.of(BindingConstants.THING_TYPE_ACCOUNT, BindingConstants.THING_TYPE_AIRCONDITION)
                     .collect(Collectors.toSet()));
     private Map<ThingUID, ServiceRegistration<?>> discoveryServiceRegs = new HashMap<>();
+    private StorageService storageService;
+
+    @Activate
+    public PanasonicComfortCloudHandlerFactory(@Reference StorageService storageService) {
+        this.storageService = storageService;
+    }
 
     @Override
     protected @Nullable ThingHandler createHandler(final Thing thing) {
@@ -55,7 +64,8 @@ public class PanasonicComfortCloudHandlerFactory extends BaseThingHandlerFactory
         if (BindingConstants.THING_TYPE_AIRCONDITION.equals(thingTypeUID)) {
             return new PanasonicComfortCloudAirconditionHandler(thing);
         } else if (BindingConstants.THING_TYPE_ACCOUNT.equals(thingTypeUID)) {
-            PanasonicComfortCloudAccountHandler handler = new PanasonicComfortCloudAccountHandler((Bridge) thing);
+            PanasonicComfortCloudAccountHandler handler = new PanasonicComfortCloudAccountHandler((Bridge) thing,
+                    storageService);
             registerDeviceDiscoveryService(handler);
             return handler;
         }

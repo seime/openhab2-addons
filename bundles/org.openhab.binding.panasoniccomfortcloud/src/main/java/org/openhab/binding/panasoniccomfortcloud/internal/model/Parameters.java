@@ -53,7 +53,7 @@ public class Parameters {
         fanSpeed = FanSpeed.parseValue(dto.fanSpeed);
         nanoeMode = NanoeMode.parseValue(dto.nanoe);
         actualNanoeMode = NanoeMode.parseValue(dto.actualNanoe);
-        masterSwitch = dto.operate == null || dto.operate == 0 ? false : true;
+        masterSwitch = dto.operate != null && dto.operate != 0;
         targetTemperature = dto.temperatureSet;
 
         if (BindingConstants.DEVICE_TYPE_WIFI_DONGLE.equals(device.getType())) {

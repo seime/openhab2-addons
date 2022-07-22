@@ -72,12 +72,12 @@ public class FeatureSet {
             supportedAirSwingUpDownModes.addAll(Arrays.asList(AirSwingUpDown.values()));
         }
 
-        iAutoX = dto.iAutoX == null || dto.iAutoX == false ? false : true;
-        nanoe = dto.nanoe == null || dto.nanoe == false ? false : true;
-        nanoeStandAlone = dto.nanoeStandAlone == null || dto.nanoeStandAlone == false ? false : true;
-        iAutoX = dto.iAutoX == null || dto.iAutoX == false ? false : true;
-        ecoNavi = dto.ecoNavi == null || dto.ecoNavi == false ? false : true;
-        ecoFunction = dto.ecoFunction == null ? 0 : dto.ecoFunction;
+        iAutoX = dto.iAutoX != null && dto.iAutoX;
+        nanoe = dto.nanoe != null && dto.nanoe;
+        nanoeStandAlone = dto.nanoeStandAlone != null && dto.nanoeStandAlone;
+        iAutoX = dto.iAutoX != null && dto.iAutoX;
+        ecoNavi = dto.ecoNavi != null && dto.ecoNavi;
+        ecoFunction = (dto.ecoFunction == null) ? 0 : dto.ecoFunction;
     }
 
     public boolean isiAutoX() {

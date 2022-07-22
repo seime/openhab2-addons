@@ -13,12 +13,14 @@ https://openhab.org/schemas/config-description-1.0.0.xsd">
 		<parameter name="password" type="text" required="true">
 			<label>Password</label>
 			<description>Your Panasonic Comfort Cloud app password</description>
+			<context>password</context>
 		</parameter>
 
 		<parameter name="refreshInterval" type="integer" min="30" unit="s">
 			<label>Refresh Interval</label>
 			<description>How often in seconds to fetch updates from Panasonic Comfort Cloud service (polling interval)</description>
 			<default>120</default>
+			<advanced>true</advanced>
 		</parameter>
 	</config-description>
 

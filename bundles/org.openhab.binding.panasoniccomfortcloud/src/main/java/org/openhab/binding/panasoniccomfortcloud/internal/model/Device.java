@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.measure.Unit;
+import javax.measure.quantity.Temperature;
 
 import org.openhab.binding.panasoniccomfortcloud.internal.dto.DeviceDTO;
 import org.openhab.core.library.unit.ImperialUnits;
@@ -38,7 +39,7 @@ public class Device {
 
     private FeatureSet featureSet;
 
-    private Unit temperatureUnit;
+    private Unit<Temperature> temperatureUnit;
     /**
      * TODO modeAvlList - figure out what it is
      * * "modeAvlList": {
@@ -89,10 +90,6 @@ public class Device {
         this.isInitialized = true;
     }
 
-    public boolean isAlive() {
-        return true; // TODO Check if device actually is reachable by servers
-    }
-
     public String getDeviceId() {
         return deviceId;
     }
@@ -121,7 +118,7 @@ public class Device {
         return featureSet;
     }
 
-    public Unit getTemperatureUnit() {
+    public Unit<Temperature> getTemperatureUnit() {
         return temperatureUnit;
     }
 

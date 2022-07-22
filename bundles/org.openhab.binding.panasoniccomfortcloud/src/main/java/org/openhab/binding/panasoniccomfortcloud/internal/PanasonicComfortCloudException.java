@@ -24,11 +24,11 @@ public abstract class PanasonicComfortCloudException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
-    public PanasonicComfortCloudException(String message) {
+    protected PanasonicComfortCloudException(String message) {
         super(message);
     }
 
-    public PanasonicComfortCloudException(String message, Throwable cause) {
+    protected PanasonicComfortCloudException(String message, Throwable cause) {
         super(message, cause);
     }
 }

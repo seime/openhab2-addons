@@ -113,7 +113,7 @@ public class PanasonicComfortCloudDiscoveryService extends AbstractDiscoveryServ
     }
 
     @Override
-    protected void stopScan() {
+    protected synchronized void stopScan() {
         logger.debug("Stop scan for devices.");
         super.stopScan();
     }

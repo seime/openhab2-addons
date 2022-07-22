@@ -14,15 +14,12 @@ package org.openhab.binding.panasoniccomfortcloud.internal;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.panasoniccomfortcloud.internal.dto.AbstractRequest;
 import org.openhab.binding.panasoniccomfortcloud.internal.dto.LoginRequest;
 import org.openhab.binding.panasoniccomfortcloud.internal.dto.LoginResponse;
-import org.openhab.core.thing.ThingUID;
+import org.openhab.core.storage.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,22 +44,24 @@ import okhttp3.logging.HttpLoggingInterceptor;
 public class ApiBridge {
     private static final String API_ENDPOINT = "https://accsmart.panasonic.com";
 
+    private static final String ACCESS_TOKEN_KEY = "accessToken";
+
     private final Logger logger = LoggerFactory.getLogger(ApiBridge.class);
 
     private String username;
     private String password;
-    private int refreshInterval;
-
-    @Nullable
-    private String accessToken = null;
 
     private Gson gson;
 
-    OkHttpClient client;
+    private OkHttpClient client;
 
-    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+    private Storage<String> storage;
 
-    public ApiBridge() {
+    public static final String APPLICATION_JSON_CHARSET_UTF_8 = "application/json; charset=utf-8";
+    public static final MediaType JSON = MediaType.parse(APPLICATION_JSON_CHARSET_UTF_8);
+
+    public ApiBridge(Storage<String> storage) {
+        this.storage = storage;
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor(message -> logger.debug(message));
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
@@ -70,10 +69,9 @@ public class ApiBridge {
         gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
     }
 
-    public void init(ThingUID bridgeUid, String username, String password, int refreshInterval) {
+    public void init(String username, String password) {
         this.username = username;
         this.password = password;
-        this.refreshInterval = refreshInterval;
     }
 
     private Request buildRequest(final AbstractRequest req) {
@@ -88,53 +86,54 @@ public class ApiBridge {
         request.removeHeader("User-Agent");
         request.removeHeader("Accept");
         request.header("User-Agent", "G-RAC");
-        request.header("Accept", "application/json; charset=utf-8");
-        request.header("Content-Type", "application/json; charset=utf-8");
+        request.header("Accept", APPLICATION_JSON_CHARSET_UTF_8);
+        request.header("Content-Type", APPLICATION_JSON_CHARSET_UTF_8);
         request.header("X-APP-TYPE", "1");
         request.header("X-APP-VERSION", "1.15.0");
-        if (accessToken != null) {
-            request.header("X-User-Authorization", accessToken);
+        if (storage.containsKey(ACCESS_TOKEN_KEY)) {
+            request.header("X-User-Authorization", storage.get(ACCESS_TOKEN_KEY));
         }
         return request.build();
     }
 
     public <T> T sendRequest(final AbstractRequest req, final Type responseType) throws PanasonicComfortCloudException {
 
-        try {
-            if (accessToken == null) {
-                // Login first
-                LoginRequest loginRequest = new LoginRequest(username, password);
-                LoginResponse loginResponse = sendRequestInternal(buildRequest(loginRequest), loginRequest,
-                        new TypeToken<LoginResponse>() {
-                        }.getType());
+        if (!storage.containsKey(ACCESS_TOKEN_KEY)) {
+            // No access token, send login with username+password
+            LoginRequest loginRequest = new LoginRequest(username, password);
+            LoginResponse loginResponse = sendRequestInternal(buildRequest(loginRequest), loginRequest,
+                    new TypeToken<LoginResponse>() {
+                    }.getType());
 
-                accessToken = loginResponse.uToken;
-            }
-
-            return sendRequestInternal(buildRequest(req), req, responseType);
-        } catch (InterruptedException | TimeoutException | ExecutionException e) {
-            throw new CommunicationException(String.format("Error sending request to server: %s", e.getMessage()), e);
+            storage.put(ACCESS_TOKEN_KEY, loginResponse.uToken);
         }
+
+        return sendRequestInternal(buildRequest(req), req, responseType);
     }
 
     public <T> T sendRequestInternal(final Request request, final AbstractRequest req, final Type responseType)
-            throws PanasonicComfortCloudException, ExecutionException, InterruptedException, TimeoutException {
+            throws PanasonicComfortCloudException {
 
         try (Response response = client.newCall(request).execute()) {
             if (response.code() == 200) {
-
                 final JsonObject o = JsonParser.parseString(response.body().string()).getAsJsonObject();
                 if (o.has("message")) {
                     throw new CommunicationException(req, o.get("message").getAsString());
                 } else {
-                    return gson.fromJson(o, responseType);
+                    T responseJson = gson.fromJson(o, responseType);
+                    if (responseJson != null) {
+                        return responseJson;
+                    } else {
+                        throw new CommunicationException(
+                                "Unable to unmarshal response from API: " + response.body().string());
+                    }
                 }
 
             } else if (response.code() == 401) {
-                if (accessToken == null) {
+                if (storage.get(ACCESS_TOKEN_KEY) == null) {
                     throw new CommunicationException("Could not renew token");
                 } else {
-                    accessToken = null; // expired
+                    storage.remove(ACCESS_TOKEN_KEY);
                     return sendRequest(req, responseType); // Retry login + request
 
                 }
@@ -143,7 +142,7 @@ public class ApiBridge {
                         + response.code() + " and payload " + response.body().string());
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CommunicationException("General error communicating with service: " + e);
         }
     }
 }

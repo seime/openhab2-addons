@@ -45,7 +45,7 @@ public abstract class PanasonicComfortCloudBaseThingHandler extends BaseThingHan
     @NonNullByDefault({})
     protected PanasonicComfortCloudAccountHandler accountHandler;
 
-    public PanasonicComfortCloudBaseThingHandler(final Thing thing) {
+    protected PanasonicComfortCloudBaseThingHandler(final Thing thing) {
         super(thing);
     }
 
