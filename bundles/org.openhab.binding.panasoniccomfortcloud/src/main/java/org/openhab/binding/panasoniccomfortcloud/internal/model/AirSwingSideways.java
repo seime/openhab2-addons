@@ -16,6 +16,7 @@ package org.openhab.binding.panasoniccomfortcloud.internal.model;
  * @author Arne Seime - Initial contribution
  */
 public enum AirSwingSideways {
+    AUTO(-1),
     LEFT(0),
     LEFT_CENTER(4),
     CENTER(2),

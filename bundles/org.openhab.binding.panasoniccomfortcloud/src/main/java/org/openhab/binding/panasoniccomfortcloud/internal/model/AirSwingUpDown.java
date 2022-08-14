@@ -16,11 +16,13 @@ package org.openhab.binding.panasoniccomfortcloud.internal.model;
  * @author Arne Seime - Initial contribution
  */
 public enum AirSwingUpDown {
+    AUTO(-1),
     TOP(0),
     TOP_MIDDLE(3),
     MIDDLE(2),
     MIDDLE_BOTTOM(4),
-    BOTTOM(1);
+    BOTTOM(1),
+    ALL(5);
 
     public final int value;
 

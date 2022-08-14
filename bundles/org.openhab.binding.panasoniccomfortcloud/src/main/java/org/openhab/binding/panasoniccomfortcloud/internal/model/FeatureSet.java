@@ -36,7 +36,10 @@ public class FeatureSet {
     public FeatureSet(DeviceDTO dto) {
         supportedOperationModes = new TreeSet<>();
         // Main operation mode
-        supportedOperationModes.add(OperationMode.AUTO);
+
+        if (Boolean.TRUE.equals(dto.autoMode)) {
+            supportedOperationModes.add(OperationMode.AUTO);
+        }
         if (Boolean.TRUE.equals(dto.dryMode)) {
             supportedOperationModes.add(OperationMode.DRY);
         }
