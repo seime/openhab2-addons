@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0" bindingId="bluetooth"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+
+	<thing-type id="secuyou_smart_lock">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="roaming"/>
+			<bridge-type-ref id="bluegiga"/>
+			<bridge-type-ref id="bluez"/>
+		</supported-bridge-type-refs>
+
+		<label>Secuyou Smart Lock</label>
+		<description>Smart Lock for terrace doors</description>
+
+		<channels>
+			<channel id="rssi" typeId="rssi"/>
+
+			<channel id="handle_position" typeId="secuyou_handle_position"/>
+			<channel id="lock" typeId="secuyou_lock"/>
+			<channel id="battery" typeId="secuyou_battery"/>
+			<channel id="home_lock" typeId="secuyou_homelock"/>
+
+		</channels>
+
+		<config-description>
+			<parameter name="address" type="text">
+				<label>Address</label>
+				<description>Bluetooth address in XX:XX:XX:XX:XX:XX format</description>
+			</parameter>
+			<parameter name="pinCode" type="integer" min="0" max="99999">
+				<label>Pin code</label>
+				<description>Pin code as selected in the Secuyou app. Must be 5 digits</description>
+				<context>password</context>
+			</parameter>
+			<parameter name="encryptionKey" type="text" pattern="^[a-fA-F0-9]{32}$">
+				<label>Encryption key</label>
+				<description>Secuyou encryption key in hex format, 16 bytes ie 2B7E151628AED2A6ABF7158809CF4F3C</description>
+			</parameter>
+			<parameter name="keepAliveSeconds" type="integer" min="10">
+				<label>Keep-alive interval in seconds</label>
+				<description>How often to poll the lock status. Low value will use more battery. -1 disables the polling</description>
+				<default>600</default>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+
+	<channel-type id="secuyou_handle_position">
+		<item-type>Contact</item-type>
+		<label>Handle</label>
+		<description>Handle position</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="secuyou_lock">
+		<item-type>Switch</item-type>
+		<label>Lock</label>
+		<description>Lock (ON=locked, OFF=unlocked). Note:</description>
+	</channel-type>
+	<channel-type id="secuyou_battery">
+		<item-type>String</item-type>
+		<label>Battery</label>
+		<description>One of GOOD/LOW/CRITICAL/EMPTY. Replace on LOW</description>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="secuyou_homelock">
+		<item-type>Switch</item-type>
+		<label>Home Lock</label>
+		<description>Mode of operation, ON=Manual unlocking/locking (highly recommended), OFF=Auto locks when BLE connection
+			drops (which might never happen if the BLE connection between the device and the BLE adapter is
+			good)
+			is lost
+		</description>
+	</channel-type>
+
+</thing:thing-descriptions>
