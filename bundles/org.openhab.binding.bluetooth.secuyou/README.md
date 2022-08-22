@@ -11,6 +11,8 @@ Following thing type is supported by this extension:
 * [Secuyou Smart Lock](https://www.secuyou.dk/collections/produkter/products/secuyou-smart-lock-med-venstre-greb) model
   2.21
 
+The lock must already have been setup in the Secuyou app.
+
 NOTE: Only tested with a single lock of model 2.21 and firmware version 6. Might work somewhat on older models.
 
 NOTE2: Flaky firmware; sometimes when manually locked by touching the device, the lock reports UNKNOWN/IN PROGRESS

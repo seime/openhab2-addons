@@ -96,6 +96,11 @@ public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
         if (connectionNotification.getConnectionState() == BluetoothDevice.ConnectionState.DISCONNECTED) {
             cancelKeepAlive();
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.GONE, "Bluetooth connection to device lost");
+            // Set all channels to UNDEF
+            updateState(SecuyouBindingConstants.CHANNEL_ID_HOMELOCK, UnDefType.UNDEF);
+            updateState(SecuyouBindingConstants.CHANNEL_ID_LOCK, UnDefType.UNDEF);
+            updateState(SecuyouBindingConstants.CHANNEL_ID_HANDLE_POSITION, UnDefType.UNDEF);
+            updateState(SecuyouBindingConstants.CHANNEL_ID_BATTERY, UnDefType.UNDEF);
         } else if (connectionNotification.getConnectionState() == BluetoothDevice.ConnectionState.CONNECTED) {
             // Reset state when reconnected
             lock = new SecuyouSmartLockState();
@@ -324,6 +329,10 @@ public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
 
     private void refreshStatus() {
         if (device.getConnectionState() == BluetoothDevice.ConnectionState.CONNECTED) {
+
+            // Ensure we still get 'em
+            setupNotifications();
+
             BluetoothCharacteristic lockStatusCharacteristic = device
                     .getCharacteristic(SecuyouBindingConstants.LOCK_STATUS_CHARACTERISTIC);
             if (lockStatusCharacteristic != null) {
@@ -332,13 +341,13 @@ public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
         }
     }
 
-    private void setupNotifications(BluetoothService keyService) {
-        BluetoothCharacteristic stateCharacteristic = keyService
+    private void setupNotifications() {
+        BluetoothCharacteristic stateCharacteristic = device
                 .getCharacteristic(SecuyouBindingConstants.LOCK_STATE_CHARACTERISTIC);
         if (stateCharacteristic != null) {
             device.enableNotifications(stateCharacteristic);
         }
-        BluetoothCharacteristic keyCharacteristic = keyService
+        BluetoothCharacteristic keyCharacteristic = device
                 .getCharacteristic(SecuyouBindingConstants.LOCK_STATUS_CHARACTERISTIC);
         if (keyCharacteristic != null) {
             device.enableNotifications(keyCharacteristic);
