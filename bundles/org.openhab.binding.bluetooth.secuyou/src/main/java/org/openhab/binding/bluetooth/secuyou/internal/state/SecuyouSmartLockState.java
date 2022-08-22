@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.bluetooth.secuyou.internal.state;
 
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -50,96 +51,35 @@ public class SecuyouSmartLockState {
     private AuthenticationState authenticationState = AuthenticationState.UNAUTHENTICATED;
     private byte[] challenge;
 
-    private static byte toByte(char digit) {
-        switch (digit) {
-            case '0':
-                return 0;
-            case '1':
-                return 1;
-            case '2':
-                return 2;
-            case '3':
-                return 3;
-            case '4':
-                return 4;
-            case '5':
-                return 5;
-            case '6':
-                return 6;
-            case '7':
-                return 7;
-            case '8':
-                return 8;
-            case '9':
-                return 9;
-            default:
-                return 0;
-        }
-    }
-
-    public byte[] generateChallengeResponse(String pinCode, String encryptionKeyHexString) {
-        byte[] challengeResponse = new byte[16];
-        Arrays.fill(challengeResponse, (byte) 0);
-
-        int digitCounter = 0;
-
-        while (true) {
-            int position = 0;
-            if (digitCounter >= 5) {
-                while (position < 16) {
-                    challengeResponse[position] = ((byte) (challengeResponse[position] + challenge[position]));
-                    ++position;
-                }
-
-                return encrypt(challengeResponse, encryptionKeyHexString);
-            }
-
-            challengeResponse[digitCounter] = toByte(pinCode.charAt(digitCounter));
-            ++digitCounter;
-        }
-    }
-
-    private byte[] encrypt(byte[] data, String encryptionKeyHexString) {
-        try {
-            SecretKeySpec keySpec = new SecretKeySpec(DatatypeConverter.parseHexBinary(encryptionKeyHexString), "AES");
-            Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
-            cipher.init(Cipher.ENCRYPT_MODE, keySpec);
-            return cipher.doFinal(data);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException
-                | BadPaddingException e) {
-            throw new SecurityException(String.format("Error doing pin encryption: %s", e.getMessage()), e);
-        }
-    }
-
     public void setChallenge(byte[] challenge) {
         this.challenge = challenge;
     }
 
-    public void setLockState(byte[] lockStatus) {
-        deviceState = DeviceState.fromValue(lockStatus[0]);
+    public void setLockState(byte[] lockState) {
+        deviceState = DeviceState.fromValue(lockState[0]);
     }
 
-    public void setLockStatus(byte[] statusData) {
+    public void setLockStatus(byte[] lockStatus) {
         if (previousLockPosition == LockingMechanismPosition.UNKNOWN) {
             previousLockPosition = lockPosition;
-            lockPosition = LockingMechanismPosition.fromValue(statusData[0]);
         }
+        lockPosition = LockingMechanismPosition.fromValue(lockStatus[0]);
 
-        if (statusData[1] == 16) {
+        if (lockStatus[1] == 16) {
             pinCodeCorrect = true;
         } else {
             pinCodeCorrect = false;
         }
 
-        batteryStatus = BatteryStatus.fromValue(statusData[2]);
+        batteryStatus = BatteryStatus.fromValue(lockStatus[2]);
 
-        if (statusData[3] != 0 && statusData[3] != 1) {
+        if (lockStatus[3] != 0 && lockStatus[3] != 1) {
             handleState = HandleState.OPEN;
         } else {
             handleState = HandleState.CLOSED;
         }
 
-        byte lockPositionStatus = statusData[4];
+        byte lockPositionStatus = lockStatus[4];
         if (lockPositionStatus == 0) {
             homeLockEnabled = false;
             rescueState = false;
@@ -152,6 +92,28 @@ public class SecuyouSmartLockState {
         } else if (lockPositionStatus == 3) {
             homeLockEnabled = true;
             rescueState = true;
+        }
+    }
+
+    public byte[] generateChallengeResponse(String pinCode, String encryptionKeyHexString) {
+        byte[] challengeResponse = Arrays.copyOf(challenge, 16);
+        byte[] pinAsBytes = pinCode.getBytes(StandardCharsets.ISO_8859_1);
+        for (int i = 0; i < 5; i++) {
+            challengeResponse[i] = (byte) (challenge[i] + (pinAsBytes[i] - 0x30)); // Convert '0' (0x30) to 0x00
+        }
+
+        return encrypt(challengeResponse, encryptionKeyHexString);
+    }
+
+    private byte[] encrypt(byte[] data, String encryptionKeyHexString) {
+        try {
+            SecretKeySpec keySpec = new SecretKeySpec(DatatypeConverter.parseHexBinary(encryptionKeyHexString), "AES");
+            Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec);
+            return cipher.doFinal(data);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException
+                | BadPaddingException e) {
+            throw new SecurityException(String.format("Error doing pin encryption: %s", e.getMessage()), e);
         }
     }
 

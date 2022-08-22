@@ -39,7 +39,7 @@ public class SecuyouHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
         if (thingTypeUID.equals(SecuyouBindingConstants.THING_TYPE_SMART_LOCK)) {
-            return new SecuyouConnectedHandler(thing);
+            return new SecuyouSmartLockHandler(thing);
         }
 
         return null;

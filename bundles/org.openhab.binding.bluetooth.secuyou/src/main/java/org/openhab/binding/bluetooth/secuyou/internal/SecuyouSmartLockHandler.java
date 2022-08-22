@@ -48,13 +48,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link SecuyouConnectedHandler} is responsible for handling commands, which are sent to one of the channels.
+ * The {@link SecuyouSmartLockHandler} is responsible for handling commands, which are sent to one of the channels.
  *
  * @author Arne Seime - Initial contribution
  */
-public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
+public class SecuyouSmartLockHandler extends ConnectedBluetoothHandler {
 
-    private final Logger logger = LoggerFactory.getLogger(SecuyouConnectedHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(SecuyouSmartLockHandler.class);
 
     private Optional<SecuyouConfiguration> configuration = Optional.empty();
 
@@ -63,7 +63,7 @@ public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
     private SecuyouSmartLockState lock = new SecuyouSmartLockState();
     private ScheduledFuture<?> keepAliveJob;
 
-    public SecuyouConnectedHandler(Thing thing) {
+    public SecuyouSmartLockHandler(Thing thing) {
         super(thing);
     }
 
@@ -71,7 +71,7 @@ public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
     public void initialize() {
         logger.debug("Initialize {}", this);
         super.initialize();
-        updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.CONFIGURATION_PENDING, "Performing handshake");
+        updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.CONFIGURATION_PENDING, "Init started");
 
         configuration = Optional.of(getConfigAs(SecuyouConfiguration.class));
         logger.debug("Using configuration: {}", configuration.get());
@@ -185,8 +185,8 @@ public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
         }
     }
 
-    private void handleLockStatusUpdated(byte[] value) {
-        lock.setLockStatus(value);
+    private void handleLockStatusUpdated(byte[] lockStatus) {
+        lock.setLockStatus(lockStatus);
         logger.debug("Updated state: {}", lock);
 
         updateState(SecuyouBindingConstants.CHANNEL_ID_BATTERY,
@@ -232,7 +232,7 @@ public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
 
     private synchronized void initializeLock() {
         logger.info("Starting lock handshake procedure");
-        updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.NONE, "Initializing lock");
+        updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.NONE, "Connected, initializing");
         @Nullable
         BluetoothService keyService = device.getServices(SecuyouBindingConstants.KEY_SERVICE);
         if (keyService == null) {
@@ -241,8 +241,8 @@ public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
                     "Unsupported device or firmware (gatt service not found)");
             disconnect();
         } else {
-            setupNotifications(keyService);
-            readStaticProperties();
+            setupNotifications();
+            readThingProperties();
 
             BluetoothCharacteristic lockStateCharacteristic = keyService
                     .getCharacteristic(SecuyouBindingConstants.LOCK_STATE_CHARACTERISTIC);
@@ -329,7 +329,6 @@ public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
 
     private void refreshStatus() {
         if (device.getConnectionState() == BluetoothDevice.ConnectionState.CONNECTED) {
-
             // Ensure we still get 'em
             setupNotifications();
 
@@ -354,7 +353,7 @@ public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
         }
     }
 
-    private void readStaticProperties() {
+    private void readThingProperties() {
         // Update thing properties in one go
         CountDownLatch latch = new CountDownLatch(6);
 
@@ -397,7 +396,6 @@ public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
         if (command instanceof RefreshType) {
             refreshStatus();
         } else {
-
             if (lock.getAuthenticationState() == AuthenticationState.AUTHENTICATED) {
                 switch (channelUID.getId()) {
                     case SecuyouBindingConstants.CHANNEL_ID_LOCK: {
@@ -428,12 +426,10 @@ public class SecuyouConnectedHandler extends ConnectedBluetoothHandler {
                     default:
                         logger.warn("Ignored command {} for channel {}", command, channelUID.getId());
                 }
-
             } else {
                 logger.warn("Ignoring command as authentication state is not AUTHENTICATED but {}",
                         lock.getAuthenticationState());
             }
-
         }
         super.handleCommand(channelUID, command);
     }
