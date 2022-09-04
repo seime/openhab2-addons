@@ -12,6 +12,8 @@
  */
 package org.openhab.binding.bluetooth.secuyou.internal;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -62,6 +64,7 @@ public class SecuyouSmartLockHandler extends ConnectedBluetoothHandler {
 
     private SecuyouSmartLockState lock = new SecuyouSmartLockState();
     private ScheduledFuture<?> keepAliveJob;
+    private ScheduledFuture<?> delayedDisconnectJob;
 
     public SecuyouSmartLockHandler(Thing thing) {
         super(thing);
@@ -95,13 +98,20 @@ public class SecuyouSmartLockHandler extends ConnectedBluetoothHandler {
         super.onConnectionStateChange(connectionNotification);
         if (connectionNotification.getConnectionState() == BluetoothDevice.ConnectionState.DISCONNECTED) {
             cancelKeepAlive();
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.GONE, "Bluetooth connection to device lost");
-            // Set all channels to UNDEF
-            updateState(SecuyouBindingConstants.CHANNEL_ID_HOMELOCK, UnDefType.UNDEF);
-            updateState(SecuyouBindingConstants.CHANNEL_ID_LOCK, UnDefType.UNDEF);
-            updateState(SecuyouBindingConstants.CHANNEL_ID_HANDLE_POSITION, UnDefType.UNDEF);
-            updateState(SecuyouBindingConstants.CHANNEL_ID_BATTERY, UnDefType.UNDEF);
+
+            delayedDisconnectJob = scheduler.schedule(() -> {
+                // Do not set device to OFFLINE just yet, a reconnect might come in a very short time
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.GONE, "Bluetooth connection to device lost");
+                // Set all channels to UNDEF
+                updateState(SecuyouBindingConstants.CHANNEL_ID_HOMELOCK, UnDefType.UNDEF);
+                updateState(SecuyouBindingConstants.CHANNEL_ID_LOCK, UnDefType.UNDEF);
+                updateState(SecuyouBindingConstants.CHANNEL_ID_HANDLE_POSITION, UnDefType.UNDEF);
+                updateState(SecuyouBindingConstants.CHANNEL_ID_BATTERY, UnDefType.UNDEF);
+            }, 3, TimeUnit.SECONDS);
+
         } else if (connectionNotification.getConnectionState() == BluetoothDevice.ConnectionState.CONNECTED) {
+            cancelDelayedDisconnect();
+
             // Reset state when reconnected
             lock = new SecuyouSmartLockState();
         }
@@ -111,6 +121,13 @@ public class SecuyouSmartLockHandler extends ConnectedBluetoothHandler {
         if (keepAliveJob != null && !keepAliveJob.isCancelled()) {
             keepAliveJob.cancel(true);
             keepAliveJob = null;
+        }
+    }
+
+    private void cancelDelayedDisconnect() {
+        if (delayedDisconnectJob != null && !delayedDisconnectJob.isCancelled()) {
+            delayedDisconnectJob.cancel(true);
+            delayedDisconnectJob = null;
         }
     }
 
@@ -215,13 +232,88 @@ public class SecuyouSmartLockHandler extends ConnectedBluetoothHandler {
                 break;
             case LOCKING_OPERATION_IN_PROGRESS:
             case UNKNOWN:
-                updateState(SecuyouBindingConstants.CHANNEL_ID_LOCK, UnDefType.UNDEF);
+                // Try unlock and locking again if status cannot be determined
+                if (!unknownLockStatusRescueOperationInProgress
+                        && lastRescueOperation.plus(3, ChronoUnit.MINUTES).isBefore(Instant.now())) {
+                    lastRescueOperation = Instant.now();
+                    tryDoubleLockToogleToResetUnknownLockPosition();
+                } else {
+                    updateState(SecuyouBindingConstants.CHANNEL_ID_LOCK, UnDefType.UNDEF);
+                }
                 break;
             default:
                 logger.info("Unsupported lock state {}", lock.getLockPosition());
         }
 
         // Update channels
+    }
+
+    private Instant lastRescueOperation = Instant.EPOCH;
+
+    private boolean unknownLockStatusRescueOperationInProgress = false;
+
+    private synchronized void tryDoubleLockToogleToResetUnknownLockPosition() {
+        unknownLockStatusRescueOperationInProgress = true;
+        logger.info("Starting rescue operation");
+        CountDownLatch resetCountdown = new CountDownLatch(1);
+        if (device.getConnectionState() == BluetoothDevice.ConnectionState.CONNECTED) {
+            BluetoothCharacteristic confirmCharacteristic = device
+                    .getCharacteristic(SecuyouBindingConstants.CONFIRM_CHARACTERISTIC);
+            if (confirmCharacteristic != null) {
+                device.writeCharacteristic(confirmCharacteristic, SecuyouBindingConstants.CMD_TOGGLE_LOCK)
+                        .whenComplete((toggle1, ex) -> {
+                            logger.info("Toggle #1 sent");
+                            sleep(2000);
+                            device.writeCharacteristic(confirmCharacteristic, SecuyouBindingConstants.CMD_TOGGLE_LOCK)
+                                    .whenComplete((toggle2, ex2) -> {
+                                        logger.info("Toggle #2 sent");
+                                        sleep(2000);
+
+                                        BluetoothCharacteristic lockStatusCharacteristic = device
+                                                .getCharacteristic(SecuyouBindingConstants.LOCK_STATUS_CHARACTERISTIC);
+
+                                        if (lockStatusCharacteristic != null) {
+                                            device.readCharacteristic(lockStatusCharacteristic)
+                                                    .whenComplete((lockStatus, ex3) -> {
+                                                        logger.info("Status update after rescue received");
+                                                        handleLockStatusUpdated(lockStatus);
+                                                        if (lock.getLockPosition() == LockingMechanismPosition.UNLOCKED
+                                                                || lock.getLockPosition() == LockingMechanismPosition.LOCKED) {
+                                                            logger.info("Rescue operation successful");
+                                                        } else {
+                                                            logger.warn("Rescue operation unsuccessful");
+                                                        }
+                                                        resetCountdown.countDown();
+                                                    });
+                                        } else {
+                                            logger.warn(
+                                                    "Could not request lock status during recovery - characteristic not found");
+                                        }
+                                    });
+
+                        });
+            } else {
+                logger.warn("Could not send command to lock - characteristic not found");
+            }
+        } else {
+            logger.warn("Could not send command to lock - device not connected");
+        }
+
+        try {
+            resetCountdown.await(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            unknownLockStatusRescueOperationInProgress = false;
+        }
+    }
+
+    private static void sleep(int i) {
+        try {
+            Thread.sleep(i);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

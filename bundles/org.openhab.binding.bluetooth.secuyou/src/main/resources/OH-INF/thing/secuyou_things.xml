@@ -38,10 +38,11 @@
 				<label>Encryption key</label>
 				<description>Secuyou encryption key in hex format, 16 bytes ie 2B7E151628AED2A6ABF7158809CF4F3C</description>
 			</parameter>
-			<parameter name="keepAliveSeconds" type="integer" min="10">
+			<parameter name="keepAliveSeconds" type="integer">
 				<label>Keep-alive interval in seconds</label>
-				<description>How often to poll the lock status. Low value will use more battery. -1 disables the polling</description>
-				<default>600</default>
+				<description>How often to poll the lock status. Default is no polling, but rely on state notifications. Low value
+					will use more battery. -1 disables the polling</description>
+				<default>-1</default>
 			</parameter>
 		</config-description>
 	</thing-type>
