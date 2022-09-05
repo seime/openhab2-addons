@@ -41,8 +41,20 @@
 			<parameter name="keepAliveSeconds" type="integer">
 				<label>Keep-alive interval in seconds</label>
 				<description>How often to poll the lock status. Default is no polling, but rely on state notifications. Low value
-					will use more battery. -1 disables the polling</description>
+					will use more battery. -1 disables the polling
+				</description>
 				<default>-1</default>
+			</parameter>
+			<parameter name="attemptLockRescue" type="boolean">
+				<label>Try lock "rescue" when lock stuck at LOCKING_OPERATION_IN_PROGRESS</label>
+				<description>When lock reports LOCKING_OPERATION_IN_PROGRESS, try to toggle the lock twice to get accurate state
+					reading without actually changing the lock position</description>
+				<default>false</default>
+			</parameter>
+			<parameter name="treatLockingInProgressAsLocked" type="boolean">
+				<label>Treat lock status LOCKING_OPERATION_IN_PROGRESS as LOCKED</label>
+				<description>When lock reports LOCKING_OPERATION_IN_PROGRESS, treat this as LOCKED. Warning: Might be wrong!</description>
+				<default>false</default>
 			</parameter>
 		</config-description>
 	</thing-type>

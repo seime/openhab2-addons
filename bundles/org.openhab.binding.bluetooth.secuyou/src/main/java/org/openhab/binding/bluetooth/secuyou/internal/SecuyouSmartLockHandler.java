@@ -62,7 +62,7 @@ public class SecuyouSmartLockHandler extends ConnectedBluetoothHandler {
 
     private Map<String, String> deviceProps = new HashMap<>();
 
-    private SecuyouSmartLockState lock = new SecuyouSmartLockState();
+    private SecuyouSmartLockState lock;
     private ScheduledFuture<?> keepAliveJob;
     private ScheduledFuture<?> delayedDisconnectJob;
 
@@ -78,6 +78,8 @@ public class SecuyouSmartLockHandler extends ConnectedBluetoothHandler {
 
         configuration = Optional.of(getConfigAs(SecuyouConfiguration.class));
         logger.debug("Using configuration: {}", configuration.get());
+        lock = new SecuyouSmartLockState(configuration.get().treatLockingInProgressAsLocked);
+
         if (device.getConnectionState() != BluetoothDevice.ConnectionState.CONNECTED) {
             device.connect();
         } else if (!device.isServicesDiscovered()) {
@@ -113,7 +115,7 @@ public class SecuyouSmartLockHandler extends ConnectedBluetoothHandler {
             cancelDelayedDisconnect();
 
             // Reset state when reconnected
-            lock = new SecuyouSmartLockState();
+            lock = new SecuyouSmartLockState(configuration.get().treatLockingInProgressAsLocked);
         }
     }
 
@@ -234,7 +236,8 @@ public class SecuyouSmartLockHandler extends ConnectedBluetoothHandler {
             case UNKNOWN:
                 // Try unlock and locking again if status cannot be determined
                 if (!unknownLockStatusRescueOperationInProgress
-                        && lastRescueOperation.plus(3, ChronoUnit.MINUTES).isBefore(Instant.now())) {
+                        && lastRescueOperation.plus(3, ChronoUnit.MINUTES).isBefore(Instant.now())
+                        && configuration.get().attemptLockRescue) {
                     lastRescueOperation = Instant.now();
                     tryDoubleLockToogleToResetUnknownLockPosition();
                 } else {

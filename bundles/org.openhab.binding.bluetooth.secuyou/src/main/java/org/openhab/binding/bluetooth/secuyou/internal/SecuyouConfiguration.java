@@ -29,9 +29,14 @@ public class SecuyouConfiguration {
 
     public int keepAliveSeconds = 600;
 
+    public boolean attemptLockRescue = false;
+
+    public boolean treatLockingInProgressAsLocked = false;
+
     @Override
     public String toString() {
-        return "SecuyouConfiguration{" + "address='" + address + '\'' + ", pinCode='<hidden>'"
-                + ", encryptionKey='<hidden>'" + ", keepAliveSeconds=" + keepAliveSeconds + '}';
+        return "SecuyouConfiguration{" + "address='" + address + '\'' + ", attemptLockRescue=" + attemptLockRescue
+                + ", encryptionKey='<hidden>'" + ", keepAliveSeconds=" + keepAliveSeconds + ", pinCode='<hidden>'"
+                + ", treatLockingInProgressAsLocked=" + treatLockingInProgressAsLocked + '}';
     }
 }

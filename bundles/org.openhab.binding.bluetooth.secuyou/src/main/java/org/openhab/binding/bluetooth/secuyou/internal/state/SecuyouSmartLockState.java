@@ -24,12 +24,17 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * The {@link SecuyouSmartLockState} is responsible for parsing lock state
  *
  * @author Arne Seime - Initial contribution
  */
 public class SecuyouSmartLockState {
+
+    private final Logger logger = LoggerFactory.getLogger(SecuyouSmartLockState.class);
 
     private boolean homeLockEnabled;
     private boolean pinCodeCorrect;
@@ -39,6 +44,12 @@ public class SecuyouSmartLockState {
     private LockingMechanismPosition previousLockPosition = LockingMechanismPosition.UNKNOWN;
     private LockingMechanismPosition lockPosition = LockingMechanismPosition.UNKNOWN;
     private DeviceState deviceState = DeviceState.KEY_GENERATION;
+    private boolean treatLockingInProgressAsLocked;
+
+    public SecuyouSmartLockState(boolean treatLockingInProgressAsLocked) {
+
+        this.treatLockingInProgressAsLocked = treatLockingInProgressAsLocked;
+    }
 
     public AuthenticationState getAuthenticationState() {
         return authenticationState;
@@ -60,10 +71,14 @@ public class SecuyouSmartLockState {
     }
 
     public void setLockStatus(byte[] lockStatus) {
-        if (previousLockPosition == LockingMechanismPosition.UNKNOWN) {
-            previousLockPosition = lockPosition;
-        }
+        previousLockPosition = lockPosition;
         lockPosition = LockingMechanismPosition.fromValue(lockStatus[0]);
+        if (lockPosition == LockingMechanismPosition.LOCKING_OPERATION_IN_PROGRESS
+                && previousLockPosition == LockingMechanismPosition.UNLOCKED) {
+            logger.warn("Lock reported {} but will assume state LOCKED since previous state was UNLOCKED",
+                    lockPosition);
+            lockPosition = LockingMechanismPosition.LOCKED;
+        }
 
         if (lockStatus[1] == 16) {
             pinCodeCorrect = true;

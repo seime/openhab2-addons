@@ -30,7 +30,7 @@ public class SecuyouSmartLockStateTest {
     @Test
     void testGenerateChallengeResponse() {
         byte[] challenge = DatatypeConverter.parseHexBinary("FCE8C4904CF87611BE3A79B75CC24650");
-        SecuyouSmartLockState lock = new SecuyouSmartLockState();
+        SecuyouSmartLockState lock = new SecuyouSmartLockState(false);
         lock.setChallenge(challenge);
         byte[] challengeResponse = lock.generateChallengeResponse("12345", "AA7E151628AED2A6ABF7158809CF4F3C");
         byte[] expectedChallengeResponse = DatatypeConverter.parseHexBinary("1B440138FC47F84D7B24905988C652E9");
@@ -44,7 +44,7 @@ public class SecuyouSmartLockStateTest {
 
         byte[] firstUpdate = DatatypeConverter
                 .parseHexBinary("00-10-00-02-01-00-F6BB62426A41B2AA236A".replace("-", ""));
-        SecuyouSmartLockState state = new SecuyouSmartLockState();
+        SecuyouSmartLockState state = new SecuyouSmartLockState(false);
         state.setLockStatus(firstUpdate);
 
         // next

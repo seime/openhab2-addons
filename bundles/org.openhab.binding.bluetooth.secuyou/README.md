@@ -34,12 +34,14 @@ As any other Bluetooth device, devices are discovered automatically by the corre
 
 Supported configuration parameters for the things:
 
-| Property         | Type    | Default | Required | Description                                                                                                      |
-|------------------|---------|---------|----------|------------------------------------------------------------------------------------------------------------------|
-| address          | String  |         | Yes      | Bluetooth address of the device (in format "XX:XX:XX:XX:XX:XX")                                                  |
-| pinCode          | Integer |         | No       | Pin code as used in app. Necessary to control lock, but not read status                                          |
-| encryptionKey    | String  |         | No       | Hex encoded encryption key. Necessary to control lock but not read status                                        |
-| keepAliveSeconds | Integer | 600     | No       | How often a refresh shall occur in seconds. Note that lock changes are pushed, no polling should be necessary(?) |
+| Property         | Type    | Default | Required | Description                                                                                                                                                 |
+|------------------|---------|---------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| address          | String  |         | Yes      | Bluetooth address of the device (in format "XX:XX:XX:XX:XX:XX")                                                                                             |
+| pinCode          | Integer |         | No       | Pin code as used in app. Necessary to control lock, but not read status                                                                                     |
+| encryptionKey    | String  |         | No       | Hex encoded encryption key. Necessary to control lock but not read status                                                                                   |
+| keepAliveSeconds | Integer | 600     | No       | How often a refresh shall occur in seconds. Note that lock changes are pushed, no polling should be necessary. Defaults to -1 (no polling)                  |
+| attemptLockRescue | Boolean | false   | No       | When lock reports LOCKING_OPERATION_IN_PROGRESS, try to toggle the lock twice to get accurate state reading without actually changing the lock position     |
+| treatLockingInProgressAsLocked | Boolean | false   | No       | When lock reports LOCKING_OPERATION_IN_PROGRESS, treat this as LOCKED if previous known position was UNLOCKED. Warning: Your door may actually be unlocked! |
 
 ## Channels
 
