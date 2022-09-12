@@ -73,9 +73,9 @@ public class SecuyouSmartLockState {
     public void setLockStatus(byte[] lockStatus) {
         previousLockPosition = lockPosition;
         lockPosition = LockingMechanismPosition.fromValue(lockStatus[0]);
-        if (lockPosition == LockingMechanismPosition.LOCKING_OPERATION_IN_PROGRESS
-                && previousLockPosition == LockingMechanismPosition.UNLOCKED) {
-            logger.warn("Lock reported {} but will assume state LOCKED since previous state was UNLOCKED",
+        if (treatLockingInProgressAsLocked && lockPosition == LockingMechanismPosition.LOCKING_OPERATION_IN_PROGRESS) {
+            logger.warn(
+                    "Lock reported {} but will assume state LOCKED since lock reported LOCKING_OPERATION_IN_PROGRESS",
                     lockPosition);
             lockPosition = LockingMechanismPosition.LOCKED;
         }
