@@ -37,8 +37,8 @@ public class FeatureSet {
         supportedOperationModes = new TreeSet<>();
         // Main operation mode
 
-        if (Boolean.TRUE.equals(dto.autoMode)) {
-            supportedOperationModes.add(OperationMode.AUTO);
+        if (Boolean.TRUE.equals(dto.fanMode)) {
+            supportedOperationModes.add(OperationMode.FAN);
         }
         if (Boolean.TRUE.equals(dto.dryMode)) {
             supportedOperationModes.add(OperationMode.DRY);

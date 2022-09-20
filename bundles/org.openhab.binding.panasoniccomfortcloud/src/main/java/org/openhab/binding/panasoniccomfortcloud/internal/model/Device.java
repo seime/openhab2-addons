@@ -81,11 +81,12 @@ public class Device {
 
         currentParameters = new Parameters(dto.parameters, this);
 
-        this.dryRange = new TemperatureRange(dto.dryTempMin, dto.dryTempMax);
-        this.heatRange = new TemperatureRange(dto.heatTempMin, dto.heatTempMax);
-        this.autoRange = new TemperatureRange(dto.autoTempMin, dto.autoTempMax);
-        this.coolRange = new TemperatureRange(dto.coolTempMin, dto.coolTempMax);
-
+        /*
+         * this.dryRange = new TemperatureRange(dto.dryTempMin, dto.dryTempMax);
+         * this.heatRange = new TemperatureRange(dto.heatTempMin, dto.heatTempMax);
+         * this.autoRange = new TemperatureRange(dto.autoTempMin, dto.autoTempMax);
+         * this.coolRange = new TemperatureRange(dto.coolTempMin, dto.coolTempMax);
+         */
         this.lastUpdated = Instant.ofEpochMilli(dto.timestamp);
         this.isInitialized = true;
     }
