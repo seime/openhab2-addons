@@ -143,7 +143,7 @@ public class PanasonicComfortCloudAccountHandler extends BaseBridgeHandler {
             updateStatus(ThingStatus.ONLINE);
             if (triggerDeviceUpdate)
                 try {
-                    getThing().getThings().parallelStream()
+                    getThing().getThings().parallelStream().filter(e -> e.isEnabled())
                             .forEach(e -> ((PanasonicComfortCloudBaseThingHandler) e.getHandler()).loadFromServer());
                 } catch (NullPointerException ex) {
                     logger.debug(
