@@ -73,7 +73,7 @@ Note: Possible values for most `String` channels are reported as a thing propert
 | airSwingHorizontal        | R/W        | String               | Current horizontal air swing mode (LEFT, CENTER etc, see thing properties)  |
 | airSwingVertical          | R/W        | String               | Current vertical air swing mode (TOP, BOTTOM etc, see thing properties)     |
 | ecoMode                   | R/W        | String               | Current eco mode (AUTO, POWERFUL, QUIET, see thing properties)              |
-| nanoe                     | R          | String               | Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL, see thing properties)        |
+| nanoe                     | R/W        | String               | Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL, see thing properties)        |
 | actualNanoe               | R          | String               | Actual Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL, see thing properties) |
 
 Some channels are still missing like iAutoX and ecoNavi.
