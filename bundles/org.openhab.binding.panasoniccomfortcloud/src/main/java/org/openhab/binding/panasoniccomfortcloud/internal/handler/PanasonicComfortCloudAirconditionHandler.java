@@ -40,6 +40,7 @@ import org.openhab.binding.panasoniccomfortcloud.internal.model.AirSwingUpDown;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.Device;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.EcoMode;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.FanSpeed;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.NanoeMode;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.OperationMode;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.Parameters;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.TemperatureRange;
@@ -178,6 +179,12 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
     private void handleNanoeCommand(ChannelUID channelUID, Command command, Device device) {
         if (command instanceof RefreshType) {
             updateState(channelUID, StringType.valueOf(device.getCurrentParameters().getNanoeMode().toString()));
+        } else if (device.getFeatureSet().isNanoeStandAlone()) {
+            NanoeMode nanoeMode = NanoeMode.valueOf(command.toString());
+            Parameters currentParameters = device.getCurrentParameters();
+            currentParameters.setNanoeMode(nanoeMode);
+            sendParameters(channelUID, device, currentParameters,
+                    StringType.valueOf(device.getCurrentParameters().getNanoeMode().toString()));
         } else {
             logger.debug(ERROR_MESSAGE_UNSUPPORTED_COMMAND, command, channelUID);
         }

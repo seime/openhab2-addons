@@ -95,10 +95,9 @@ public class Parameters {
         dto.fanAutoMode = airSwingAutoMode.value;
         dto.fanSpeed = fanSpeed.value;
 
-        if (device.getFeatureSet().isNanoe()) {
-            dto.nanoe = nanoeMode.value;
-            dto.actualNanoe = actualNanoeMode.value;
-        }
+        dto.nanoe = nanoeMode.value;
+        dto.actualNanoe = actualNanoeMode.value;
+
         dto.operate = masterSwitch ? 1 : 0;
         dto.temperatureSet = targetTemperature;
 
