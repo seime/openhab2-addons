@@ -43,7 +43,8 @@ In order to find the correct deviceId to use in thing files, _check discovered t
 
 The following devices have been *tested* by users and found to be working. Currently no devices are *not* known to work.
 
-If your device is *not* listed, please test and report back so I can add it to the list.
+If your device is *not* listed, please test
+and [report back](https://community.openhab.org/t/panasonic-comfort-cloud-binding/133848) so I can add it to the list.
 
 * CS-MTZ16WKE
 * CS-HZ35XKE
@@ -77,6 +78,7 @@ Note: Possible values for most `String` channels are reported as a thing propert
 | `actualNanoe`               | R          | `String`               | Actual Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL) |
 
 Some channels are still missing like iAutoX and ecoNavi. If you have a device that supports these functions, please
+[contact me on the forum](https://community.openhab.org/t/panasonic-comfort-cloud-binding/133848)
 
 ## Reported issues
 
