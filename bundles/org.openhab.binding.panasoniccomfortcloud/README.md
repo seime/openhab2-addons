@@ -4,29 +4,29 @@ This binding integrates Panasonic Comfort Cloud air conditioners.
 
 ## Supported Things
 
-This binding supports Panasonic Air Conditioners that are connected to the internet via WiFi and can be controlled via
-the Panasonic Comfort Cloud app.
+This binding supports Panasonic Air Conditioners/heat pumps that are connected to the internet via WiFi _and_ can be
+controlled via the Panasonic Comfort Cloud app.
 
 * `account` = Panasonic Comfort Cloud Account - the account bridge
 * `aircondition` = An air conditioner or WiFi dongle
 
 ## Discovery
 
-In order to do discovery, add a thing of type Panasonic Comfort Cloud API and add username and password.
+In order to do discovery, add a thing of type Panasonic Comfort Cloud API (`account`) and add `username` and `password`.
 
 ## Thing Configuration
 
 See full example below for how to configure using thing files.
 
-### Account
+### account
 
-* `username` = Same as you use in the mobile app
-* `password` = Same as you use in the mobile app
-* `refreshInterval` = number of seconds between refresh calls to the server
+* `username` = Same as you use in the mobile app (_mandatory_)
+* `password` = Same as you use in the mobile app (_mandatory_)
+* `refreshInterval` = Number of seconds between refresh calls to the server (_optional_)
 
-### Airconditioner
+### aircondition
 
-* `deviceId` = id of aircondition device
+* `deviceId` = id of air condition device (_mandatory_)
 
 DeviceId can be found printed on side or back of the device. Or you can find it during discovery.
 
@@ -39,11 +39,11 @@ If you are using *thing* files; Device discovery will create a modified thingUID
 requirements.
 In order to find the correct deviceId to use in thing files, _check discovered thing properties_.
 
-#### Tested devices
+## Tested devices
 
-The following devices have been *tested* by users and found to be working. Currently no devices are *not* know to work.
+The following devices have been *tested* by users and found to be working. Currently no devices are *not* known to work.
 
-If your device is *not* listed, please report back so I can add it to the list.
+If your device is *not* listed, please test and report back so I can add it to the list.
 
 * CS-MTZ16WKE
 * CS-HZ35XKE
@@ -64,19 +64,19 @@ Note: Possible values for most `String` channels are reported as a thing propert
 
 | Channel                   | Read/write | Item type            | Description                                                                 |
 |---------------------------|------------|----------------------|-----------------------------------------------------------------------------|
-| masterSwitch              | R/W        | Switch               | Switch AC ON or OFF                                                         |
-| currentIndoorTemperature  | R          | Number:Temperature   | Measured indoor temperature                                                 |
-| currentOutdoorTemperature | R          | Number:Temperature   | Measured outdoor temperature                                                |
-| targetTemperature         | R/W        | Number:Temperature   | Target temperature / setpoint                                               |
-| operationMode             | R/W        | String               | Current mode (COOL, HEAT, etc, see thing properties)                        |
-| airSwingAutoMode          | R/W        | String               | Current auto air swing mode (AUTO, LEFT_RIGHT etc, see thing properties)    |
-| airSwingHorizontal        | R/W        | String               | Current horizontal air swing mode (LEFT, CENTER etc, see thing properties)  |
-| airSwingVertical          | R/W        | String               | Current vertical air swing mode (TOP, BOTTOM etc, see thing properties)     |
-| ecoMode                   | R/W        | String               | Current eco mode (AUTO, POWERFUL, QUIET, see thing properties)              |
-| nanoe                     | R/W        | String               | Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL, see thing properties)        |
-| actualNanoe               | R          | String               | Actual Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL, see thing properties) |
+| `masterSwitch`              | R/W        | `Switch`               | Switch AC ON or OFF                                                         |
+| `currentIndoorTemperature`  | R          | `Number:Temperature`   | Measured indoor temperature                                                 |
+| `currentOutdoorTemperature` | R          | `Number:Temperature`   | Measured outdoor temperature                                                |
+| `targetTemperature`         | R/W        | `Number:Temperature`   | Target temperature / setpoint                                               |
+| `operationMode`             | R/W        | `String`               | Current mode (COOL, HEAT, etc, see thing properties)                        |
+| `airSwingAutoMode`          | R/W        | `String`               | Current auto air swing mode (AUTO, LEFT_RIGHT etc, see thing properties)    |
+| `airSwingHorizontal`        | R/W        | `String`               | Current horizontal air swing mode (LEFT, CENTER etc, see thing properties)  |
+| `airSwingVertical`          | R/W        | `String`               | Current vertical air swing mode (TOP, BOTTOM etc, see thing properties)     |
+| `ecoMode`                   | R/W        | `String`               | Current eco mode (AUTO, POWERFUL, QUIET, see thing properties)              |
+| `nanoe`                     | R/W        | `String`               | Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL)        |
+| `actualNanoe`               | R          | `String`               | Actual Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL) |
 
-Some channels are still missing like iAutoX and ecoNavi.
+Some channels are still missing like iAutoX and ecoNavi. If you have a device that supports these functions, please
 
 ## Reported issues
 
