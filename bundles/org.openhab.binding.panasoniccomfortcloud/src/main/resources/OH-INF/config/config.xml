@@ -15,6 +15,13 @@ https://openhab.org/schemas/config-description-1.0.0.xsd">
 			<description>Your Panasonic Comfort Cloud app password</description>
 			<context>password</context>
 		</parameter>
+		<parameter name="appVersion" type="text" required="false">
+			<label>App version</label>
+			<description>Your Panasonic Comfort Cloud app version code, ie '1.16.0'. You can find this information in the apps
+				section of your mobile phone. If no value provided, it will use the current binding default.
+			</description>
+			<default>1.16.0</default>
+		</parameter>
 
 		<parameter name="refreshInterval" type="integer" min="30" unit="s">
 			<label>Refresh Interval</label>

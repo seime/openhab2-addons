@@ -45,11 +45,14 @@ public class ApiBridge {
     private static final String API_ENDPOINT = "https://accsmart.panasonic.com";
 
     private static final String ACCESS_TOKEN_KEY = "accessToken";
+    private static final int ERROR_CODE_UPDATE_VERSION = 4106;
 
     private final Logger logger = LoggerFactory.getLogger(ApiBridge.class);
 
     private String username;
     private String password;
+
+    private String appVersion;
 
     private Gson gson;
 
@@ -69,9 +72,10 @@ public class ApiBridge {
         gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
     }
 
-    public void init(String username, String password) {
+    public void init(String username, String password, String appVersion) {
         this.username = username;
         this.password = password;
+        this.appVersion = appVersion;
     }
 
     private Request buildRequest(final AbstractRequest req) {
@@ -89,7 +93,7 @@ public class ApiBridge {
         request.header("Accept", APPLICATION_JSON_CHARSET_UTF_8);
         request.header("Content-Type", APPLICATION_JSON_CHARSET_UTF_8);
         request.header("X-APP-TYPE", "1");
-        request.header("X-APP-VERSION", "1.15.0");
+        request.header("X-APP-VERSION", appVersion);
         if (storage.containsKey(ACCESS_TOKEN_KEY)) {
             request.header("X-User-Authorization", storage.get(ACCESS_TOKEN_KEY));
         }
@@ -131,7 +135,18 @@ public class ApiBridge {
 
             } else if (response.code() == 401) {
                 if (storage.get(ACCESS_TOKEN_KEY) == null) {
-                    throw new CommunicationException("Could not renew token");
+                    final JsonObject o = JsonParser.parseString(response.body().string()).getAsJsonObject();
+                    int errorCode = o.has("code") ? o.get("code").getAsInt() : -1;
+                    String errorMessage = o.has("message") ? o.get("message").getAsString() : "<not provided>";
+
+                    if (errorCode == ERROR_CODE_UPDATE_VERSION) {
+                        throw new CommunicationException(String.format(
+                                "New app version published - check the version number of your mobile app and enter the value as account config parameter (currently using %s)",
+                                appVersion));
+                    } else {
+                        throw new CommunicationException(
+                                String.format("Could not renew token: code %d, message %s", errorCode, errorMessage));
+                    }
                 } else {
                     storage.remove(ACCESS_TOKEN_KEY);
                     return sendRequest(req, responseType); // Retry login + request

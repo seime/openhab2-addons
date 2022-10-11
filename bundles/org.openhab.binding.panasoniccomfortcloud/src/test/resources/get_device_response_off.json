@@ -1,0 +1,50 @@
+{
+  "fanMode": false,
+  "modeAvlList": {
+    "autoMode": 1,
+    "fanMode": 1
+  },
+  "coolMode": true,
+  "airSwingLR": true,
+  "summerHouse": 0,
+  "nanoe": false,
+  "permission": 3,
+  "dryMode": true,
+  "nanoeList": {
+    "visualizationShow": 0
+  },
+  "autoMode": true,
+  "nanoeStandAlone": false,
+  "heatMode": true,
+  "autoSwingUD": false,
+  "ecoNavi": false,
+  "temperatureUnit": 0,
+  "iAutoX": false,
+  "quietMode": true,
+  "ecoFunction": 0,
+  "powerfulMode": true,
+  "timestamp": 1665516007424,
+  "pairedFlg": false,
+  "parameters": {
+    "ecoFunctionData": 0,
+    "airSwingLR": 2,
+    "nanoe": 0,
+    "lastSettingMode": 0,
+    "ecoNavi": 0,
+    "ecoMode": 2,
+    "operationMode": 2,
+    "fanAutoMode": 3,
+    "errorStatus": -255,
+    "temperatureSet": 17.5,
+    "fanSpeed": 0,
+    "iAuto": 0,
+    "airQuality": 0,
+    "insideTemperature": 20,
+    "outTemperature": 4,
+    "nanoeDevice": -255,
+    "operate": 0,
+    "airDirection": 1,
+    "actualNanoe": 0,
+    "airSwingUD": 0
+  }
+}

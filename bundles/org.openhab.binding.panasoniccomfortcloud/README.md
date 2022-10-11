@@ -22,7 +22,13 @@ See full example below for how to configure using thing files.
 
 * `username` = Same as you use in the mobile app (_mandatory_)
 * `password` = Same as you use in the mobile app (_mandatory_)
+* `appVersion` = The version of your Panasonic Comfort Cloud mobile app. You can find this information in the
+  application section of your phone (_mandatory_ with default value)
 * `refreshInterval` = Number of seconds between refresh calls to the server (_optional_)
+
+NOTE: If your account refuses to go online with error message 'New app version published - check the version number of
+your mobile app and enter the value as account config parameter (currently using <current version>)', update
+the `appVersion` config field. This _may_ work if the API has not changed too much
 
 ### aircondition
 

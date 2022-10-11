@@ -29,11 +29,14 @@ public class AccountConfiguration extends Configuration {
     @Nullable
     public String password;
 
+    @Nullable
+    public String appVersion;
+
     public int refreshInterval = 120;
 
     @Override
     public String toString() {
-        return "AccountConfiguration{" + "password='<REDACTED>'" + ", refreshInterval=" + refreshInterval
-                + ", username='" + username + '\'' + '}';
+        return "AccountConfiguration{" + "appVersion='" + appVersion + '\'' + ", password='<REDACTED>'"
+                + ", refreshInterval=" + refreshInterval + ", username='" + username + '\'' + '}';
     }
 }

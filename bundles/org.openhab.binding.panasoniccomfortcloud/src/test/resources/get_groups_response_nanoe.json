@@ -7,15 +7,15 @@
   "groupList": [
     {
       "groupId": 114958,
-      "groupName": "Daheim",
+      "groupName": "Da house",
       "deviceList": [
         {
-          "deviceGuid": "CS-Z42VKEW+4962505611",
+          "deviceGuid": "CS-Z42VKEW+10101010101",
           "deviceType": "3",
           "deviceName": "Klima Erdgeschoss",
           "permission": 3,
           "deviceModuleNumber": "CS-Z42VKEW",
-          "deviceHashGuid": "798c5e6bad60a25c50c1c62418b1f072463e89398c0c728fea42b11458e4e978",
+          "deviceHashGuid": "HASH",
           "summerHouse": 0,
           "iAutoX": false,
           "nanoe": true,
@@ -56,12 +56,12 @@
           }
         },
         {
-          "deviceGuid": "CS-MZ16VKE+4409006597",
+          "deviceGuid": "CS-MZ16VKE+290230202",
           "deviceType": "3",
           "deviceName": "Klima Bastian",
           "permission": 3,
           "deviceModuleNumber": "CS-MZ16VKE",
-          "deviceHashGuid": "385c50ad9857f908b3155fa2458afb131bcdcc9ab99e53367a1f931efb22ab26",
+          "deviceHashGuid": "HASH",
           "summerHouse": 0,
           "iAutoX": false,
           "nanoe": true,
@@ -102,12 +102,12 @@
           }
         },
         {
-          "deviceGuid": "CS-MZ16VKE+4409006619",
+          "deviceGuid": "CS-MZ16VKE+111111111111",
           "deviceType": "3",
           "deviceName": "Klima Rafael",
           "permission": 3,
           "deviceModuleNumber": "CS-MZ16VKE",
-          "deviceHashGuid": "6048b97c169480ec441573e7ad2f9ee0bbc42b4eb9b877e8261bf4689f88ddbc",
+          "deviceHashGuid": "HASH",
           "summerHouse": 0,
           "iAutoX": false,
           "nanoe": true,
@@ -148,12 +148,12 @@
           }
         },
         {
-          "deviceGuid": "CS-MZ16VKE+4409006605",
+          "deviceGuid": "CS-MZ16VKE+2222222222",
           "deviceType": "3",
           "deviceName": "Klima Schlafzimmer",
           "permission": 3,
           "deviceModuleNumber": "CS-MZ16VKE",
-          "deviceHashGuid": "d403ebc71a86581976fc9890adfaef5c92f49000a2ce063bd226ca5e82964774",
+          "deviceHashGuid": "HASH",
           "summerHouse": 0,
           "iAutoX": false,
           "nanoe": true,

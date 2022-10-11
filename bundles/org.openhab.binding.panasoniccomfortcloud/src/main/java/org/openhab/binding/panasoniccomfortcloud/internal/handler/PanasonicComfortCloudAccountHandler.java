@@ -78,7 +78,7 @@ public class PanasonicComfortCloudAccountHandler extends BaseBridgeHandler {
         updateStatus(ThingStatus.UNKNOWN);
         AccountConfiguration loadedConfig = getConfigAs(AccountConfiguration.class);
         config = loadedConfig;
-        apiBridge.init(loadedConfig.username, loadedConfig.password);
+        apiBridge.init(loadedConfig.username, loadedConfig.password, loadedConfig.appVersion);
         int refreshInterval = config.refreshInterval;
         if (refreshInterval < MIN_TIME_BETWEEEN_MODEL_UPDATES) {
             logger.warn("Refresh interval too short, setting minimum value of {}", MIN_TIME_BETWEEEN_MODEL_UPDATES);
