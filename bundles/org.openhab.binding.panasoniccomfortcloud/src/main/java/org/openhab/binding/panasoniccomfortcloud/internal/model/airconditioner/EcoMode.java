@@ -10,27 +10,24 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.panasoniccomfortcloud.internal.model;
+package org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner;
 
 /**
  * @author Arne Seime - Initial contribution
  */
-public enum FanSpeed {
+public enum EcoMode {
     AUTO(0),
-    LOW(1),
-    LOW_MIDDLE(2),
-    MIDDLE(3),
-    HIGH_MIDDLE(4),
-    HIGH(5);
+    POWERFUL(1),
+    QUIET(2);
 
     public final int value;
 
-    FanSpeed(int value) {
+    EcoMode(int value) {
         this.value = value;
     }
 
-    public static FanSpeed parseValue(int value) {
-        for (FanSpeed e : values()) {
+    public static EcoMode parseValue(int value) {
+        for (EcoMode e : values()) {
             if (e.value == value) {
                 return e;
             }

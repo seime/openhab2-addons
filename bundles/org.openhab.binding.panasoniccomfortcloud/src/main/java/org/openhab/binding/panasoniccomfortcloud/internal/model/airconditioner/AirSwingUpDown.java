@@ -10,27 +10,28 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.panasoniccomfortcloud.internal.model;
+package org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner;
 
 /**
  * @author Arne Seime - Initial contribution
  */
-public enum AirSwingSideways {
+public enum AirSwingUpDown {
     AUTO(-1),
-    LEFT(0),
-    LEFT_CENTER(4),
-    CENTER(2),
-    RIGHT_CENTER(3),
-    RIGHT(1);
+    TOP(0),
+    TOP_MIDDLE(3),
+    MIDDLE(2),
+    MIDDLE_BOTTOM(4),
+    BOTTOM(1),
+    ALL(5);
 
     public final int value;
 
-    AirSwingSideways(int value) {
+    AirSwingUpDown(int value) {
         this.value = value;
     }
 
-    public static AirSwingSideways parseValue(int value) {
-        for (AirSwingSideways e : values()) {
+    public static AirSwingUpDown parseValue(int value) {
+        for (AirSwingUpDown e : values()) {
             if (e.value == value) {
                 return e;
             }

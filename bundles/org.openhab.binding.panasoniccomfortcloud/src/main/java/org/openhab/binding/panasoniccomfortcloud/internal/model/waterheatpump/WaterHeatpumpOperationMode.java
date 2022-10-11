@@ -10,24 +10,25 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.panasoniccomfortcloud.internal.model;
+package org.openhab.binding.panasoniccomfortcloud.internal.model.waterheatpump;
 
 /**
  * @author Arne Seime - Initial contribution
  */
-public enum EcoMode {
-    AUTO(0),
-    POWERFUL(1),
-    QUIET(2);
+public enum WaterHeatpumpOperationMode {
+    OFF(0),
+    HEAT(2),
+    COOL(3),
+    AUTO(8);
 
     public final int value;
 
-    EcoMode(int value) {
+    WaterHeatpumpOperationMode(int value) {
         this.value = value;
     }
 
-    public static EcoMode parseValue(int value) {
-        for (EcoMode e : values()) {
+    public static WaterHeatpumpOperationMode parseValue(int value) {
+        for (WaterHeatpumpOperationMode e : values()) {
             if (e.value == value) {
                 return e;
             }

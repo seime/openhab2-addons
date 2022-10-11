@@ -32,9 +32,9 @@ the `appVersion` config field. This _may_ work if the API has not changed too mu
 
 ### aircondition
 
-* `deviceId` = id of air condition device (_mandatory_)
+* `deviceId` = id of air condition airconditionDevice (_mandatory_)
 
-DeviceId can be found printed on side or back of the device. Or you can find it during discovery.
+DeviceId can be found printed on side or back of the airconditionDevice. Or you can find it during discovery.
 
 Devices with built-in WIFI support appears to use format 'MODEL+SERIAL' while devices with a separate WIFI dongle
 usually only uses the 'SERIAL' part.
@@ -49,7 +49,7 @@ In order to find the correct deviceId to use in thing files, _check discovered t
 
 The following devices have been *tested* by users and found to be working. Currently no devices are *not* known to work.
 
-If your device is *not* listed, please test
+If your airconditionDevice is *not* listed, please test
 and [report back](https://community.openhab.org/t/panasonic-comfort-cloud-binding/133848) so I can add it to the list.
 
 * CS-MTZ16WKE
@@ -83,7 +83,8 @@ Note: Possible values for most `String` channels are reported as a thing propert
 | `nanoe`                     | R/W        | `String`               | Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL)        |
 | `actualNanoe`               | R          | `String`               | Actual Nanoe mode (UNAVAILABLE, OFF, ON, MODE_G, ALL) |
 
-Some channels are still missing like iAutoX and ecoNavi. If you have a device that supports these functions, please
+Some channels are still missing like iAutoX and ecoNavi. If you have a airconditionDevice that supports these functions,
+please
 [contact me on the forum](https://community.openhab.org/t/panasonic-comfort-cloud-binding/133848)
 
 ## Reported issues

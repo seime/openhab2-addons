@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.panasoniccomfortcloud.internal.model;
+package org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner;
 
 import org.openhab.binding.panasoniccomfortcloud.internal.BindingConstants;
 import org.openhab.binding.panasoniccomfortcloud.internal.dto.ParametersDTO;
@@ -44,7 +44,7 @@ public class Parameters {
     /**
      * Parse from wire format
      */
-    public Parameters(ParametersDTO dto, Device device) {
+    public Parameters(ParametersDTO dto, AirconditionDevice airconditionDevice) {
         swingUpDown = AirSwingUpDown.parseValue(dto.airSwingUD);
         airSwingSideways = AirSwingSideways.parseValue(dto.airSwingLR);
         mode = OperationMode.parseValue(dto.operationMode);
@@ -56,7 +56,7 @@ public class Parameters {
         masterSwitch = dto.operate != null && dto.operate != 0;
         targetTemperature = dto.temperatureSet;
 
-        if (BindingConstants.DEVICE_TYPE_WIFI_DONGLE.equals(device.getType())) {
+        if (BindingConstants.DEVICE_TYPE_WIFI_DONGLE.equals(airconditionDevice.getType())) {
             // Bug in WiFi dongles reporting invalid temperature
             if (dto.insideTemperature != INVALID_TEMPERATURE_READING) {
                 insideTemperature = dto.insideTemperature;
@@ -80,13 +80,13 @@ public class Parameters {
     /**
      * Convert to wire format
      */
-    public ParametersDTO toParametersDTO(Device device) {
+    public ParametersDTO toParametersDTO(AirconditionDevice airconditionDevice) {
         ParametersDTO dto = new ParametersDTO();
-        if (!device.getFeatureSet().getSupportedSwingUpDownModes().isEmpty()) {
+        if (!airconditionDevice.getFeatureSet().getSupportedSwingUpDownModes().isEmpty()) {
             dto.airSwingUD = swingUpDown.value;
         }
 
-        if (!device.getFeatureSet().getSupportedSwingSidewayModes().isEmpty()) {
+        if (!airconditionDevice.getFeatureSet().getSupportedSwingSidewayModes().isEmpty()) {
             dto.airSwingLR = airSwingSideways.value;
         }
 
@@ -101,11 +101,11 @@ public class Parameters {
         dto.operate = masterSwitch ? 1 : 0;
         dto.temperatureSet = targetTemperature;
 
-        if (device.getFeatureSet().isEcoNavi()) {
+        if (airconditionDevice.getFeatureSet().isEcoNavi()) {
             dto.ecoNavi = ecoNavi;
         }
 
-        if (device.getFeatureSet().isiAutoX()) {
+        if (airconditionDevice.getFeatureSet().isiAutoX()) {
             dto.iAuto = iAuto;
         }
 

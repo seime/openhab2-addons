@@ -29,6 +29,7 @@ import org.openhab.binding.panasoniccomfortcloud.internal.dto.GroupDTO;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.Device;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.Group;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.GroupModel;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.AirconditionDevice;
 import org.openhab.core.storage.StorageService;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
@@ -124,19 +125,20 @@ public class PanasonicComfortCloudAccountHandler extends BaseBridgeHandler {
                 group.mergeFrom(groupDto);
 
                 for (final DeviceDTO deviceDTO : groupDto.devices) {
-                    // Some device details come from the getGroups call, others come from each device call
+                    // Some airconditionDevice details come from the getGroups call, others come from each
+                    // airconditionDevice call
 
                     Optional<Device> existingDevice = group.getDevices().stream()
                             .filter(e -> deviceDTO.deviceGuid.equals(e.getDeviceId())).findFirst();
-                    Device device;
+                    AirconditionDevice airconditionDevice;
                     if (existingDevice.isEmpty()) {
-                        device = new Device(group);
-                        group.addDevice(device);
+                        airconditionDevice = new AirconditionDevice(group);
+                        group.addDevice(airconditionDevice);
                     } else {
-                        device = existingDevice.get();
+                        airconditionDevice = (AirconditionDevice) existingDevice.get();
                     }
 
-                    device.mergeFromGroupList(deviceDTO);
+                    airconditionDevice.mergeFromGroupList(deviceDTO);
 
                 }
             }

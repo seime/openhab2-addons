@@ -34,16 +34,17 @@ import org.openhab.binding.panasoniccomfortcloud.internal.PanasonicComfortCloudE
 import org.openhab.binding.panasoniccomfortcloud.internal.config.AirConditionerConfiguration;
 import org.openhab.binding.panasoniccomfortcloud.internal.dto.SetDevicePropertiesRequest;
 import org.openhab.binding.panasoniccomfortcloud.internal.dto.SetDevicePropertiesResponse;
-import org.openhab.binding.panasoniccomfortcloud.internal.model.AirSwingAutoMode;
-import org.openhab.binding.panasoniccomfortcloud.internal.model.AirSwingSideways;
-import org.openhab.binding.panasoniccomfortcloud.internal.model.AirSwingUpDown;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.Device;
-import org.openhab.binding.panasoniccomfortcloud.internal.model.EcoMode;
-import org.openhab.binding.panasoniccomfortcloud.internal.model.FanSpeed;
-import org.openhab.binding.panasoniccomfortcloud.internal.model.NanoeMode;
-import org.openhab.binding.panasoniccomfortcloud.internal.model.OperationMode;
-import org.openhab.binding.panasoniccomfortcloud.internal.model.Parameters;
-import org.openhab.binding.panasoniccomfortcloud.internal.model.TemperatureRange;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.AirSwingAutoMode;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.AirSwingSideways;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.AirSwingUpDown;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.AirconditionDevice;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.EcoMode;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.FanSpeed;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.NanoeMode;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.OperationMode;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.Parameters;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.TemperatureRange;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.QuantityType;
@@ -92,184 +93,201 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
     }
 
     @Override
-    protected synchronized void handleCommand(final ChannelUID channelUID, final Command command, final Device device) {
-        if (device.isInitialized()) {
+    protected synchronized void handleCommand(final ChannelUID channelUID, final Command command,
+            final AirconditionDevice airconditionDevice) {
+        if (airconditionDevice.isInitialized()) {
             switch (channelUID.getId()) {
                 case CHANNEL_CURRENT_INDOOR_TEMPERATURE:
-                    handleCurrentIndoorTemperatureCommand(channelUID, command, device);
+                    handleCurrentIndoorTemperatureCommand(channelUID, command, airconditionDevice);
                     break;
                 case CHANNEL_CURRENT_OUTDOOR_TEMPERATURE:
-                    handleCurrentOutdoorTemperatureCommand(channelUID, command, device);
+                    handleCurrentOutdoorTemperatureCommand(channelUID, command, airconditionDevice);
                     break;
                 case CHANNEL_MASTER_SWITCH:
-                    handleMasterSwitchCommand(channelUID, command, device);
+                    handleMasterSwitchCommand(channelUID, command, airconditionDevice);
                     break;
                 case CHANNEL_OPERATION_MODE:
-                    handleOperatingModeCommand(channelUID, command, device);
+                    handleOperatingModeCommand(channelUID, command, airconditionDevice);
                     break;
                 case CHANNEL_ECO_MODE:
-                    handleEcoModeCommand(channelUID, command, device);
+                    handleEcoModeCommand(channelUID, command, airconditionDevice);
                     break;
                 case CHANNEL_FAN_SPEED:
-                    handleFanLevelCommand(channelUID, command, device);
+                    handleFanLevelCommand(channelUID, command, airconditionDevice);
                     break;
                 case CHANNEL_AIR_SWING_AUTO_MODE:
-                    handleFanAutoModeCommand(channelUID, command, device);
+                    handleFanAutoModeCommand(channelUID, command, airconditionDevice);
                     break;
                 case CHANNEL_TARGET_TEMPERATURE:
-                    handleTargetTemperatureCommand(channelUID, command, device);
+                    handleTargetTemperatureCommand(channelUID, command, airconditionDevice);
                     break;
                 case CHANNEL_AIR_SWING_HORIZONTAL:
-                    handleHorizontalSwingCommand(channelUID, command, device);
+                    handleHorizontalSwingCommand(channelUID, command, airconditionDevice);
                     break;
                 case CHANNEL_AIR_SWING_VERTICAL:
-                    handleVerticalSwingCommand(channelUID, command, device);
+                    handleVerticalSwingCommand(channelUID, command, airconditionDevice);
                     break;
                 case CHANNEL_NANOE:
-                    handleNanoeCommand(channelUID, command, device);
+                    handleNanoeCommand(channelUID, command, airconditionDevice);
                     break;
                 case CHANNEL_ACTUAL_NANOE:
-                    handleActualNanoeCommand(channelUID, command, device);
+                    handleActualNanoeCommand(channelUID, command, airconditionDevice);
                     break;
                 default:
                     logger.debug("Received command on unknown channel {}, ignoring", channelUID.getId());
             }
         } else {
-            logger.debug("Received command {} for device {} on channel {}, but devices is not yet initialized", command,
-                    device.getDeviceId(), channelUID);
+            logger.debug(
+                    "Received command {} for airconditionDevice {} on channel {}, but devices is not yet initialized",
+                    command, airconditionDevice.getDeviceId(), channelUID);
             updateState(channelUID, UnDefType.UNDEF);
         }
     }
 
-    private void handleFanAutoModeCommand(ChannelUID channelUID, Command command, Device device) {
+    private void handleFanAutoModeCommand(ChannelUID channelUID, Command command,
+            AirconditionDevice airconditionDevice) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, StringType.valueOf(device.getCurrentParameters().getFanAutoMode().toString()));
+            updateState(channelUID,
+                    StringType.valueOf(airconditionDevice.getCurrentParameters().getFanAutoMode().toString()));
         } else {
 
             try {
                 AirSwingAutoMode airSwingAutoMode = AirSwingAutoMode.valueOf(command.toString());
-                Parameters currentParameters = device.getCurrentParameters();
+                Parameters currentParameters = airconditionDevice.getCurrentParameters();
                 currentParameters.setFanAutoMode(airSwingAutoMode);
-                sendParameters(channelUID, device, currentParameters,
-                        StringType.valueOf(device.getCurrentParameters().getFanAutoMode().toString()));
+                sendParameters(channelUID, airconditionDevice, currentParameters,
+                        StringType.valueOf(airconditionDevice.getCurrentParameters().getFanAutoMode().toString()));
             } catch (IllegalArgumentException e) {
-                logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, device.getDeviceId(), command, channelUID,
-                        device.getFeatureSet().getSupportedEcoModes());
+                logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, airconditionDevice.getDeviceId(), command, channelUID,
+                        airconditionDevice.getFeatureSet().getSupportedEcoModes());
             }
         }
     }
 
-    private void handleFanLevelCommand(ChannelUID channelUID, Command command, Device device) {
+    private void handleFanLevelCommand(ChannelUID channelUID, Command command, AirconditionDevice airconditionDevice) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, StringType.valueOf(device.getCurrentParameters().getFanSpeed().toString()));
+            updateState(channelUID,
+                    StringType.valueOf(airconditionDevice.getCurrentParameters().getFanSpeed().toString()));
         } else {
             try {
                 FanSpeed fanSpeed = FanSpeed.valueOf(command.toString());
-                Parameters currentParameters = device.getCurrentParameters();
+                Parameters currentParameters = airconditionDevice.getCurrentParameters();
                 currentParameters.setFanSpeed(fanSpeed);
-                sendParameters(channelUID, device, currentParameters,
-                        StringType.valueOf(device.getCurrentParameters().getFanSpeed().toString()));
+                sendParameters(channelUID, airconditionDevice, currentParameters,
+                        StringType.valueOf(airconditionDevice.getCurrentParameters().getFanSpeed().toString()));
             } catch (IllegalArgumentException e) {
-                logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, device.getDeviceId(), command, channelUID,
-                        device.getFeatureSet().getSupportedEcoModes());
+                logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, airconditionDevice.getDeviceId(), command, channelUID,
+                        airconditionDevice.getFeatureSet().getSupportedEcoModes());
             }
         }
     }
 
-    private void handleNanoeCommand(ChannelUID channelUID, Command command, Device device) {
+    private void handleNanoeCommand(ChannelUID channelUID, Command command, AirconditionDevice airconditionDevice) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, StringType.valueOf(device.getCurrentParameters().getNanoeMode().toString()));
-        } else if (device.getFeatureSet().isNanoeStandAlone()) {
+            updateState(channelUID,
+                    StringType.valueOf(airconditionDevice.getCurrentParameters().getNanoeMode().toString()));
+        } else if (airconditionDevice.getFeatureSet().isNanoeStandAlone()) {
             NanoeMode nanoeMode = NanoeMode.valueOf(command.toString());
-            Parameters currentParameters = device.getCurrentParameters();
+            Parameters currentParameters = airconditionDevice.getCurrentParameters();
             currentParameters.setNanoeMode(nanoeMode);
-            sendParameters(channelUID, device, currentParameters,
-                    StringType.valueOf(device.getCurrentParameters().getNanoeMode().toString()));
+            sendParameters(channelUID, airconditionDevice, currentParameters,
+                    StringType.valueOf(airconditionDevice.getCurrentParameters().getNanoeMode().toString()));
         } else {
             logger.debug(ERROR_MESSAGE_UNSUPPORTED_COMMAND, command, channelUID);
         }
     }
 
-    private void handleActualNanoeCommand(ChannelUID channelUID, Command command, Device device) {
+    private void handleActualNanoeCommand(ChannelUID channelUID, Command command,
+            AirconditionDevice airconditionDevice) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, StringType.valueOf(device.getCurrentParameters().getActualNanoeMode().toString()));
+            updateState(channelUID,
+                    StringType.valueOf(airconditionDevice.getCurrentParameters().getActualNanoeMode().toString()));
         } else {
             logger.debug(ERROR_MESSAGE_UNSUPPORTED_COMMAND, command, channelUID);
         }
     }
 
-    private void handleEcoModeCommand(ChannelUID channelUID, Command command, Device device) {
+    private void handleEcoModeCommand(ChannelUID channelUID, Command command, AirconditionDevice airconditionDevice) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, StringType.valueOf(device.getCurrentParameters().getEcoMode().toString()));
+            updateState(channelUID,
+                    StringType.valueOf(airconditionDevice.getCurrentParameters().getEcoMode().toString()));
         } else {
             try {
                 EcoMode ecoMode = EcoMode.valueOf(command.toString());
-                if (device.getFeatureSet().getSupportedEcoModes().contains(ecoMode)) {
-                    Parameters currentParameters = device.getCurrentParameters();
+                if (airconditionDevice.getFeatureSet().getSupportedEcoModes().contains(ecoMode)) {
+                    Parameters currentParameters = airconditionDevice.getCurrentParameters();
                     currentParameters.setEcoMode(ecoMode);
 
-                    sendParameters(channelUID, device, currentParameters,
-                            StringType.valueOf(device.getCurrentParameters().getEcoMode().toString()));
+                    sendParameters(channelUID, airconditionDevice, currentParameters,
+                            StringType.valueOf(airconditionDevice.getCurrentParameters().getEcoMode().toString()));
                 } else {
-                    logger.debug(ERROR_MESSAGE_UNSUPPORTED_FEATURE, device.getDeviceId(), command, channelUID);
+                    logger.debug(ERROR_MESSAGE_UNSUPPORTED_FEATURE, airconditionDevice.getDeviceId(), command,
+                            channelUID);
                 }
             } catch (IllegalArgumentException e) {
-                logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, device.getDeviceId(), command, channelUID,
-                        device.getFeatureSet().getSupportedEcoModes());
+                logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, airconditionDevice.getDeviceId(), command, channelUID,
+                        airconditionDevice.getFeatureSet().getSupportedEcoModes());
             }
         }
     }
 
-    private void handleHorizontalSwingCommand(ChannelUID channelUID, Command command, Device device) {
+    private void handleHorizontalSwingCommand(ChannelUID channelUID, Command command,
+            AirconditionDevice airconditionDevice) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, StringType.valueOf(device.getCurrentParameters().getSwingSideways().toString()));
+            updateState(channelUID,
+                    StringType.valueOf(airconditionDevice.getCurrentParameters().getSwingSideways().toString()));
         } else {
             try {
                 AirSwingSideways airSwingSideways = AirSwingSideways.valueOf(command.toString());
-                if (device.getFeatureSet().getSupportedSwingSidewayModes().contains(airSwingSideways)) {
-                    Parameters currentParameters = device.getCurrentParameters();
+                if (airconditionDevice.getFeatureSet().getSupportedSwingSidewayModes().contains(airSwingSideways)) {
+                    Parameters currentParameters = airconditionDevice.getCurrentParameters();
                     currentParameters.setSwingSideways(airSwingSideways);
 
-                    sendParameters(channelUID, device, currentParameters,
-                            StringType.valueOf(device.getCurrentParameters().getSwingSideways().toString()));
+                    sendParameters(channelUID, airconditionDevice, currentParameters, StringType
+                            .valueOf(airconditionDevice.getCurrentParameters().getSwingSideways().toString()));
                 } else {
-                    logger.debug(ERROR_MESSAGE_UNSUPPORTED_FEATURE, device.getDeviceId(), command, channelUID);
+                    logger.debug(ERROR_MESSAGE_UNSUPPORTED_FEATURE, airconditionDevice.getDeviceId(), command,
+                            channelUID);
                 }
             } catch (IllegalArgumentException e) {
-                logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, device.getDeviceId(), command, channelUID,
-                        device.getFeatureSet().getSupportedSwingSidewayModes());
+                logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, airconditionDevice.getDeviceId(), command, channelUID,
+                        airconditionDevice.getFeatureSet().getSupportedSwingSidewayModes());
             }
         }
     }
 
-    private void handleVerticalSwingCommand(ChannelUID channelUID, Command command, Device device) {
+    private void handleVerticalSwingCommand(ChannelUID channelUID, Command command,
+            AirconditionDevice airconditionDevice) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, StringType.valueOf(device.getCurrentParameters().getSwingUpDown().toString()));
+            updateState(channelUID,
+                    StringType.valueOf(airconditionDevice.getCurrentParameters().getSwingUpDown().toString()));
         } else {
             try {
                 AirSwingUpDown airSwingUpDown = AirSwingUpDown.valueOf(command.toString());
-                if (device.getFeatureSet().getSupportedSwingUpDownModes().contains(airSwingUpDown)) {
-                    Parameters currentParameters = device.getCurrentParameters();
+                if (airconditionDevice.getFeatureSet().getSupportedSwingUpDownModes().contains(airSwingUpDown)) {
+                    Parameters currentParameters = airconditionDevice.getCurrentParameters();
                     currentParameters.setSwingUpDown(airSwingUpDown);
 
-                    sendParameters(channelUID, device, currentParameters,
-                            StringType.valueOf(device.getCurrentParameters().getSwingUpDown().toString()));
+                    sendParameters(channelUID, airconditionDevice, currentParameters,
+                            StringType.valueOf(airconditionDevice.getCurrentParameters().getSwingUpDown().toString()));
                 } else {
-                    logger.debug(ERROR_MESSAGE_UNSUPPORTED_FEATURE, device.getDeviceId(), command, channelUID);
+                    logger.debug(ERROR_MESSAGE_UNSUPPORTED_FEATURE, airconditionDevice.getDeviceId(), command,
+                            channelUID);
                 }
             } catch (IllegalArgumentException e) {
-                logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, device.getDeviceId(), command, channelUID,
-                        device.getFeatureSet().getSupportedSwingUpDownModes()
+                logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, airconditionDevice.getDeviceId(), command, channelUID,
+                        airconditionDevice.getFeatureSet().getSupportedSwingUpDownModes()
 
                 );
             }
         }
     }
 
-    private void handleTargetTemperatureCommand(ChannelUID channelUID, Command command, Device device) {
+    private void handleTargetTemperatureCommand(ChannelUID channelUID, Command command,
+            AirconditionDevice airconditionDevice) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, new QuantityType<>(device.getCurrentParameters().getTargetTemperature(),
-                    device.getTemperatureUnit()));
+            updateState(channelUID, new QuantityType<>(airconditionDevice.getCurrentParameters().getTargetTemperature(),
+                    airconditionDevice.getTemperatureUnit()));
         } else {
             double targetTemperature = -1;
             if (command instanceof QuantityType) {
@@ -278,118 +296,128 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
                 targetTemperature = ((DecimalType) command).doubleValue();
             }
 
-            OperationMode mode = device.getCurrentParameters().getMode();
+            OperationMode mode = airconditionDevice.getCurrentParameters().getMode();
             if (OperationMode.AUTO == mode || OperationMode.COOL == mode || OperationMode.HEAT == mode) {
                 TemperatureRange validRange = null;
                 switch (mode) {
                     case AUTO:
-                        validRange = device.getAutoRange();
+                        validRange = airconditionDevice.getAutoRange();
                         break;
                     case COOL:
-                        validRange = device.getCoolRange();
+                        validRange = airconditionDevice.getCoolRange();
                         break;
                     case HEAT:
-                        validRange = device.getHeatRange();
+                        validRange = airconditionDevice.getHeatRange();
                         break;
                     default:
                         logger.warn("Found no valid temperature range for mode {}", mode);
                 }
                 if (validRange != null && validRange.isValid(targetTemperature)) {
-                    Parameters currentParameters = device.getCurrentParameters();
+                    Parameters currentParameters = airconditionDevice.getCurrentParameters();
                     currentParameters.setTargetTemperature(targetTemperature);
 
-                    sendParameters(channelUID, device, currentParameters,
-                            new QuantityType<Temperature>(targetTemperature, device.getTemperatureUnit()));
+                    sendParameters(channelUID, airconditionDevice, currentParameters,
+                            new QuantityType<Temperature>(targetTemperature, airconditionDevice.getTemperatureUnit()));
 
                 } else {
                     logger.debug(
-                            "The device {} does not support setting target temperature for channel {} to {}. Valid range {}",
-                            device.getDeviceId(), channelUID, targetTemperature, validRange);
+                            "The airconditionDevice {} does not support setting target temperature for channel {} to {}. Valid range {}",
+                            airconditionDevice.getDeviceId(), channelUID, targetTemperature, validRange);
                 }
 
             } else {
                 logger.debug(
-                        "The device {} does not support setting target temperature for channel {} - in mode {}. Change mode to AUTO, COOL or HEAT to set target temperature",
-                        device.getDeviceId(), channelUID, mode);
+                        "The airconditionDevice {} does not support setting target temperature for channel {} - in mode {}. Change mode to AUTO, COOL or HEAT to set target temperature",
+                        airconditionDevice.getDeviceId(), channelUID, mode);
 
             }
 
         }
     }
 
-    private void handleOperatingModeCommand(ChannelUID channelUID, Command command, Device device) {
+    private void handleOperatingModeCommand(ChannelUID channelUID, Command command,
+            AirconditionDevice airconditionDevice) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, StringType.valueOf(device.getCurrentParameters().getMode().toString()));
+            updateState(channelUID, StringType.valueOf(airconditionDevice.getCurrentParameters().getMode().toString()));
         } else {
             try {
                 OperationMode operationMode = OperationMode.valueOf(command.toString());
-                if (device.getFeatureSet().getSupportedOperationModes().contains(operationMode)) {
-                    Parameters currentParameters = device.getCurrentParameters();
+                if (airconditionDevice.getFeatureSet().getSupportedOperationModes().contains(operationMode)) {
+                    Parameters currentParameters = airconditionDevice.getCurrentParameters();
                     currentParameters.setMode(operationMode);
 
-                    sendParameters(channelUID, device, currentParameters,
-                            StringType.valueOf(device.getCurrentParameters().getMode().toString()));
+                    sendParameters(channelUID, airconditionDevice, currentParameters,
+                            StringType.valueOf(airconditionDevice.getCurrentParameters().getMode().toString()));
                 } else {
-                    logger.debug(ERROR_MESSAGE_UNSUPPORTED_FEATURE, device.getDeviceId(), command, channelUID);
+                    logger.debug(ERROR_MESSAGE_UNSUPPORTED_FEATURE, airconditionDevice.getDeviceId(), command,
+                            channelUID);
                 }
             } catch (IllegalArgumentException e) {
-                logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, device.getDeviceId(), command, channelUID,
-                        device.getFeatureSet().getSupportedOperationModes());
+                logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, airconditionDevice.getDeviceId(), command, channelUID,
+                        airconditionDevice.getFeatureSet().getSupportedOperationModes());
             }
         }
     }
 
-    private void handleMasterSwitchCommand(ChannelUID channelUID, Command command, Device device) {
+    private void handleMasterSwitchCommand(ChannelUID channelUID, Command command,
+            AirconditionDevice airconditionDevice) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, OnOffType.from(device.getCurrentParameters().isMasterSwitch()));
+            updateState(channelUID, OnOffType.from(airconditionDevice.getCurrentParameters().isMasterSwitch()));
         } else {
             if (command instanceof OnOffType) {
-                Parameters currentParameters = device.getCurrentParameters();
+                Parameters currentParameters = airconditionDevice.getCurrentParameters();
                 currentParameters.setMasterSwitch(command == OnOffType.ON);
-                sendParameters(channelUID, device, currentParameters, (OnOffType) command);
+                sendParameters(channelUID, airconditionDevice, currentParameters, (OnOffType) command);
             } else {
                 logger.debug(ERROR_MESSAGE_UNSUPPORTED_COMMAND, command, channelUID);
             }
         }
     }
 
-    private void handleCurrentIndoorTemperatureCommand(ChannelUID channelUID, Command command, Device device) {
+    private void handleCurrentIndoorTemperatureCommand(ChannelUID channelUID, Command command,
+            AirconditionDevice airconditionDevice) {
         if (command instanceof RefreshType) {
-            if (device.getCurrentParameters().getInsideTemperature() == null) {
+            if (airconditionDevice.getCurrentParameters().getInsideTemperature() == null) {
                 updateState(channelUID, UnDefType.UNDEF);
             } else {
-                updateState(channelUID, new QuantityType<>(device.getCurrentParameters().getInsideTemperature(),
-                        device.getTemperatureUnit()));
+                updateState(channelUID,
+                        new QuantityType<>(airconditionDevice.getCurrentParameters().getInsideTemperature(),
+                                airconditionDevice.getTemperatureUnit()));
             }
         } else {
             logger.debug(ERROR_MESSAGE_UNSUPPORTED_COMMAND, command, channelUID);
         }
     }
 
-    private void handleCurrentOutdoorTemperatureCommand(ChannelUID channelUID, Command command, Device device) {
+    private void handleCurrentOutdoorTemperatureCommand(ChannelUID channelUID, Command command,
+            AirconditionDevice airconditionDevice) {
         if (command instanceof RefreshType) {
 
-            if (device.getCurrentParameters().getOutsideTemperature() == null) {
+            if (airconditionDevice.getCurrentParameters().getOutsideTemperature() == null) {
                 updateState(channelUID, UnDefType.UNDEF);
             } else {
-                updateState(channelUID, new QuantityType<>(device.getCurrentParameters().getOutsideTemperature(),
-                        device.getTemperatureUnit()));
+                updateState(channelUID,
+                        new QuantityType<>(airconditionDevice.getCurrentParameters().getOutsideTemperature(),
+                                airconditionDevice.getTemperatureUnit()));
             }
         } else {
             logger.debug(ERROR_MESSAGE_UNSUPPORTED_COMMAND, command, channelUID);
         }
     }
 
-    private void sendParameters(ChannelUID channelUID, Device device, Parameters currentParameters,
-            State newStateIfSuccessfulUpdate) {
+    private void sendParameters(ChannelUID channelUID, AirconditionDevice airconditionDevice,
+            Parameters currentParameters, State newStateIfSuccessfulUpdate) {
         try {
-            SetDevicePropertiesResponse rsp = accountHandler.getApiBridge().sendRequest(
-                    new SetDevicePropertiesRequest(device.getDeviceId(), currentParameters.toParametersDTO(device)),
-                    SetDevicePropertiesResponse.class);
+            SetDevicePropertiesResponse rsp = accountHandler.getApiBridge()
+                    .sendRequest(
+                            new SetDevicePropertiesRequest(airconditionDevice.getDeviceId(),
+                                    currentParameters.toParametersDTO(airconditionDevice)),
+                            SetDevicePropertiesResponse.class);
             if (rsp.code == 0) {
                 updateState(channelUID, newStateIfSuccessfulUpdate);
             } else {
-                logger.info("Error sending parameters to device {} for channel {}", device.getDeviceId(), channelUID);
+                logger.info("Error sending parameters to airconditionDevice {} for channel {}",
+                        airconditionDevice.getDeviceId(), channelUID);
             }
         } catch (PanasonicComfortCloudException e) {
             logger.debug("Error updating AC parameter", e);

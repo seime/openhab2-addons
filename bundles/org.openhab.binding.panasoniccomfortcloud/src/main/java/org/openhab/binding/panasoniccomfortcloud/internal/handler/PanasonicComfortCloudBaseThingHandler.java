@@ -21,6 +21,7 @@ import org.openhab.binding.panasoniccomfortcloud.internal.PanasonicComfortCloudE
 import org.openhab.binding.panasoniccomfortcloud.internal.dto.DeviceDTO;
 import org.openhab.binding.panasoniccomfortcloud.internal.dto.GetDeviceRequest;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.Device;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.AirconditionDevice;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
@@ -64,8 +65,9 @@ public abstract class PanasonicComfortCloudBaseThingHandler extends BaseThingHan
                         .sendRequest(getDeviceDetailsRequest, new TypeToken<DeviceDTO>() {
                         }.getType());
 
-                device.get().mergeFromDeviceDetails(updatedDeviceDetails);
-                Map<String, String> properties = device.get().getThingProperties();
+                AirconditionDevice airconditionDevice = (AirconditionDevice) device.get();
+                airconditionDevice.mergeFromDeviceDetails(updatedDeviceDetails);
+                Map<String, String> properties = airconditionDevice.getThingProperties();
                 updateThing(editThing().withProperties(properties).build());
                 updateStatus(ThingStatus.ONLINE);
                 thing.getChannels().forEach(e -> handleCommand(e.getUID(), RefreshType.REFRESH));
@@ -86,11 +88,12 @@ public abstract class PanasonicComfortCloudBaseThingHandler extends BaseThingHan
     public void handleCommand(final ChannelUID channelUID, final Command command) {
         Optional<Device> device = accountHandler.getModel().findDeviceByDeviceId(deviceId);
         if (device.isPresent()) {
-            handleCommand(channelUID, command, device.get());
+            handleCommand(channelUID, command, (AirconditionDevice) device.get());
         } else {
             logger.debug("Ignoring command {} for channel {}, device {} is unknown", command, channelUID, deviceId);
         }
     }
 
-    protected abstract void handleCommand(ChannelUID channelUID, Command command, Device device);
+    protected abstract void handleCommand(ChannelUID channelUID, Command command,
+            AirconditionDevice airconditionDevice);
 }

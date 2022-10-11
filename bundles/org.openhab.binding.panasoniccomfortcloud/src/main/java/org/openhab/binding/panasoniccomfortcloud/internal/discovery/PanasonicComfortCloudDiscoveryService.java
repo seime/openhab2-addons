@@ -90,7 +90,7 @@ public class PanasonicComfortCloudDiscoveryService extends AbstractDiscoveryServ
                     thingDiscovered(discoveryResult);
                 } else {
                     logger.debug(
-                            "Found device of type {} which is currently not supported (not known by the developer) - please report back",
+                            "Found airconditionDevice of type {} which is currently not supported (not known by the developer) - please report back",
                             device.getType());
                 }
             }
@@ -119,11 +119,13 @@ public class PanasonicComfortCloudDiscoveryService extends AbstractDiscoveryServ
     }
 
     @Nullable
-    private ThingTypeUID getThingType(Device device) {
-        switch (device.getType()) {
+    private ThingTypeUID getThingType(Device airconditionDevice) {
+        switch (airconditionDevice.getType()) {
             case BindingConstants.DEVICE_TYPE_WIFI_DONGLE:
             case BindingConstants.DEVICE_TYPE_WIFI_BUILTIN:
                 return BindingConstants.THING_TYPE_AIRCONDITION;
+            case BindingConstants.DEVICE_TYPE_WATERHEATPUMP:
+                return BindingConstants.THING_TYPE_WATERHEATPUMP;
 
             default:
                 return null;

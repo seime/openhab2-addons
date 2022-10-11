@@ -63,6 +63,8 @@ public class PanasonicComfortCloudHandlerFactory extends BaseThingHandlerFactory
         final ThingTypeUID thingTypeUID = thing.getThingTypeUID();
         if (BindingConstants.THING_TYPE_AIRCONDITION.equals(thingTypeUID)) {
             return new PanasonicComfortCloudAirconditionHandler(thing);
+        } else if (BindingConstants.THING_TYPE_WATERHEATPUMP.equals(thingTypeUID)) {
+            return new PanasonicComfortCloudWaterHeatpumpHandler(thing);
         } else if (BindingConstants.THING_TYPE_ACCOUNT.equals(thingTypeUID)) {
             PanasonicComfortCloudAccountHandler handler = new PanasonicComfortCloudAccountHandler((Bridge) thing,
                     storageService);

@@ -19,8 +19,8 @@ import java.lang.reflect.Type;
 
 import org.junit.jupiter.api.Test;
 import org.openhab.binding.panasoniccomfortcloud.internal.BindingConstants;
-import org.openhab.binding.panasoniccomfortcloud.internal.model.Device;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.Group;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner.AirconditionDevice;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -35,10 +35,10 @@ public class GetDeviceResponseTest extends AbstractSerializationDeserializationT
         }.getType();
 
         final DeviceDTO rsp = wireHelper.deSerializeFromClasspathResource("/get_device_response_on.json", type);
-        Device device = new Device(new Group());
-        device.mergeFromDeviceDetails(rsp);
+        AirconditionDevice airconditionDevice = new AirconditionDevice(new Group());
+        airconditionDevice.mergeFromDeviceDetails(rsp);
 
-        assertEquals(20, device.getCurrentParameters().getInsideTemperature());
+        assertEquals(20, airconditionDevice.getCurrentParameters().getInsideTemperature());
     }
 
     @Test
@@ -48,10 +48,10 @@ public class GetDeviceResponseTest extends AbstractSerializationDeserializationT
 
         final DeviceDTO rsp = wireHelper.deSerializeFromClasspathResource("/get_device_response_wifi_dongle_off.json",
                 type);
-        Device device = new Device(new Group());
-        device.setType(BindingConstants.DEVICE_TYPE_WIFI_DONGLE);
-        device.mergeFromDeviceDetails(rsp);
+        AirconditionDevice airconditionDevice = new AirconditionDevice(new Group());
+        airconditionDevice.setType(BindingConstants.DEVICE_TYPE_WIFI_DONGLE);
+        airconditionDevice.mergeFromDeviceDetails(rsp);
 
-        assertEquals(null, device.getCurrentParameters().getInsideTemperature());
+        assertEquals(null, airconditionDevice.getCurrentParameters().getInsideTemperature());
     }
 }

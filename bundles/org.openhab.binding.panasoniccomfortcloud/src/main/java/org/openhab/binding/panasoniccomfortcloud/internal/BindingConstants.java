@@ -27,6 +27,7 @@ public class BindingConstants {
     // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_ACCOUNT = new ThingTypeUID(BINDING_ID, "account");
     public static final ThingTypeUID THING_TYPE_AIRCONDITION = new ThingTypeUID(BINDING_ID, "aircondition");
+    public static final ThingTypeUID THING_TYPE_WATERHEATPUMP = new ThingTypeUID(BINDING_ID, "waterheatpump");
     // Fixed channels
     public static final String CHANNEL_CURRENT_INDOOR_TEMPERATURE = "currentIndoorTemperature";
     public static final String CHANNEL_CURRENT_OUTDOOR_TEMPERATURE = "currentOutdoorTemperature";
@@ -41,5 +42,7 @@ public class BindingConstants {
     public static final String CHANNEL_NANOE = "nanoe";
     public static final String CHANNEL_ACTUAL_NANOE = "actualNanoe";
     public static final String DEVICE_TYPE_WIFI_DONGLE = "1";
+
+    public static final String DEVICE_TYPE_WATERHEATPUMP = "2";
     public static final String DEVICE_TYPE_WIFI_BUILTIN = "3";
 }

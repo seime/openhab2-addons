@@ -1,0 +1,41 @@
+{
+  "iaqStatus": {
+    "statusCode": 200
+  },
+  "a2wStatus": {
+    "statusCode": 200
+  },
+  "uiFlg": false,
+  "groupCount": 1,
+  "groupList": [
+    {
+      "groupId": 924509,
+      "groupName": "My House",
+      "pairingList": [],
+      "deviceList": [
+        {
+          "deviceGuid": "B123946320",
+          "deviceType": "2",
+          "deviceName": "WP Rebhan",
+          "connectionStatus": 0,
+          "operationMode": 1,
+          "zoneStatus": [
+            {
+              "zoneId": 1,
+              "operationStatus": 1,
+              "temperature": -2
+            },
+            {
+              "zoneId": 2
+            }
+          ],
+          "tankStatus": {
+            "operationStatus": 1,
+            "temperature": 40
+          },
+          "parameters": {}
+        }
+      ]
+    }
+  ]
+}

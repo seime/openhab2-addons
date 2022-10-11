@@ -10,26 +10,27 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.panasoniccomfortcloud.internal.model;
+package org.openhab.binding.panasoniccomfortcloud.internal.model.airconditioner;
 
 /**
  * @author Arne Seime - Initial contribution
  */
-public enum NanoeMode {
-    UNAVAILABLE(0),
-    OFF(1),
-    ON(2),
-    MODE_G(3),
-    ALL(4);
+public enum AirSwingSideways {
+    AUTO(-1),
+    LEFT(0),
+    LEFT_CENTER(4),
+    CENTER(2),
+    RIGHT_CENTER(3),
+    RIGHT(1);
 
     public final int value;
 
-    NanoeMode(int value) {
+    AirSwingSideways(int value) {
         this.value = value;
     }
 
-    public static NanoeMode parseValue(int value) {
-        for (NanoeMode e : values()) {
+    public static AirSwingSideways parseValue(int value) {
+        for (AirSwingSideways e : values()) {
             if (e.value == value) {
                 return e;
             }

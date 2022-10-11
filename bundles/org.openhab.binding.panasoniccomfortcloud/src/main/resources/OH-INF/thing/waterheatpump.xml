@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="panasoniccomfortcloud"
+                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                          xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+                          xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+    <thing-type id="waterheatpump">
+        <supported-bridge-type-refs>
+            <bridge-type-ref id="account"/>
+        </supported-bridge-type-refs>
+
+        <label>AQUQREA Air to Water heat pump</label>
+        <description>Air to water heatpump - limited support</description>
+
+        <channels>
+            <channel id="systemOperationMode" typeId="systemOperationMode"/>
+            <channel id="tankTemperature" typeId="tankTemperature"/>
+            <channel id="tankOperationStatus" typeId="tankOperationStatus"/>
+        </channels>
+
+        <representation-property>deviceId</representation-property>
+        <config-description-ref uri="thing-type:panasoniccomfortcloud:waterheatpump"/>
+    </thing-type>
+
+    <channel-type id="tankTemperature">
+        <item-type>Number:Temperature</item-type>
+        <label>Water Tank Temperature</label>
+        <category>Temperature</category>
+        <state readOnly="true" pattern="%.1f %unit%"/>
+    </channel-type>
+    <channel-type id="tankOperationStatus">
+        <item-type>String</item-type>
+        <label>Water Tank Operation status</label>
+        <state readOnly="true"/>
+    </channel-type>
+    <channel-type id="systemOperationMode">
+        <item-type>String</item-type>
+        <label>System Operation mode</label>
+        <state readOnly="true"/>
+    </channel-type>
+
+
+</thing:thing-descriptions>
