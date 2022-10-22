@@ -38,6 +38,7 @@ import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
+import org.openhab.core.types.UnDefType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,6 +147,8 @@ public class OneWireGPIOHandler extends BaseThingHandler {
         BigDecimal temp = readSensorTemperature(gpioBusFile);
         if (temp != null) {
             updateState(channelUID, new QuantityType<>(temp, SIUnits.CELSIUS));
+        } else {
+            updateState(channelUID, UnDefType.UNDEF);
         }
     }
 
@@ -175,7 +178,13 @@ public class OneWireGPIOHandler extends BaseThingHandler {
     }
 
     private BigDecimal calculateValue(Integer intTemp) {
+        if (intTemp == 0) {
+            logger.debug("Skipping temperature of 0");
+            return null;
+        }
+
         BigDecimal result = BigDecimal.valueOf(intTemp).movePointLeft(3);
+
         if (precision != MAX_PRECISION_VALUE) {
             result = result.setScale(precision, RoundingMode.HALF_UP);
         }
