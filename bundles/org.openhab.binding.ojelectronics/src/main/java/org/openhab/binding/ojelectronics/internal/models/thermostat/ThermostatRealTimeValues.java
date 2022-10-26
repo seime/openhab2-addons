@@ -13,22 +13,26 @@
 package org.openhab.binding.ojelectronics.internal.models.thermostat;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.ojelectronics.internal.models.RequestModelBase;
 
 /**
- * Model for updating a thermostat
+ * Model for realtime values of a thermostat
  *
  * @author Christian Kittel - Initial contribution
  */
 @NonNullByDefault
-public class UpdateThermostatRequestModel extends RequestModelBase {
+public class ThermostatRealTimeValues extends ThermostatBase {
 
-    public UpdateThermostatRequestModel(Thermostat thermostat) {
-        setThermostat = thermostat;
-        thermostatID = thermostat.serialNumber;
-    }
+    public int action;
 
-    public Thermostat setThermostat;
+    public int floorTemperature;
 
-    public String thermostatID;
+    public boolean heating;
+
+    public int id;
+
+    public boolean online;
+
+    public int roomTemperature;
+
+    public int sensorAppl;
 }
