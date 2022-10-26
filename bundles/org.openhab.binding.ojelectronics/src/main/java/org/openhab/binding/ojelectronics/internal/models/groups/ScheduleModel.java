@@ -18,14 +18,14 @@ import java.util.List;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
 /**
- * Model for a day
+ * Model for a schedule
  *
  * @author Christian Kittel - Initial contribution
  */
 @NonNullByDefault
-public class Day {
+public class ScheduleModel {
 
-    public int weekDayGrpNo;
+    public List<DayModel> days = new ArrayList<DayModel>();
 
-    public List<Event> events = new ArrayList<>();
+    public boolean modifiedDueToVerification;
 }

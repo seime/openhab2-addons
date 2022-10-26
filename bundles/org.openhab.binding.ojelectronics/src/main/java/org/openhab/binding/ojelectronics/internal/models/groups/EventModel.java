@@ -12,20 +12,23 @@
  */
 package org.openhab.binding.ojelectronics.internal.models.groups;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
 /**
- * Model for a schedule
+ * Model for events
  *
  * @author Christian Kittel - Initial contribution
  */
 @NonNullByDefault
-public class Schedule {
+public class EventModel {
 
-    public List<Day> days = new ArrayList<Day>();
+    public int scheduleType;
 
-    public boolean modifiedDueToVerification;
+    public String clock = "";
+
+    public int temperature;
+
+    public boolean active;
+
+    public boolean eventIsOnNextDay;
 }
