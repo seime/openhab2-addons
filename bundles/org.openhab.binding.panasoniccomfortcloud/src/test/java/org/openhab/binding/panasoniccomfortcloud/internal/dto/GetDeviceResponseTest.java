@@ -13,6 +13,7 @@
 package org.openhab.binding.panasoniccomfortcloud.internal.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.openhab.binding.panasoniccomfortcloud.internal.BindingConstants;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.Device;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.Group;
+import org.openhab.binding.panasoniccomfortcloud.internal.model.Parameters;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -39,6 +41,15 @@ public class GetDeviceResponseTest extends AbstractSerializationDeserializationT
         device.mergeFromDeviceDetails(rsp);
 
         assertEquals(20, device.getCurrentParameters().getInsideTemperature());
+
+        Parameters currentParameters = device.getCurrentParameters();
+        assertTrue(currentParameters.isMasterSwitch());
+        Parameters sendRequestParameters = device.createSendRequestParameters();
+        assertTrue(sendRequestParameters.isMasterSwitch());
+
+        sendRequestParameters.setTargetTemperature(22d);
+        ParametersDTO parametersDTO = sendRequestParameters.toParametersDTO(device);
+        assertEquals(1, parametersDTO.operate);
     }
 
     @Test

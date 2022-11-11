@@ -43,7 +43,6 @@ import org.openhab.binding.panasoniccomfortcloud.internal.model.FanSpeed;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.NanoeMode;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.OperationMode;
 import org.openhab.binding.panasoniccomfortcloud.internal.model.Parameters;
-import org.openhab.binding.panasoniccomfortcloud.internal.model.TemperatureRange;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.QuantityType;
@@ -148,10 +147,10 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
 
             try {
                 AirSwingAutoMode airSwingAutoMode = AirSwingAutoMode.valueOf(command.toString());
-                Parameters currentParameters = device.getCurrentParameters();
-                currentParameters.setFanAutoMode(airSwingAutoMode);
-                sendParameters(channelUID, device, currentParameters,
-                        StringType.valueOf(device.getCurrentParameters().getFanAutoMode().toString()));
+                Parameters newParameters = device.createSendRequestParameters();
+                newParameters.setFanAutoMode(airSwingAutoMode);
+                sendParameters(channelUID, device, newParameters,
+                        StringType.valueOf(newParameters.getFanAutoMode().toString()));
             } catch (IllegalArgumentException e) {
                 logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, device.getDeviceId(), command, channelUID,
                         device.getFeatureSet().getSupportedEcoModes());
@@ -165,10 +164,10 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
         } else {
             try {
                 FanSpeed fanSpeed = FanSpeed.valueOf(command.toString());
-                Parameters currentParameters = device.getCurrentParameters();
-                currentParameters.setFanSpeed(fanSpeed);
-                sendParameters(channelUID, device, currentParameters,
-                        StringType.valueOf(device.getCurrentParameters().getFanSpeed().toString()));
+                Parameters newParameters = device.createSendRequestParameters();
+                newParameters.setFanSpeed(fanSpeed);
+                sendParameters(channelUID, device, newParameters,
+                        StringType.valueOf(newParameters.getFanSpeed().toString()));
             } catch (IllegalArgumentException e) {
                 logger.debug(ERROR_MESSAGE_UNSUPPORTED_VALUE, device.getDeviceId(), command, channelUID,
                         device.getFeatureSet().getSupportedEcoModes());
@@ -181,10 +180,10 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
             updateState(channelUID, StringType.valueOf(device.getCurrentParameters().getNanoeMode().toString()));
         } else if (device.getFeatureSet().isNanoeStandAlone()) {
             NanoeMode nanoeMode = NanoeMode.valueOf(command.toString());
-            Parameters currentParameters = device.getCurrentParameters();
-            currentParameters.setNanoeMode(nanoeMode);
-            sendParameters(channelUID, device, currentParameters,
-                    StringType.valueOf(device.getCurrentParameters().getNanoeMode().toString()));
+            Parameters newParameters = device.createSendRequestParameters();
+            newParameters.setNanoeMode(nanoeMode);
+            sendParameters(channelUID, device, newParameters,
+                    StringType.valueOf(newParameters.getNanoeMode().toString()));
         } else {
             logger.debug(ERROR_MESSAGE_UNSUPPORTED_COMMAND, command, channelUID);
         }
@@ -205,11 +204,11 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
             try {
                 EcoMode ecoMode = EcoMode.valueOf(command.toString());
                 if (device.getFeatureSet().getSupportedEcoModes().contains(ecoMode)) {
-                    Parameters currentParameters = device.getCurrentParameters();
-                    currentParameters.setEcoMode(ecoMode);
+                    Parameters newParameters = device.createSendRequestParameters();
+                    newParameters.setEcoMode(ecoMode);
 
-                    sendParameters(channelUID, device, currentParameters,
-                            StringType.valueOf(device.getCurrentParameters().getEcoMode().toString()));
+                    sendParameters(channelUID, device, newParameters,
+                            StringType.valueOf(newParameters.getEcoMode().toString()));
                 } else {
                     logger.debug(ERROR_MESSAGE_UNSUPPORTED_FEATURE, device.getDeviceId(), command, channelUID);
                 }
@@ -227,11 +226,11 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
             try {
                 AirSwingSideways airSwingSideways = AirSwingSideways.valueOf(command.toString());
                 if (device.getFeatureSet().getSupportedSwingSidewayModes().contains(airSwingSideways)) {
-                    Parameters currentParameters = device.getCurrentParameters();
-                    currentParameters.setSwingSideways(airSwingSideways);
+                    Parameters newParameters = device.createSendRequestParameters();
+                    newParameters.setSwingSideways(airSwingSideways);
 
-                    sendParameters(channelUID, device, currentParameters,
-                            StringType.valueOf(device.getCurrentParameters().getSwingSideways().toString()));
+                    sendParameters(channelUID, device, newParameters,
+                            StringType.valueOf(newParameters.getSwingSideways().toString()));
                 } else {
                     logger.debug(ERROR_MESSAGE_UNSUPPORTED_FEATURE, device.getDeviceId(), command, channelUID);
                 }
@@ -249,11 +248,11 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
             try {
                 AirSwingUpDown airSwingUpDown = AirSwingUpDown.valueOf(command.toString());
                 if (device.getFeatureSet().getSupportedSwingUpDownModes().contains(airSwingUpDown)) {
-                    Parameters currentParameters = device.getCurrentParameters();
-                    currentParameters.setSwingUpDown(airSwingUpDown);
+                    Parameters newParameters = device.createSendRequestParameters();
+                    newParameters.setSwingUpDown(airSwingUpDown);
 
-                    sendParameters(channelUID, device, currentParameters,
-                            StringType.valueOf(device.getCurrentParameters().getSwingUpDown().toString()));
+                    sendParameters(channelUID, device, newParameters,
+                            StringType.valueOf(newParameters.getSwingUpDown().toString()));
                 } else {
                     logger.debug(ERROR_MESSAGE_UNSUPPORTED_FEATURE, device.getDeviceId(), command, channelUID);
                 }
@@ -280,33 +279,11 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
 
             OperationMode mode = device.getCurrentParameters().getMode();
             if (OperationMode.AUTO == mode || OperationMode.COOL == mode || OperationMode.HEAT == mode) {
-                TemperatureRange validRange = null;
-                switch (mode) {
-                    case AUTO:
-                        validRange = device.getAutoRange();
-                        break;
-                    case COOL:
-                        validRange = device.getCoolRange();
-                        break;
-                    case HEAT:
-                        validRange = device.getHeatRange();
-                        break;
-                    default:
-                        logger.warn("Found no valid temperature range for mode {}", mode);
-                }
-                if (validRange != null && validRange.isValid(targetTemperature)) {
-                    Parameters currentParameters = device.getCurrentParameters();
-                    currentParameters.setTargetTemperature(targetTemperature);
+                Parameters newParameters = device.createSendRequestParameters();
+                newParameters.setTargetTemperature(targetTemperature);
 
-                    sendParameters(channelUID, device, currentParameters,
-                            new QuantityType<Temperature>(targetTemperature, device.getTemperatureUnit()));
-
-                } else {
-                    logger.debug(
-                            "The device {} does not support setting target temperature for channel {} to {}. Valid range {}",
-                            device.getDeviceId(), channelUID, targetTemperature, validRange);
-                }
-
+                sendParameters(channelUID, device, newParameters,
+                        new QuantityType<>(targetTemperature, device.getTemperatureUnit()));
             } else {
                 logger.debug(
                         "The device {} does not support setting target temperature for channel {} - in mode {}. Change mode to AUTO, COOL or HEAT to set target temperature",
@@ -324,11 +301,11 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
             try {
                 OperationMode operationMode = OperationMode.valueOf(command.toString());
                 if (device.getFeatureSet().getSupportedOperationModes().contains(operationMode)) {
-                    Parameters currentParameters = device.getCurrentParameters();
-                    currentParameters.setMode(operationMode);
+                    Parameters newParameters = device.createSendRequestParameters();
+                    newParameters.setMode(operationMode);
 
-                    sendParameters(channelUID, device, currentParameters,
-                            StringType.valueOf(device.getCurrentParameters().getMode().toString()));
+                    sendParameters(channelUID, device, newParameters,
+                            StringType.valueOf(newParameters.getMode().toString()));
                 } else {
                     logger.debug(ERROR_MESSAGE_UNSUPPORTED_FEATURE, device.getDeviceId(), command, channelUID);
                 }
@@ -344,9 +321,9 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
             updateState(channelUID, OnOffType.from(device.getCurrentParameters().isMasterSwitch()));
         } else {
             if (command instanceof OnOffType) {
-                Parameters currentParameters = device.getCurrentParameters();
-                currentParameters.setMasterSwitch(command == OnOffType.ON);
-                sendParameters(channelUID, device, currentParameters, (OnOffType) command);
+                Parameters newParameters = device.createSendRequestParameters();
+                newParameters.setMasterSwitch(command == OnOffType.ON);
+                sendParameters(channelUID, device, newParameters, (OnOffType) command);
             } else {
                 logger.debug(ERROR_MESSAGE_UNSUPPORTED_COMMAND, command, channelUID);
             }
@@ -380,18 +357,23 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
         }
     }
 
-    private void sendParameters(ChannelUID channelUID, Device device, Parameters currentParameters,
+    private void sendParameters(ChannelUID channelUID, Device device, Parameters newParameters,
             State newStateIfSuccessfulUpdate) {
         try {
+
             SetDevicePropertiesResponse rsp = accountHandler.getApiBridge().sendRequest(
-                    new SetDevicePropertiesRequest(device.getDeviceId(), currentParameters.toParametersDTO(device)),
+                    new SetDevicePropertiesRequest(device.getDeviceId(), newParameters.toParametersDTO(device)),
                     SetDevicePropertiesResponse.class);
             if (rsp.code == 0) {
                 updateState(channelUID, newStateIfSuccessfulUpdate);
+
             } else {
-                logger.info("Error sending parameters to device {} for channel {}", device.getDeviceId(), channelUID);
+                logger.warn(
+                        "Error sending parameters to device {} for channel {}. Server responded with code {} and message {}",
+                        device.getDeviceId(), channelUID, rsp.code, rsp.error);
             }
         } catch (PanasonicComfortCloudException e) {
+            logger.warn("Error updating AC parameter {}", e.getMessage());
             logger.debug("Error updating AC parameter", e);
         }
     }

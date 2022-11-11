@@ -77,26 +77,33 @@ public class Parameters {
         this.ecoFunctionData = dto.ecoFunctionData;
     }
 
+    public Parameters(OperationMode mode, boolean masterSwitch) {
+        this.setMode(mode);
+        this.setMasterSwitch(masterSwitch);
+    }
+
     /**
      * Convert to wire format
      */
     public ParametersDTO toParametersDTO(Device device) {
         ParametersDTO dto = new ParametersDTO();
-        if (!device.getFeatureSet().getSupportedSwingUpDownModes().isEmpty()) {
+
+        if (!device.getFeatureSet().getSupportedSwingUpDownModes().isEmpty() && swingUpDown != null) {
             dto.airSwingUD = swingUpDown.value;
         }
 
-        if (!device.getFeatureSet().getSupportedSwingSidewayModes().isEmpty()) {
+        if (!device.getFeatureSet().getSupportedSwingSidewayModes().isEmpty() && airSwingSideways != null) {
             dto.airSwingLR = airSwingSideways.value;
         }
 
-        dto.operationMode = mode.value;
-        dto.ecoMode = ecoMode.value;
-        dto.fanAutoMode = airSwingAutoMode.value;
-        dto.fanSpeed = fanSpeed.value;
+        dto.operationMode = mode.value; // Always set
 
-        dto.nanoe = nanoeMode.value;
-        dto.actualNanoe = actualNanoeMode.value;
+        dto.ecoMode = ecoMode != null ? ecoMode.value : null;
+        dto.fanAutoMode = airSwingAutoMode != null ? airSwingAutoMode.value : null;
+        dto.fanSpeed = fanSpeed != null ? fanSpeed.value : null;
+
+        dto.nanoe = nanoeMode != null ? nanoeMode.value : null;
+        dto.actualNanoe = actualNanoeMode != null ? actualNanoeMode.value : null;
 
         dto.operate = masterSwitch ? 1 : 0;
         dto.temperatureSet = targetTemperature;

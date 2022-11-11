@@ -50,14 +50,13 @@ public class Device {
     private Boolean coordinableFlg;
     private Boolean pairedFlg;
 
-    private TemperatureRange dryRange;
-    private TemperatureRange heatRange;
-    private TemperatureRange coolRange;
-    private TemperatureRange autoRange;
-
     private Instant lastUpdated;
 
     private Parameters currentParameters;
+
+    public Parameters getCurrentParameters() {
+        return currentParameters;
+    }
 
     private boolean isInitialized = false;
 
@@ -81,12 +80,6 @@ public class Device {
 
         currentParameters = new Parameters(dto.parameters, this);
 
-        /*
-         * this.dryRange = new TemperatureRange(dto.dryTempMin, dto.dryTempMax);
-         * this.heatRange = new TemperatureRange(dto.heatTempMin, dto.heatTempMax);
-         * this.autoRange = new TemperatureRange(dto.autoTempMin, dto.autoTempMax);
-         * this.coolRange = new TemperatureRange(dto.coolTempMin, dto.coolTempMax);
-         */
         this.lastUpdated = Instant.ofEpochMilli(dto.timestamp);
         this.isInitialized = true;
     }
@@ -131,28 +124,12 @@ public class Device {
         return pairedFlg;
     }
 
-    public TemperatureRange getDryRange() {
-        return dryRange;
-    }
-
-    public TemperatureRange getHeatRange() {
-        return heatRange;
-    }
-
-    public TemperatureRange getCoolRange() {
-        return coolRange;
-    }
-
-    public TemperatureRange getAutoRange() {
-        return autoRange;
-    }
-
     public Instant getLastUpdated() {
         return lastUpdated;
     }
 
-    public Parameters getCurrentParameters() {
-        return currentParameters;
+    public Parameters createSendRequestParameters() {
+        return new Parameters(currentParameters.getMode(), currentParameters.isMasterSwitch());
     }
 
     public Map<String, String> getThingProperties() {
@@ -181,14 +158,6 @@ public class Device {
 
         if (summerhouse != null)
             properties.put("summerHouse", String.valueOf(summerhouse));
-        if (dryRange != null)
-            properties.put("allowedTemperatureRangeDryMode", dryRange.toString());
-        if (heatRange != null)
-            properties.put("allowedTemperatureRangeHeatMode", heatRange.toString());
-        if (autoRange != null)
-            properties.put("allowedTemperatureRangeAutoMode", autoRange.toString());
-        if (coolRange != null)
-            properties.put("allowedTemperatureRangeCoolMode", coolRange.toString());
 
         return properties;
     }
