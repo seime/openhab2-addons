@@ -129,7 +129,7 @@ public class Device {
     }
 
     public Parameters createSendRequestParameters() {
-        return new Parameters(currentParameters.getMode(), currentParameters.isMasterSwitch());
+        return new Parameters(currentParameters.getMode(), currentParameters.isMasterSwitch(), currentParameters);
     }
 
     public Map<String, String> getThingProperties() {

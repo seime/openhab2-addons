@@ -166,6 +166,7 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
                 FanSpeed fanSpeed = FanSpeed.valueOf(command.toString());
                 Parameters newParameters = device.createSendRequestParameters();
                 newParameters.setFanSpeed(fanSpeed);
+
                 sendParameters(channelUID, device, newParameters,
                         StringType.valueOf(newParameters.getFanSpeed().toString()));
             } catch (IllegalArgumentException e) {

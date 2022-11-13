@@ -21,6 +21,7 @@ import org.openhab.binding.panasoniccomfortcloud.internal.dto.ParametersDTO;
 public class Parameters {
 
     public static final int INVALID_TEMPERATURE_READING = 126;
+    private Parameters shadowParameters = null;
     private AirSwingUpDown swingUpDown;
     private AirSwingSideways airSwingSideways;
     private OperationMode mode;
@@ -80,6 +81,12 @@ public class Parameters {
     public Parameters(OperationMode mode, boolean masterSwitch) {
         this.setMode(mode);
         this.setMasterSwitch(masterSwitch);
+    }
+
+    public Parameters(OperationMode mode, boolean masterSwitch, Parameters currentParameters) {
+        this.setMode(mode);
+        this.setMasterSwitch(masterSwitch);
+        this.shadowParameters = currentParameters;
     }
 
     /**
@@ -195,45 +202,64 @@ public class Parameters {
 
     public void setSwingUpDown(AirSwingUpDown airSwingUpDown) {
         this.swingUpDown = airSwingUpDown;
+        if (shadowParameters != null) {
+            this.shadowParameters.setSwingUpDown(this.swingUpDown);
+        }
     }
 
     public void setSwingSideways(AirSwingSideways airSwingSideways) {
         this.airSwingSideways = airSwingSideways;
+        if (shadowParameters != null) {
+            this.shadowParameters.setSwingSideways(airSwingSideways);
+        }
     }
 
     public void setMode(OperationMode mode) {
         this.mode = mode;
+        if (shadowParameters != null) {
+            this.shadowParameters.setMode(mode);
+        }
     }
 
     public void setEcoMode(EcoMode ecoMode) {
         this.ecoMode = ecoMode;
+        if (shadowParameters != null) {
+            this.shadowParameters.setEcoMode(ecoMode);
+        }
     }
 
     public void setFanAutoMode(AirSwingAutoMode airSwingAutoMode) {
         this.airSwingAutoMode = airSwingAutoMode;
+        if (shadowParameters != null) {
+            this.shadowParameters.setFanAutoMode(airSwingAutoMode);
+        }
     }
 
     public void setFanSpeed(FanSpeed fanSpeed) {
         this.fanSpeed = fanSpeed;
+        if (shadowParameters != null) {
+            this.shadowParameters.setFanSpeed(fanSpeed);
+        }
     }
 
     public void setNanoeMode(NanoeMode nanoeMode) {
         this.nanoeMode = nanoeMode;
-    }
-
-    public void setActualNanoeMode(NanoeMode actualNanoeMode) {
-        this.actualNanoeMode = actualNanoeMode;
+        if (shadowParameters != null) {
+            this.shadowParameters.setNanoeMode(nanoeMode);
+        }
     }
 
     public void setTargetTemperature(Double targetTemperature) {
         this.targetTemperature = targetTemperature;
+        if (shadowParameters != null) {
+            this.shadowParameters.setTargetTemperature(targetTemperature);
+        }
     }
 
     public void setMasterSwitch(boolean masterSwitch) {
         this.masterSwitch = masterSwitch;
-    }
-
-    public void setAirDirection(Integer airDirection) {
-        this.airDirection = airDirection;
+        if (shadowParameters != null) {
+            this.shadowParameters.setMasterSwitch(masterSwitch);
+        }
     }
 }
