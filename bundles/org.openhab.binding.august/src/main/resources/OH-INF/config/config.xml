@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config-description:config-descriptions
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0
+https://openhab.org/schemas/config-description-1.0.0.xsd">
+
+	<config-description uri="thing-type:august:account">
+		<parameter name="phone" type="text" required="true">
+			<label>Account phone number</label>
+			<description>Your registered app phone number</description>
+		</parameter>
+		<parameter name="email" type="text" required="true">
+			<label>Account email address</label>
+			<description>Your registered app email address</description>
+		</parameter>
+		<parameter name="password" type="text" required="true">
+			<label>Account password</label>
+			<description>Your August app password</description>
+			<context>password</context>
+		</parameter>
+		<parameter name="validationCode" type="text" required="false">
+			<label>Validation code received via email</label>
+			<description>Code received via email upon first login attempt. 6 digits</description>
+			<context>password</context>
+		</parameter>
+
+		<parameter name="refreshIntervalSeconds" type="integer" min="30" unit="s">
+			<label>Refresh Interval</label>
+			<description>How often in seconds to fetch updates from August service (polling interval)</description>
+			<default>120</default>
+			<advanced>true</advanced>
+		</parameter>
+	</config-description>
+
+	<config-description uri="thing-type:august:lock">
+		<parameter name="lockId" type="text" required="true">
+			<label>Lock ID</label>
+			<description>Id of lock</description>
+		</parameter>
+		<parameter name="refreshIntervalSeconds" type="integer" min="30" unit="s">
+			<label>Refresh Interval</label>
+			<description>How often in seconds to fetch updates from August service (polling interval)</description>
+			<default>60</default>
+			<advanced>true</advanced>
+		</parameter>
+	</config-description>
+
+</config-description:config-descriptions>

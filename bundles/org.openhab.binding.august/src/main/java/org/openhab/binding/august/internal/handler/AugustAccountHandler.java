@@ -1,0 +1,280 @@
+/**
+ * Copyright (c) 2010-2022 Contributors to the openHAB project
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+
+package org.openhab.binding.august.internal.handler;
+
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.august.internal.ApiBridge;
+import org.openhab.binding.august.internal.AugustException;
+import org.openhab.binding.august.internal.AuthenticationStatus;
+import org.openhab.binding.august.internal.CommunicationException;
+import org.openhab.binding.august.internal.config.AccountConfiguration;
+import org.openhab.binding.august.internal.dto.GetLocksRequest;
+import org.openhab.binding.august.internal.dto.GetLocksResponse;
+import org.openhab.binding.august.internal.dto.GetSessionRequest;
+import org.openhab.binding.august.internal.dto.GetSessionResponse;
+import org.openhab.binding.august.internal.dto.GetValidationCodeRequest;
+import org.openhab.binding.august.internal.dto.GetValidationCodeResponse;
+import org.openhab.binding.august.internal.dto.ValidateCodeRequest;
+import org.openhab.binding.august.internal.dto.ValidateCodeResponse;
+import org.openhab.binding.august.internal.model.Lock;
+import org.openhab.core.storage.Storage;
+import org.openhab.core.thing.Bridge;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.thing.ThingStatus;
+import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.binding.BaseBridgeHandler;
+import org.openhab.core.types.Command;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.gson.reflect.TypeToken;
+
+/**
+ * The {@link AugustAccountHandler} is responsible for authentication
+ *
+ * 
+ * @author Arne Seime - Initial contribution
+ */
+@NonNullByDefault
+public class AugustAccountHandler extends BaseBridgeHandler implements AccessTokenUpdatedListener {
+    public static final String STORAGE_KEY_AUTH_STATUS = "AUTH_STATUS";
+    public static final String STORAGE_KEY_INSTALLID = "INSTALL_ID";
+    public static final String STORAGE_KEY_ACCESS_TOKEN = "ACCESS_TOKEN";
+    public static final String STORAGE_KEY_ACCESS_TOKEN_EXPIRY = "ACCESS_TOKEN_EXPIRY";
+    private final Logger logger = LoggerFactory.getLogger(AugustAccountHandler.class);
+    private Optional<ScheduledFuture<?>> statusFuture = Optional.empty();
+    @NonNullByDefault({})
+    AccountConfiguration config;
+    private ApiBridge apiBridge;
+    private Storage<String> storage;
+
+    private Map<String, Lock> locks = new HashMap<>();
+
+    public AugustAccountHandler(final Bridge bridge, ApiBridge apiBridge, Storage<String> storage) {
+        super(bridge);
+        this.apiBridge = apiBridge;
+        this.storage = storage;
+        apiBridge.init(bridge.getUID(), this);
+    }
+
+    @Override
+    public void handleCommand(final ChannelUID channelUID, final Command command) {
+        // Ignore commands as none are supported
+    }
+
+    public Map<String, Lock> getLocks() {
+        return locks;
+    }
+
+    @Override
+    public void initialize() {
+
+        // Stop any pending updates if any
+        stopScheduledUpdate();
+
+        updateStatus(ThingStatus.UNKNOWN);
+        config = getConfigAs(AccountConfiguration.class);
+
+        if ((null == config.email || null == config.phone || null == config.password)) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                    "Provide email address, phone number and password");
+        }
+
+        AuthenticationStatus status;
+
+        @Nullable
+        String authStatus = storage.get(STORAGE_KEY_AUTH_STATUS);
+        if (authStatus == null) {
+            status = AuthenticationStatus.NOT_VALIDATED;
+            storage.put(STORAGE_KEY_AUTH_STATUS, status.toString());
+        } else {
+            status = AuthenticationStatus.valueOf(authStatus);
+        }
+
+        // Set accesstoken if available
+        @Nullable
+        String accessToken = storage.get(STORAGE_KEY_ACCESS_TOKEN);
+        if (accessToken != null) {
+            apiBridge.setAccessToken(accessToken);
+        }
+
+        try {
+            switch (status) {
+                case NOT_VALIDATED:
+                    // First time usage, installation must be validated
+                    logger.info("No initial setup, performing 2 factor authentication");
+                    String installationId = "openHAB-" + UUID.randomUUID();
+                    storage.put(STORAGE_KEY_INSTALLID, installationId);
+
+                    GetSessionRequest getSessionRequest = new GetSessionRequest(config.email, config.password,
+                            installationId);
+                    GetSessionResponse rsp = apiBridge.sendRequest(getSessionRequest,
+                            new TypeToken<GetSessionResponse>() {
+                            }.getType());
+
+                    storage.put(STORAGE_KEY_ACCESS_TOKEN, apiBridge.getLastAccessTokenFromHeader());
+                    storage.put(STORAGE_KEY_ACCESS_TOKEN_EXPIRY, rsp.expiresAt.toString());
+
+                    // Initiate 2 factor
+                    GetValidationCodeRequest validationCodeRequest = new GetValidationCodeRequest(config.email);
+                    GetValidationCodeResponse validationCodeResponse = apiBridge.sendRequest(validationCodeRequest,
+                            new TypeToken<GetValidationCodeResponse>() {
+                            }.getType());
+                    if ("sent".equals(validationCodeResponse.code)) {
+                        logger.info(
+                                "Validation code has been sent to {}. Enter the code in the thing configuration and save",
+                                validationCodeResponse.value);
+                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_PENDING, String.format(
+                                "A verification code has been sent to %s. Enter the code and save configuration",
+                                validationCodeResponse.value));
+                        storage.put(STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATION_REQUESTED.toString());
+                    } else {
+                        logger.warn("2 factor authentication failed, code {}", validationCodeResponse.code);
+                        // Something went wrong, update state and reset storage
+                        clearStorage();
+                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, String.format(
+                                "Expected validation code to be sent, but received '%s'", validationCodeResponse.code));
+                    }
+
+                    break;
+                case VALIDATION_REQUESTED:
+                    if (null == config.validationCode || !StringUtils.isNumeric(config.validationCode)
+                            || config.validationCode.length() != 6) {
+                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                                String.format("Verification code is not a 6 digit number: %s. Enter code again",
+                                        config.validationCode));
+                    } else {
+                        logger.info("Verifying 2 factor code");
+                        ValidateCodeRequest validateCodeRequest = new ValidateCodeRequest(config.validationCode,
+                                config.email, config.phone);
+                        ValidateCodeResponse validateCodeResponse = apiBridge.sendRequest(validateCodeRequest,
+                                new TypeToken<ValidateCodeResponse>() {
+                                }.getType());
+                        if ("token_incomplete".equals(validateCodeResponse.resolution)) {
+                            // All good
+                            logger.info("2 factor authentication complete");
+                            getThing().getConfiguration().remove("validationCode");
+                            storage.put(STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATED.toString());
+                            doPoll();
+                        }
+                    }
+                    break;
+                case VALIDATED:
+                    @Nullable
+                    String expiryString = storage.get(STORAGE_KEY_ACCESS_TOKEN_EXPIRY);
+                    if (expiryString != null) {
+                        ZonedDateTime accessTokenExpiryTime = ZonedDateTime.parse(expiryString);
+                        if (accessTokenExpiryTime.isBefore(ZonedDateTime.now().plus(7, ChronoUnit.DAYS))) {
+                            logger.info("Access token is expired or about to expire, renewing");
+                            // Refresh token if expiry is in 7 days or less
+                            GetSessionRequest getSessionRequestRefresh = new GetSessionRequest(config.email,
+                                    config.password, storage.get(STORAGE_KEY_INSTALLID));
+                            GetSessionResponse getSessionResponseRefresh = apiBridge
+                                    .sendRequest(getSessionRequestRefresh, new TypeToken<GetSessionResponse>() {
+                                    }.getType());
+
+                            storage.put(STORAGE_KEY_ACCESS_TOKEN, apiBridge.getLastAccessTokenFromHeader());
+                            storage.put(STORAGE_KEY_ACCESS_TOKEN_EXPIRY,
+                                    getSessionResponseRefresh.expiresAt.toString());
+                        }
+                    }
+
+                    doPoll();
+                    break;
+            }
+
+        } catch (AugustException e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                    "Internal error: " + e.getMessage());
+            logger.warn("Error logging in", e);
+            clearStorage();
+        }
+
+        statusFuture = Optional.of(scheduler.scheduleWithFixedDelay(this::doPoll, config.refreshIntervalSeconds,
+                config.refreshIntervalSeconds, TimeUnit.SECONDS));
+    }
+
+    private void clearStorage() {
+        storage.remove(STORAGE_KEY_ACCESS_TOKEN);
+        storage.remove(STORAGE_KEY_ACCESS_TOKEN_EXPIRY);
+        storage.remove(STORAGE_KEY_INSTALLID);
+        storage.remove(STORAGE_KEY_AUTH_STATUS);
+    }
+
+    @Override
+    public void dispose() {
+        stopScheduledUpdate();
+        super.dispose();
+    }
+
+    public synchronized void doPoll() {
+        logger.info("Polling for new account status/lock overview");
+        try {
+            GetLocksRequest getLocksRequest = new GetLocksRequest();
+            final GetLocksResponse getLocksResponse = apiBridge.sendRequest(getLocksRequest,
+                    new TypeToken<GetLocksResponse>() {
+                    }.getType());
+
+            locks = getLocksResponse.entrySet().stream()
+                    .collect(Collectors.toMap(e -> e.getKey(), e -> new Lock(e.getValue())));
+            updateStatus(ThingStatus.ONLINE);
+            logger.info("Fetching lock overview success, found {} lock(s)", locks.size());
+            getThing().getThings().stream()
+                    .filter(e -> e.isEnabled() && ((AugustLockHandler) e.getHandler()).isInitialized())
+                    .map(e -> (AugustLockHandler) e.getHandler()).forEach(e -> e.doPoll());
+        } catch (final CommunicationException e) {
+            logger.warn("Error initializing data: {}, retrying at specified refreshInterval", e.getMessage());
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                    "Error fetching data: " + e.getMessage());
+        } catch (final AugustException e) {
+            logger.warn("Error initializing August Lock data: {}. Not retrying", e.getMessage());
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                    "Error fetching data: " + e.getMessage());
+            stopScheduledUpdate();
+        }
+    }
+
+    /**
+     * Stops this thing's polling future
+     */
+    private void stopScheduledUpdate() {
+        statusFuture.ifPresent(future -> {
+            if (!future.isCancelled()) {
+                future.cancel(true);
+            }
+            statusFuture = Optional.empty();
+        });
+    }
+
+    public ApiBridge getApiBridge() {
+        return apiBridge;
+    }
+
+    @Override
+    public void onAccessTokenUpdated(@Nullable String updatedAccessToken) {
+        storage.put(STORAGE_KEY_ACCESS_TOKEN, updatedAccessToken);
+    }
+}

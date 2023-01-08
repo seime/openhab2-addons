@@ -1,0 +1,211 @@
+/**
+ * Copyright (c) 2010-2022 Contributors to the openHAB project
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+package org.openhab.binding.august.internal.handler;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.openhab.binding.august.internal.ApiBridge.HEADER_ACCESS_TOKEN;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
+
+import org.eclipse.jetty.client.HttpClient;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.openhab.binding.august.internal.ApiBridge;
+import org.openhab.binding.august.internal.AuthenticationStatus;
+import org.openhab.binding.august.internal.config.AccountConfiguration;
+import org.openhab.binding.august.internal.model.Lock;
+import org.openhab.core.config.core.Configuration;
+import org.openhab.core.storage.Storage;
+import org.openhab.core.test.storage.VolatileStorage;
+import org.openhab.core.thing.Bridge;
+import org.openhab.core.thing.ThingUID;
+
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+
+/**
+ * 
+ * @author Arne Seime - Initial contribution
+ */
+@ExtendWith(MockitoExtension.class)
+public class AugustAccountHandlerTest {
+
+    private WireMockServer wireMockServer;
+
+    private HttpClient httpClient;
+
+    private @Mock Configuration configuration;
+    private @Mock Bridge bridge;
+
+    private Storage<String> storage;
+
+    private ApiBridge apiBridge;
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        wireMockServer = new WireMockServer(WireMockConfiguration.options().dynamicPort());
+        wireMockServer.start();
+
+        int port = wireMockServer.port();
+        WireMock.configureFor("localhost", port);
+        ApiBridge.API_ENDPOINT = "http://localhost:" + port;
+
+        httpClient = new HttpClient();
+        httpClient.start();
+
+        apiBridge = new ApiBridge(httpClient);
+
+        storage = new VolatileStorage<>();
+    }
+
+    @AfterEach
+    public void shutdown() throws Exception {
+        httpClient.stop();
+    }
+
+    @Test
+    public void testInitial2FactorLogin() throws IOException {
+        // Setup account
+        final AccountConfiguration accountConfig = new AccountConfiguration();
+        accountConfig.email = "email@address.com";
+        accountConfig.phone = "+4700000000";
+        accountConfig.password = "password";
+        when(configuration.as(eq(AccountConfiguration.class))).thenReturn(accountConfig);
+
+        // Setup get session response
+        preparePostNetworkResponse("/session", "/get_session_response.json", 200);
+        // Setup get 2 factor code response
+        preparePostNetworkResponse("/validation/email", "/get_validation_code_response.json", 200);
+
+        when(bridge.getConfiguration()).thenReturn(configuration);
+        when(bridge.getUID()).thenReturn(new ThingUID("august:account:thinguid"));
+        when(bridge.getThings()).thenReturn(List.of());
+
+        AugustAccountHandler accountHandler = Mockito.spy(new AugustAccountHandler(bridge, apiBridge, storage));
+
+        accountHandler.initialize();
+
+        assertAuthState(AuthenticationStatus.VALIDATION_REQUESTED);
+
+        // Setup validate 2 factor code response
+        preparePostNetworkResponse("/validate/email", "/validate_code_response.json", 200);
+        // Setup get locks response
+        prepareGetNetworkResponse("/users/locks/mine", "/get_locks_response.json", 200);
+
+        // Second init / TODO must check what kind of event is sent when config is updated
+        accountConfig.validationCode = "000000";
+        accountHandler.initialize();
+
+        assertAuthState(AuthenticationStatus.VALIDATED);
+
+        Map<String, Lock> locks = accountHandler.getLocks();
+        assertEquals(2, locks.size());
+    }
+
+    @Test
+    public void testAlreadyLoggedInValidToken() throws IOException {
+        // Setup account
+        final AccountConfiguration accountConfig = new AccountConfiguration();
+        accountConfig.email = "email@address.com";
+        accountConfig.phone = "+4700000000";
+        accountConfig.password = "password";
+        when(configuration.as(eq(AccountConfiguration.class))).thenReturn(accountConfig);
+
+        storage.put(AugustAccountHandler.STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATED.toString());
+        storage.put(AugustAccountHandler.STORAGE_KEY_INSTALLID, "InstallID");
+        storage.put(AugustAccountHandler.STORAGE_KEY_ACCESS_TOKEN, "ACCESSTOKEN");
+        storage.put(AugustAccountHandler.STORAGE_KEY_ACCESS_TOKEN_EXPIRY,
+                ZonedDateTime.now().plus(1, ChronoUnit.MONTHS).toString());
+
+        prepareGetNetworkResponse("/users/locks/mine", "/get_locks_response.json", 200);
+
+        when(bridge.getConfiguration()).thenReturn(configuration);
+        when(bridge.getUID()).thenReturn(new ThingUID("august:account:thinguid"));
+        when(bridge.getThings()).thenReturn(List.of());
+        AugustAccountHandler accountHandler = new AugustAccountHandler(bridge, apiBridge, storage);
+
+        accountHandler.initialize();
+
+        Map<String, Lock> locks = accountHandler.getLocks();
+        assertEquals(2, locks.size());
+    }
+
+    @Test
+    public void testAlreadyLoggedInExpiredToken() throws IOException {
+        // Setup account
+        final AccountConfiguration accountConfig = new AccountConfiguration();
+        accountConfig.email = "email@address.com";
+        accountConfig.phone = "+4700000000";
+        accountConfig.password = "password";
+        when(configuration.as(eq(AccountConfiguration.class))).thenReturn(accountConfig);
+
+        storage.put(AugustAccountHandler.STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATED.toString());
+        storage.put(AugustAccountHandler.STORAGE_KEY_INSTALLID, "InstallID");
+        storage.put(AugustAccountHandler.STORAGE_KEY_ACCESS_TOKEN, "ACCESSTOKEN");
+        storage.put(AugustAccountHandler.STORAGE_KEY_ACCESS_TOKEN_EXPIRY,
+                ZonedDateTime.now().minus(1, ChronoUnit.MONTHS).toString());
+
+        preparePostNetworkResponse("/session", "/get_session_response.json", 200);
+        prepareGetNetworkResponse("/users/locks/mine", "/get_locks_response.json", 200);
+
+        when(bridge.getConfiguration()).thenReturn(configuration);
+        when(bridge.getUID()).thenReturn(new ThingUID("august:account:thinguid"));
+        when(bridge.getThings()).thenReturn(List.of());
+        AugustAccountHandler accountHandler = new AugustAccountHandler(bridge, apiBridge, storage);
+
+        accountHandler.initialize();
+
+        Map<String, Lock> locks = accountHandler.getLocks();
+        assertEquals(2, locks.size());
+    }
+
+    private void assertAuthState(AuthenticationStatus status) {
+        assertTrue(storage.containsKey(AugustAccountHandler.STORAGE_KEY_AUTH_STATUS));
+        assertEquals(storage.get(AugustAccountHandler.STORAGE_KEY_AUTH_STATUS), status.toString());
+    }
+
+    private void preparePostNetworkResponse(String urlPath, String responseResource, int responseCode)
+            throws IOException {
+        stubFor(post(urlEqualTo(urlPath)).willReturn(aResponse().withStatus(responseCode)
+                .withBody(getClasspathJSONContent(responseResource)).withHeader(HEADER_ACCESS_TOKEN, "ACCESSTOKEN")));
+    }
+
+    private void prepareGetNetworkResponse(String urlPath, String responseResource, int responseCode)
+            throws IOException {
+        stubFor(get(urlEqualTo(urlPath)).willReturn(aResponse().withStatus(responseCode)
+                .withBody(getClasspathJSONContent(responseResource)).withHeader(HEADER_ACCESS_TOKEN, "ACCESSTOKEN")));
+    }
+
+    private String getClasspathJSONContent(String path) throws IOException {
+        return new String(getClass().getResourceAsStream(path).readAllBytes(), StandardCharsets.UTF_8);
+    }
+}
