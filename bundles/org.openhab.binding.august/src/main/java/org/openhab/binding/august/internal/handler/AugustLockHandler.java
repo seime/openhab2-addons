@@ -119,7 +119,7 @@ public class AugustLockHandler extends BaseThingHandler {
             logger.warn("{} Not polling lock since bridge isn't online yet. Bridge reported status {}", config.lockId,
                     getBridge().getStatus());
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
-
+            stopScheduledUpdate();
             return;
         }
 

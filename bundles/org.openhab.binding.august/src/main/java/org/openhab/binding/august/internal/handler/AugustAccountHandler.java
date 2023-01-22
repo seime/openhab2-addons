@@ -119,6 +119,8 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         String accessToken = storage.get(STORAGE_KEY_ACCESS_TOKEN);
         if (accessToken != null) {
             apiBridge.setAccessToken(accessToken);
+        } else {
+            logger.debug("No previous access token");
         }
 
         try {
@@ -129,14 +131,7 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
                     String installationId = "openHAB-" + UUID.randomUUID();
                     storage.put(STORAGE_KEY_INSTALLID, installationId);
 
-                    GetSessionRequest getSessionRequest = new GetSessionRequest(config.email, config.password,
-                            installationId);
-                    GetSessionResponse rsp = apiBridge.sendRequest(getSessionRequest,
-                            new TypeToken<GetSessionResponse>() {
-                            }.getType());
-
-                    storage.put(STORAGE_KEY_ACCESS_TOKEN, apiBridge.getLastAccessTokenFromHeader());
-                    storage.put(STORAGE_KEY_ACCESS_TOKEN_EXPIRY, rsp.expiresAt.toString());
+                    obtainNewSession();
 
                     // Initiate 2 factor
                     GetValidationCodeRequest validationCodeRequest = new GetValidationCodeRequest(config.email);
@@ -183,25 +178,9 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
                     }
                     break;
                 case VALIDATED:
-                    @Nullable
-                    String expiryString = storage.get(STORAGE_KEY_ACCESS_TOKEN_EXPIRY);
-                    if (expiryString != null) {
-                        ZonedDateTime accessTokenExpiryTime = ZonedDateTime.parse(expiryString);
-                        if (accessTokenExpiryTime.isBefore(ZonedDateTime.now().plus(7, ChronoUnit.DAYS))) {
-                            logger.info("Access token is expired or about to expire, renewing");
-                            // Refresh token if expiry is in 7 days or less
-                            GetSessionRequest getSessionRequestRefresh = new GetSessionRequest(config.email,
-                                    config.password, storage.get(STORAGE_KEY_INSTALLID));
-                            GetSessionResponse getSessionResponseRefresh = apiBridge
-                                    .sendRequest(getSessionRequestRefresh, new TypeToken<GetSessionResponse>() {
-                                    }.getType());
-
-                            storage.put(STORAGE_KEY_ACCESS_TOKEN, apiBridge.getLastAccessTokenFromHeader());
-                            storage.put(STORAGE_KEY_ACCESS_TOKEN_EXPIRY,
-                                    getSessionResponseRefresh.expiresAt.toString());
-                        }
+                    if (isSessionExpired() || storage.get(STORAGE_KEY_ACCESS_TOKEN) == null) {
+                        obtainNewSession();
                     }
-
                     doPoll();
                     break;
             }
@@ -215,6 +194,19 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
 
         statusFuture = Optional.of(scheduler.scheduleWithFixedDelay(this::doPoll, config.refreshIntervalSeconds,
                 config.refreshIntervalSeconds, TimeUnit.SECONDS));
+    }
+
+    private void obtainNewSession() throws AugustException {
+        GetSessionRequest getSessionRequestRefresh = new GetSessionRequest(config.email, config.password,
+                storage.get(STORAGE_KEY_INSTALLID));
+        GetSessionResponse getSessionResponseRefresh = apiBridge.sendRequest(getSessionRequestRefresh,
+                new TypeToken<GetSessionResponse>() {
+                }.getType());
+
+        logger.debug("New access token obtained, expiry {}", getSessionResponseRefresh.expiresAt.toString());
+
+        storage.put(STORAGE_KEY_ACCESS_TOKEN, apiBridge.getLastAccessTokenFromHeader());
+        storage.put(STORAGE_KEY_ACCESS_TOKEN_EXPIRY, getSessionResponseRefresh.expiresAt.toString());
     }
 
     private void clearStorage() {
@@ -233,6 +225,10 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
     public synchronized void doPoll() {
         logger.info("Polling for new account status/lock overview");
         try {
+            if (isSessionExpired()) {
+                obtainNewSession();
+            }
+
             GetLocksRequest getLocksRequest = new GetLocksRequest();
             final GetLocksResponse getLocksResponse = apiBridge.sendRequest(getLocksRequest,
                     new TypeToken<GetLocksResponse>() {
@@ -257,6 +253,19 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         }
     }
 
+    private boolean isSessionExpired() {
+        String expiryString = storage.get(STORAGE_KEY_ACCESS_TOKEN_EXPIRY);
+        if (expiryString != null) {
+            ZonedDateTime accessTokenExpiryTime = ZonedDateTime.parse(expiryString);
+            logger.debug("Access token expiry time {}", expiryString);
+            // Refresh token if expiry is in 7 days or less
+            if (!accessTokenExpiryTime.isBefore(ZonedDateTime.now().plus(7, ChronoUnit.DAYS))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Stops this thing's polling future
      */
@@ -275,6 +284,9 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
 
     @Override
     public void onAccessTokenUpdated(@Nullable String updatedAccessToken) {
-        storage.put(STORAGE_KEY_ACCESS_TOKEN, updatedAccessToken);
+        if (updatedAccessToken != null && !updatedAccessToken.isEmpty()) {
+            logger.debug("Storing new access token");
+            storage.put(STORAGE_KEY_ACCESS_TOKEN, updatedAccessToken);
+        }
     }
 }
