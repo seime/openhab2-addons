@@ -1,14 +1,13 @@
 # Yale Access / August Binding for internet connected locks
 
-This binding integrates some Yale/August locks that are linked to a Yale/August Connect WiFi Bridge or have WiFi built-in.
-Only tested device is a Yale Doorman L3.
+This binding integrates some Yale/August locks that are linked to a Yale/August Connect WiFi Bridge.
 
 ## Supported Things
 
-This binding supports door locks that are connected to the internet via a Yale Connet WiFi bridge/built-in WiFi and can be controlled
+This binding supports door locks that are connected to the internet via a Yale Connect WiFi bridge and can be controlled
 via the Yale Access app.
 
-Only tested with Yale Doorman L3, but other August locks such as Yale Linus *may* work as well.
+Only tested with Yale Doorman over WiFi bridge, but other August locks such as Yale Linus *may* work as well.
 Please report back if your lock work/do not work.
 
 * `account` = August/Yale Access account
@@ -50,6 +49,7 @@ To find the `lockId`, add the bridge and let it discover your locks
 ## Tested devices
 
 * Yale Doorman L3 with Yale/August Connect WiFi Bridge
+* Yale Doorman V2N with Access module and WiFi bridge
 
 ## Channels
 
