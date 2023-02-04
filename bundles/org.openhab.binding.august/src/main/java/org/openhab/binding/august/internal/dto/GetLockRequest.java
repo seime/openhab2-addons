@@ -18,7 +18,7 @@ package org.openhab.binding.august.internal.dto;
  *
  * @author Arne Seime - Initial contribution.
  */
-public class GetLockRequest extends AbstractRequest {
+public class GetLockRequest implements AbstractRequest {
 
     String lockId;
 

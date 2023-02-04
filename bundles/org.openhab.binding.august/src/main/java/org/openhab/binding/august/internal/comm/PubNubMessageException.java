@@ -10,13 +10,18 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.august.internal.handler;
+package org.openhab.binding.august.internal.comm;
+
+import org.openhab.binding.august.internal.AugustException;
 
 /**
- * The {@link AccessTokenUpdatedListener} is a callback interface if the access token returned from the service changes
- * 
+ * The {@link PubNubMessageException} class wraps exceptions raised when communicating with the PubNub async
+ * message api
+ *
  * @author Arne Seime - Initial contribution
  */
-public interface AccessTokenUpdatedListener {
-    void onAccessTokenUpdated(String updatedAccessToken);
+public class PubNubMessageException extends AugustException {
+    public PubNubMessageException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

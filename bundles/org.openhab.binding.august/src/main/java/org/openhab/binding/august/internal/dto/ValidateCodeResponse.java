@@ -12,6 +12,8 @@
  */
 package org.openhab.binding.august.internal.dto;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * All classes in the .dto are data transfer classes used by the GSON mapper. This class reflects a
  * part of a request/response data structure.
@@ -22,7 +24,8 @@ package org.openhab.binding.august.internal.dto;
 public class ValidateCodeResponse {
     public String userId;
 
-    public String _value;
+    @SerializedName("_value")
+    public String value;
 
     public String resolution;
 }

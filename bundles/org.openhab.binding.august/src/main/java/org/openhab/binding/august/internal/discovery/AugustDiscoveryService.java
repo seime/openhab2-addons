@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class AugustDiscoveryService extends AbstractDiscoveryService {
     public static final Set<ThingTypeUID> DISCOVERABLE_THING_TYPES_UIDS = Collections
             .singleton(BindingConstants.THING_TYPE_LOCK);
-    private static final long REFRESH_INTERVAL_MINUTES = 60 * 60 * 4; // EVERY 4 HOUR
+    private static final long DISCOVERY_INTERVAL_MINUTES = 60 * 4; // EVERY 4 HOUR
     public static final String LOCK_ID_PROPERTY = "lockId";
     private final Logger logger = LoggerFactory.getLogger(AugustDiscoveryService.class);
     private final AugustAccountHandler accountHandler;
@@ -50,7 +50,7 @@ public class AugustDiscoveryService extends AbstractDiscoveryService {
     @Override
     protected void startBackgroundDiscovery() {
         discoveryJob = Optional
-                .of(scheduler.scheduleWithFixedDelay(this::startScan, 0, REFRESH_INTERVAL_MINUTES, TimeUnit.MINUTES));
+                .of(scheduler.scheduleWithFixedDelay(this::startScan, 0, DISCOVERY_INTERVAL_MINUTES, TimeUnit.MINUTES));
     }
 
     @Override
@@ -88,7 +88,7 @@ public class AugustDiscoveryService extends AbstractDiscoveryService {
     }
 
     @Override
-    protected void stopScan() {
+    protected synchronized void stopScan() {
         logger.debug("Stop scan for devices.");
         super.stopScan();
     }

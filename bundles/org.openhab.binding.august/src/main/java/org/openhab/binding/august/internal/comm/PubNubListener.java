@@ -10,25 +10,23 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.august.internal;
+package org.openhab.binding.august.internal.comm;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
+import com.google.gson.JsonElement;
+
 /**
- * The {@link AugustException} class wraps exceptions raised when communicating with the API
+ * The {@link PubNubListener} interface is for handling connects and disconects from PubNub
  *
  * @author Arne Seime - Initial contribution
  */
 @NonNullByDefault
-public abstract class AugustException extends Exception {
+public interface PubNubListener {
 
-    private static final long serialVersionUID = 1L;
+    void onPushMessage(String channelName, JsonElement message);
 
-    protected AugustException(String message) {
-        super(message);
-    }
+    void onDisconnect(String channelName);
 
-    protected AugustException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    void onConnect(String channelName);
 }

@@ -10,29 +10,30 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.august.internal;
+package org.openhab.binding.august.internal.comm;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.openhab.binding.august.internal.AugustException;
 import org.openhab.binding.august.internal.dto.AbstractRequest;
 
 /**
- * The {@link CommunicationException} class wraps exceptions raised when communicating with the API
+ * The {@link RestCommunicationException} class wraps exceptions raised when communicating with the API
  *
  * @author Arne Seime - Initial contribution
  */
 @NonNullByDefault
-public class CommunicationException extends AugustException {
+public class RestCommunicationException extends AugustException {
     private static final long serialVersionUID = 1L;
 
-    public CommunicationException(final String message, final Throwable cause) {
+    public RestCommunicationException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
-    public CommunicationException(final String message) {
+    public RestCommunicationException(final String message) {
         super(message);
     }
 
-    public CommunicationException(final AbstractRequest req, final String overallStatus) {
+    public RestCommunicationException(final AbstractRequest req, final String overallStatus) {
         super("Server responded with error to request " + req.getClass().getSimpleName() + "/" + req.getRequestUrl()
                 + ": " + overallStatus);
     }

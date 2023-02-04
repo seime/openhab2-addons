@@ -51,4 +51,6 @@ public class GetLockResponse {
     public LockStatusDTO lockStatus;
 
     public String currentFirmwareVersion;
+
+    public String pubsubChannel;
 }

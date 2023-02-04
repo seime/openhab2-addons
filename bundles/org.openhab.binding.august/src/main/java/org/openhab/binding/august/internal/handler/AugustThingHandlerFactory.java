@@ -23,8 +23,9 @@ import java.util.stream.Stream;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
-import org.openhab.binding.august.internal.ApiBridge;
 import org.openhab.binding.august.internal.BindingConstants;
+import org.openhab.binding.august.internal.GsonFactory;
+import org.openhab.binding.august.internal.comm.RestApiClient;
 import org.openhab.binding.august.internal.discovery.AugustDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryService;
 import org.openhab.core.io.net.http.HttpClientFactory;
@@ -43,6 +44,8 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
+import com.google.gson.Gson;
+
 /**
  * The {@link AugustThingHandlerFactory} is responsible for creating things and thing
  * handlers.
@@ -60,6 +63,8 @@ public class AugustThingHandlerFactory extends BaseThingHandlerFactory {
     private StorageService storageService;
     private Map<ThingUID, ServiceRegistration<?>> discoveryServiceRegs = new HashMap<>();
 
+    private Gson gson = GsonFactory.create();
+
     @Activate
     public AugustThingHandlerFactory(@Reference HttpClientFactory httpClientFactory,
             @Reference StorageService storageService) {
@@ -71,10 +76,10 @@ public class AugustThingHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(final Thing thing) {
         final ThingTypeUID thingTypeUID = thing.getThingTypeUID();
         if (BindingConstants.THING_TYPE_LOCK.equals(thingTypeUID)) {
-            return new AugustLockHandler(thing);
+            return new AugustLockHandler(thing, gson);
         } else if (BindingConstants.THING_TYPE_ACCOUNT.equals(thingTypeUID)) {
-            ApiBridge apiBridge = new ApiBridge(httpClient);
-            AugustAccountHandler accountHandler = new AugustAccountHandler((Bridge) thing, apiBridge,
+            RestApiClient restApiClient = new RestApiClient(httpClient, gson);
+            AugustAccountHandler accountHandler = new AugustAccountHandler((Bridge) thing, restApiClient,
                     storageService.getStorage(thing.getUID().toString(),
                             FrameworkUtil.getBundle(getClass()).adapt(BundleWiring.class).getClassLoader()));
             registerDeviceDiscoveryService(accountHandler);

@@ -19,7 +19,7 @@ package org.openhab.binding.august.internal.dto;
  * @author Arne Seime - Initial contribution.
  */
 
-public class ValidateCodeRequest extends AbstractRequest {
+public class ValidateCodeRequest implements AbstractRequest {
 
     public String code;
 

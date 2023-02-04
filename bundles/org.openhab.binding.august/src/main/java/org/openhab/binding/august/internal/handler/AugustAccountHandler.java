@@ -10,7 +10,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-
 package org.openhab.binding.august.internal.handler;
 
 import java.time.ZonedDateTime;
@@ -26,10 +25,13 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.august.internal.ApiBridge;
 import org.openhab.binding.august.internal.AugustException;
 import org.openhab.binding.august.internal.AuthenticationStatus;
-import org.openhab.binding.august.internal.CommunicationException;
+import org.openhab.binding.august.internal.comm.AccessTokenUpdatedListener;
+import org.openhab.binding.august.internal.comm.PubNubListener;
+import org.openhab.binding.august.internal.comm.PubNubMessageSubscriber;
+import org.openhab.binding.august.internal.comm.RestApiClient;
+import org.openhab.binding.august.internal.comm.RestCommunicationException;
 import org.openhab.binding.august.internal.config.AccountConfiguration;
 import org.openhab.binding.august.internal.dto.GetLocksRequest;
 import org.openhab.binding.august.internal.dto.GetLocksResponse;
@@ -50,34 +52,40 @@ import org.openhab.core.types.Command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 
 /**
  * The {@link AugustAccountHandler} is responsible for authentication
  *
- * 
+ *
  * @author Arne Seime - Initial contribution
  */
 @NonNullByDefault
-public class AugustAccountHandler extends BaseBridgeHandler implements AccessTokenUpdatedListener {
+public class AugustAccountHandler extends BaseBridgeHandler implements AccessTokenUpdatedListener, PubNubListener {
     public static final String STORAGE_KEY_AUTH_STATUS = "AUTH_STATUS";
     public static final String STORAGE_KEY_INSTALLID = "INSTALL_ID";
     public static final String STORAGE_KEY_ACCESS_TOKEN = "ACCESS_TOKEN";
     public static final String STORAGE_KEY_ACCESS_TOKEN_EXPIRY = "ACCESS_TOKEN_EXPIRY";
+    public static final String STORAGE_KEY_USERID = "USERID";
     private final Logger logger = LoggerFactory.getLogger(AugustAccountHandler.class);
     private Optional<ScheduledFuture<?>> statusFuture = Optional.empty();
-    @NonNullByDefault({})
+    @Nullable
     AccountConfiguration config;
-    private ApiBridge apiBridge;
+    private RestApiClient restApiClient;
+
+    private PubNubMessageSubscriber messageSubscriber;
     private Storage<String> storage;
 
     private Map<String, Lock> locks = new HashMap<>();
+    private Map<String, PubNubListener> eventListeners = new HashMap<>();
 
-    public AugustAccountHandler(final Bridge bridge, ApiBridge apiBridge, Storage<String> storage) {
+    public AugustAccountHandler(final Bridge bridge, RestApiClient restApiClient, Storage<String> storage) {
         super(bridge);
-        this.apiBridge = apiBridge;
+        this.restApiClient = restApiClient;
         this.storage = storage;
-        apiBridge.init(bridge.getUID(), this);
+        this.messageSubscriber = new PubNubMessageSubscriber();
+        restApiClient.init(bridge.getUID(), this);
     }
 
     @Override
@@ -92,6 +100,7 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
     @Override
     public void initialize() {
 
+        logger.debug("Initializing bridge");
         // Stop any pending updates if any
         stopScheduledUpdate();
 
@@ -118,7 +127,7 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         @Nullable
         String accessToken = storage.get(STORAGE_KEY_ACCESS_TOKEN);
         if (accessToken != null) {
-            apiBridge.setAccessToken(accessToken);
+            restApiClient.setAccessToken(accessToken);
         } else {
             logger.debug("No previous access token");
         }
@@ -135,7 +144,7 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
 
                     // Initiate 2 factor
                     GetValidationCodeRequest validationCodeRequest = new GetValidationCodeRequest(config.email);
-                    GetValidationCodeResponse validationCodeResponse = apiBridge.sendRequest(validationCodeRequest,
+                    GetValidationCodeResponse validationCodeResponse = restApiClient.sendRequest(validationCodeRequest,
                             new TypeToken<GetValidationCodeResponse>() {
                             }.getType());
                     if ("sent".equals(validationCodeResponse.code)) {
@@ -165,7 +174,7 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
                         logger.info("Verifying 2 factor code");
                         ValidateCodeRequest validateCodeRequest = new ValidateCodeRequest(config.validationCode,
                                 config.email, config.phone);
-                        ValidateCodeResponse validateCodeResponse = apiBridge.sendRequest(validateCodeRequest,
+                        ValidateCodeResponse validateCodeResponse = restApiClient.sendRequest(validateCodeRequest,
                                 new TypeToken<ValidateCodeResponse>() {
                                 }.getType());
                         if ("token_incomplete".equals(validateCodeResponse.resolution)) {
@@ -173,15 +182,12 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
                             logger.info("2 factor authentication complete");
                             getThing().getConfiguration().remove("validationCode");
                             storage.put(STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATED.toString());
-                            doPoll();
+                            loginComplete();
                         }
                     }
                     break;
                 case VALIDATED:
-                    if (isSessionExpired() || storage.get(STORAGE_KEY_ACCESS_TOKEN) == null) {
-                        obtainNewSession();
-                    }
-                    doPoll();
+                    loginComplete();
                     break;
             }
 
@@ -191,7 +197,12 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
             logger.warn("Error logging in", e);
             clearStorage();
         }
+    }
 
+    private void loginComplete() throws AugustException {
+        obtainNewSession();
+        messageSubscriber.init(storage.get(STORAGE_KEY_USERID), this);
+        doPoll();
         statusFuture = Optional.of(scheduler.scheduleWithFixedDelay(this::doPoll, config.refreshIntervalSeconds,
                 config.refreshIntervalSeconds, TimeUnit.SECONDS));
     }
@@ -199,14 +210,15 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
     private void obtainNewSession() throws AugustException {
         GetSessionRequest getSessionRequestRefresh = new GetSessionRequest(config.email, config.password,
                 storage.get(STORAGE_KEY_INSTALLID));
-        GetSessionResponse getSessionResponseRefresh = apiBridge.sendRequest(getSessionRequestRefresh,
+        GetSessionResponse getSessionResponseRefresh = restApiClient.sendRequest(getSessionRequestRefresh,
                 new TypeToken<GetSessionResponse>() {
                 }.getType());
 
-        logger.debug("New access token obtained, expiry {}", getSessionResponseRefresh.expiresAt.toString());
+        logger.debug("New access token obtained, expiry {}", getSessionResponseRefresh.expiresAt);
 
-        storage.put(STORAGE_KEY_ACCESS_TOKEN, apiBridge.getLastAccessTokenFromHeader());
+        storage.put(STORAGE_KEY_ACCESS_TOKEN, restApiClient.getLastAccessTokenFromHeader());
         storage.put(STORAGE_KEY_ACCESS_TOKEN_EXPIRY, getSessionResponseRefresh.expiresAt.toString());
+        storage.put(STORAGE_KEY_USERID, getSessionResponseRefresh.userId);
     }
 
     private void clearStorage() {
@@ -214,15 +226,18 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         storage.remove(STORAGE_KEY_ACCESS_TOKEN_EXPIRY);
         storage.remove(STORAGE_KEY_INSTALLID);
         storage.remove(STORAGE_KEY_AUTH_STATUS);
+        storage.remove(STORAGE_KEY_USERID);
     }
 
     @Override
     public void dispose() {
+        messageSubscriber.dispose();
         stopScheduledUpdate();
         super.dispose();
     }
 
     public synchronized void doPoll() {
+
         logger.info("Polling for new account status/lock overview");
         try {
             if (isSessionExpired()) {
@@ -230,7 +245,7 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
             }
 
             GetLocksRequest getLocksRequest = new GetLocksRequest();
-            final GetLocksResponse getLocksResponse = apiBridge.sendRequest(getLocksRequest,
+            final GetLocksResponse getLocksResponse = restApiClient.sendRequest(getLocksRequest,
                     new TypeToken<GetLocksResponse>() {
                     }.getType());
 
@@ -238,10 +253,7 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
                     .collect(Collectors.toMap(e -> e.getKey(), e -> new Lock(e.getValue())));
             updateStatus(ThingStatus.ONLINE);
             logger.info("Fetching lock overview success, found {} lock(s)", locks.size());
-            getThing().getThings().stream()
-                    .filter(e -> e.isEnabled() && ((AugustLockHandler) e.getHandler()).isInitialized())
-                    .map(e -> (AugustLockHandler) e.getHandler()).forEach(e -> e.doPoll());
-        } catch (final CommunicationException e) {
+        } catch (final RestCommunicationException e) {
             logger.warn("Error initializing data: {}, retrying at specified refreshInterval", e.getMessage());
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                     "Error fetching data: " + e.getMessage());
@@ -278,8 +290,8 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         });
     }
 
-    public ApiBridge getApiBridge() {
-        return apiBridge;
+    public RestApiClient getApiBridge() {
+        return restApiClient;
     }
 
     @Override
@@ -287,6 +299,51 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         if (updatedAccessToken != null && !updatedAccessToken.isEmpty()) {
             logger.debug("Storing new access token");
             storage.put(STORAGE_KEY_ACCESS_TOKEN, updatedAccessToken);
+        }
+    }
+
+    @Override
+    public void onDisconnect(String channelName) {
+        // Forward to lock handler
+        PubNubListener pubNubListener = eventListeners.get(channelName);
+        if (pubNubListener != null) {
+            pubNubListener.onDisconnect(channelName);
+        }
+    }
+
+    @Override
+    public void onConnect(String channelName) {
+        // Forward to lock handler
+        PubNubListener pubNubListener = eventListeners.get(channelName);
+        if (pubNubListener != null) {
+            pubNubListener.onConnect(channelName);
+        }
+    }
+
+    @Override
+    public void onPushMessage(String channelName, JsonElement message) {
+        // Find correct handler
+        PubNubListener pubNubListener = eventListeners.get(channelName);
+        if (pubNubListener != null) {
+            pubNubListener.onPushMessage(channelName, message);
+        }
+    }
+
+    public void deregisterForEvents(AugustLockHandler augustLockHandler) {
+        Optional<Map.Entry<String, PubNubListener>> first = eventListeners.entrySet().stream()
+                .filter(e -> e.getValue() == augustLockHandler).findFirst();
+        first.ifPresent(e -> {
+            String channelName = e.getKey();
+            messageSubscriber.removeListener(channelName);
+            eventListeners.remove(channelName);
+
+        });
+    }
+
+    public void registerForEvents(AugustLockHandler augustLockHandler, String channelName) {
+        if (!eventListeners.containsKey(channelName)) {
+            eventListeners.put(channelName, augustLockHandler);
+            messageSubscriber.addListener(channelName);
         }
     }
 }

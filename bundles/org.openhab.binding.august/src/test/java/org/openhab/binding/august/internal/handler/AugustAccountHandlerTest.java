@@ -19,15 +19,13 @@ import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.openhab.binding.august.internal.ApiBridge.HEADER_ACCESS_TOKEN;
+import static org.openhab.binding.august.internal.comm.RestApiClient.HEADER_ACCESS_TOKEN;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jetty.client.HttpClient;
@@ -38,8 +36,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.openhab.binding.august.internal.ApiBridge;
 import org.openhab.binding.august.internal.AuthenticationStatus;
+import org.openhab.binding.august.internal.GsonFactory;
+import org.openhab.binding.august.internal.comm.RestApiClient;
 import org.openhab.binding.august.internal.config.AccountConfiguration;
 import org.openhab.binding.august.internal.model.Lock;
 import org.openhab.core.config.core.Configuration;
@@ -51,13 +50,14 @@ import org.openhab.core.thing.ThingUID;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.google.gson.Gson;
 
 /**
  * 
  * @author Arne Seime - Initial contribution
  */
 @ExtendWith(MockitoExtension.class)
-public class AugustAccountHandlerTest {
+class AugustAccountHandlerTest {
 
     private WireMockServer wireMockServer;
 
@@ -68,7 +68,9 @@ public class AugustAccountHandlerTest {
 
     private Storage<String> storage;
 
-    private ApiBridge apiBridge;
+    private RestApiClient restApiClient;
+
+    private Gson gson = GsonFactory.create();
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -77,12 +79,12 @@ public class AugustAccountHandlerTest {
 
         int port = wireMockServer.port();
         WireMock.configureFor("localhost", port);
-        ApiBridge.API_ENDPOINT = "http://localhost:" + port;
+        RestApiClient.API_ENDPOINT = "http://localhost:" + port;
 
         httpClient = new HttpClient();
         httpClient.start();
 
-        apiBridge = new ApiBridge(httpClient);
+        restApiClient = new RestApiClient(httpClient, gson);
 
         storage = new VolatileStorage<>();
     }
@@ -93,36 +95,37 @@ public class AugustAccountHandlerTest {
     }
 
     @Test
-    public void testInitial2FactorLogin() throws IOException {
+    void testInitial2FactorLogin() throws IOException {
         // Setup account
         final AccountConfiguration accountConfig = new AccountConfiguration();
         accountConfig.email = "email@address.com";
         accountConfig.phone = "+4700000000";
         accountConfig.password = "password";
-        when(configuration.as(eq(AccountConfiguration.class))).thenReturn(accountConfig);
+        when(configuration.as(AccountConfiguration.class)).thenReturn(accountConfig);
 
         // Setup get session response
-        preparePostNetworkResponse("/session", "/get_session_response.json", 200);
+        preparePostNetworkResponse("/session", "/mock_responses/get_session_response.json", 200);
         // Setup get 2 factor code response
-        preparePostNetworkResponse("/validation/email", "/get_validation_code_response.json", 200);
+        preparePostNetworkResponse("/validation/email", "/mock_responses/get_validation_code_response.json", 200);
 
         when(bridge.getConfiguration()).thenReturn(configuration);
         when(bridge.getUID()).thenReturn(new ThingUID("august:account:thinguid"));
-        when(bridge.getThings()).thenReturn(List.of());
 
-        AugustAccountHandler accountHandler = Mockito.spy(new AugustAccountHandler(bridge, apiBridge, storage));
+        AugustAccountHandler accountHandler = Mockito.spy(new AugustAccountHandler(bridge, restApiClient, storage));
 
+        // First init
         accountHandler.initialize();
 
         assertAuthState(AuthenticationStatus.VALIDATION_REQUESTED);
 
         // Setup validate 2 factor code response
-        preparePostNetworkResponse("/validate/email", "/validate_code_response.json", 200);
+        preparePostNetworkResponse("/validate/email", "/mock_responses/validate_code_response.json", 200);
         // Setup get locks response
-        prepareGetNetworkResponse("/users/locks/mine", "/get_locks_response.json", 200);
+        prepareGetNetworkResponse("/users/locks/mine", "/mock_responses/get_locks_response.json", 200);
 
         // Second init / TODO must check what kind of event is sent when config is updated
         accountConfig.validationCode = "000000";
+        // After code has been provided
         accountHandler.initialize();
 
         assertAuthState(AuthenticationStatus.VALIDATED);
@@ -132,26 +135,27 @@ public class AugustAccountHandlerTest {
     }
 
     @Test
-    public void testAlreadyLoggedInValidToken() throws IOException {
+    void testAlreadyLoggedInValidToken() throws IOException {
         // Setup account
         final AccountConfiguration accountConfig = new AccountConfiguration();
         accountConfig.email = "email@address.com";
         accountConfig.phone = "+4700000000";
         accountConfig.password = "password";
-        when(configuration.as(eq(AccountConfiguration.class))).thenReturn(accountConfig);
+        when(configuration.as(AccountConfiguration.class)).thenReturn(accountConfig);
 
         storage.put(AugustAccountHandler.STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATED.toString());
         storage.put(AugustAccountHandler.STORAGE_KEY_INSTALLID, "InstallID");
         storage.put(AugustAccountHandler.STORAGE_KEY_ACCESS_TOKEN, "ACCESSTOKEN");
         storage.put(AugustAccountHandler.STORAGE_KEY_ACCESS_TOKEN_EXPIRY,
                 ZonedDateTime.now().plus(1, ChronoUnit.MONTHS).toString());
+        // storage.put(AugustAccountHandler.STORAGE_KEY_USERID, "UserId");
 
-        prepareGetNetworkResponse("/users/locks/mine", "/get_locks_response.json", 200);
+        preparePostNetworkResponse("/session", "/mock_responses/get_session_response.json", 200);
+        prepareGetNetworkResponse("/users/locks/mine", "/mock_responses/get_locks_response.json", 200);
 
         when(bridge.getConfiguration()).thenReturn(configuration);
         when(bridge.getUID()).thenReturn(new ThingUID("august:account:thinguid"));
-        when(bridge.getThings()).thenReturn(List.of());
-        AugustAccountHandler accountHandler = new AugustAccountHandler(bridge, apiBridge, storage);
+        AugustAccountHandler accountHandler = new AugustAccountHandler(bridge, restApiClient, storage);
 
         accountHandler.initialize();
 
@@ -160,27 +164,27 @@ public class AugustAccountHandlerTest {
     }
 
     @Test
-    public void testAlreadyLoggedInExpiredToken() throws IOException {
+    void testAlreadyLoggedInExpiredToken() throws IOException {
         // Setup account
         final AccountConfiguration accountConfig = new AccountConfiguration();
         accountConfig.email = "email@address.com";
         accountConfig.phone = "+4700000000";
         accountConfig.password = "password";
-        when(configuration.as(eq(AccountConfiguration.class))).thenReturn(accountConfig);
+        when(configuration.as(AccountConfiguration.class)).thenReturn(accountConfig);
 
         storage.put(AugustAccountHandler.STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATED.toString());
         storage.put(AugustAccountHandler.STORAGE_KEY_INSTALLID, "InstallID");
         storage.put(AugustAccountHandler.STORAGE_KEY_ACCESS_TOKEN, "ACCESSTOKEN");
         storage.put(AugustAccountHandler.STORAGE_KEY_ACCESS_TOKEN_EXPIRY,
                 ZonedDateTime.now().minus(1, ChronoUnit.MONTHS).toString());
+        // storage.put(AugustAccountHandler.STORAGE_KEY_USERID, "UserId");
 
-        preparePostNetworkResponse("/session", "/get_session_response.json", 200);
-        prepareGetNetworkResponse("/users/locks/mine", "/get_locks_response.json", 200);
+        preparePostNetworkResponse("/session", "/mock_responses/get_session_response.json", 200);
+        prepareGetNetworkResponse("/users/locks/mine", "/mock_responses/get_locks_response.json", 200);
 
         when(bridge.getConfiguration()).thenReturn(configuration);
         when(bridge.getUID()).thenReturn(new ThingUID("august:account:thinguid"));
-        when(bridge.getThings()).thenReturn(List.of());
-        AugustAccountHandler accountHandler = new AugustAccountHandler(bridge, apiBridge, storage);
+        AugustAccountHandler accountHandler = new AugustAccountHandler(bridge, restApiClient, storage);
 
         accountHandler.initialize();
 

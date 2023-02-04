@@ -33,17 +33,15 @@ To find the `lockId`, add the bridge and let it discover your locks
 * `phone` = Mobile number used in the mobile app. Use full number with country code, ie `+4712345678`
 * `password` = Same as you use in the mobile app
 * `refreshInterval` = number of seconds between refresh calls to the server. This applies to the bridge itself, not the
-  locks. They can be configured individually.
+  locks. Defaults to once every hour
 * `validationCode` = one time code requested from the service after authenticating with email + phone + password.
 
 ### Lock
 
 * `lockId` = id of lock, typically a long string of numbers and letters
-* `refreshInterval` = number of seconds between refresh calls to the server
 
 ## TODO
 
-* Support for push messages via PubSub.
 * Support 2-factor code via SMS
 
 ## Tested devices
@@ -73,7 +71,7 @@ status. This may take 10-20 seconds to complete, but you get the latest and most
 august.things:
 
 ```
-Bridge august:account:accountName "Yale Access account" [ email="XXX@XXX.COM", phone="+4712345678", password="XXXXXXX", refreshInterval="120", validationCode="REPLACE" ] {
+Bridge august:account:accountName "Yale Access account" [ email="XXX@XXX.COM", phone="+4712345678", password="XXXXXXX", refreshInterval="3600", validationCode="REPLACE" ] {
   Thing lock frontdoor "Front door" [ lockId="344KJLK32KJ234LKJ234JLKJK34" ]
 }
 ```

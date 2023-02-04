@@ -35,7 +35,7 @@ public class AccountConfiguration {
     @Nullable
     public String validationCode;
 
-    public int refreshIntervalSeconds = 120;
+    public int refreshIntervalSeconds = 3600;
 
     @java.lang.Override
     public java.lang.String toString() {

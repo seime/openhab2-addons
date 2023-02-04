@@ -23,13 +23,14 @@ import java.util.Optional;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.openhab.binding.august.internal.ApiBridge;
 import org.openhab.binding.august.internal.AugustException;
+import org.openhab.binding.august.internal.comm.PubNubListener;
+import org.openhab.binding.august.internal.comm.RestApiClient;
 import org.openhab.binding.august.internal.config.LockConfiguration;
 import org.openhab.binding.august.internal.dto.GetLockRequest;
 import org.openhab.binding.august.internal.dto.GetLockResponse;
+import org.openhab.binding.august.internal.dto.LockStatusDTO;
 import org.openhab.binding.august.internal.dto.RemoteOperateLockRequest;
 import org.openhab.binding.august.internal.dto.RemoteOperateLockResponse;
 import org.openhab.core.library.types.OnOffType;
@@ -44,10 +45,13 @@ import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
+import org.openhab.core.types.State;
 import org.openhab.core.types.UnDefType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 
 /**
@@ -56,70 +60,75 @@ import com.google.gson.reflect.TypeToken;
  *
  * @author Arne Seime - Initial contribution
  */
-public class AugustLockHandler extends BaseThingHandler {
+public class AugustLockHandler extends BaseThingHandler implements PubNubListener {
 
     public static final String ERROR_MESSAGE_UNSUPPORTED_COMMAND = "Unsupported command {} for channel {}";
+    public static final int LOCK_POLLING_SECONDS = 1800;
 
     private final Logger logger = LoggerFactory.getLogger(AugustLockHandler.class);
 
     private LockConfiguration config;
-    @NonNullByDefault({})
-    private ApiBridge apiBridge;
 
-    public AugustLockHandler(Thing thing, ApiBridge apiBridge) {
-        super(thing);
-        this.apiBridge = apiBridge;
-    }
+    private RestApiClient restApiClient;
+    private Gson gson;
 
-    public AugustLockHandler(Thing thing) {
+    @Nullable
+    private AugustAccountHandler handler;
+
+    public AugustLockHandler(Thing thing, Gson gson) {
         super(thing);
+        this.gson = gson;
     }
 
     private GetLockResponse lock;
 
     private Optional<ScheduledFuture<?>> statusFuture = Optional.empty();
 
-    private boolean initialized = false;
-
     @Override
     public void initialize() {
-        updateStatus(ThingStatus.OFFLINE);
+        updateStatus(ThingStatus.UNKNOWN);
         config = getConfigAs(LockConfiguration.class);
 
         logger.info("Initializing lock {}", config.lockId);
         stopScheduledUpdate(); // If any
 
-        // Workaround for testing - need to inject ApiBridge but having difficulties injecting the bridge handler in the
+        // Workaround for testing - need to inject RestApiClient but having difficulties injecting the bridge handler in
+        // the
         // tests
-        if (getBridge() != null) {
-            AugustAccountHandler handler = (AugustAccountHandler) getBridge().getHandler();
+        Bridge bridge = getBridge();
+        if (bridge != null) {
+            AugustAccountHandler handler = (AugustAccountHandler) bridge.getHandler();
             if (handler != null) {
-                apiBridge = handler.getApiBridge();
+                restApiClient = handler.getApiBridge();
+                this.handler = handler;
             }
         }
 
-        Objects.requireNonNull(apiBridge,
-                "ApiBridge is null - must be set either directly in constructor or fetched via getBridge().getHandler()");
-        logger.debug("{} Initializing lock", config.lockId);
-        statusFuture = Optional.of(scheduler.scheduleWithFixedDelay(this::doPoll, config.refreshIntervalSeconds,
-                config.refreshIntervalSeconds, TimeUnit.SECONDS));
+        Objects.requireNonNull(restApiClient,
+                "RestApiClient is null - must be set either directly in constructor or fetched via getBridge().getHandler()");
+        statusFuture = Optional.of(scheduler.schedule(this::doPoll, 1, TimeUnit.SECONDS));
         logger.info("{} Lock init successful", config.lockId);
-        initialized = true;
     }
 
     @Override
     public void dispose() {
-        initialized = false;
+        handler.deregisterForEvents(this);
+
         stopScheduledUpdate();
         super.dispose();
     }
 
     public void doPoll() {
-        if (getBridge().getStatus() != ThingStatus.ONLINE) {
+
+        Bridge bridge = getBridge();
+
+        if (bridge != null && bridge.getStatus() != ThingStatus.ONLINE) {
             logger.warn("{} Not polling lock since bridge isn't online yet. Bridge reported status {}", config.lockId,
                     getBridge().getStatus());
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE);
-            stopScheduledUpdate();
+            // Schedule reconnect retry every 5 seconds
+            statusFuture = Optional.of(scheduler.schedule(this::doPoll, 5, TimeUnit.SECONDS));
+
             return;
         }
 
@@ -127,19 +136,22 @@ public class AugustLockHandler extends BaseThingHandler {
         try {
             final GetLockRequest getLockRequest = new GetLockRequest(config.lockId);
 
-            lock = apiBridge.sendRequest(getLockRequest, new TypeToken<GetLockResponse>() {
+            lock = restApiClient.sendRequest(getLockRequest, new TypeToken<GetLockResponse>() {
             }.getType());
 
             Map<String, String> properties = createProperties(lock);
             updateThing(editThing().withProperties(properties).build());
-            updateStatus(ThingStatus.ONLINE);
             thing.getChannels().forEach(e -> handleCommandInternal(e.getUID(), null));
+            // Register listener
+            handler.registerForEvents(this, lock.pubsubChannel);
         } catch (AugustException ex) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                     "Error retrieving data from server: " + ex.getMessage());
             // Undef all channels if error
             thing.getChannels().forEach(e -> updateState(e.getUID(), UnDefType.UNDEF));
         }
+        // Do poll to catch up with any message not received via PubNub
+        statusFuture = Optional.of(scheduler.schedule(this::doPoll, LOCK_POLLING_SECONDS, TimeUnit.SECONDS));
     }
 
     private Map<String, String> createProperties(GetLockResponse lockResponse) {
@@ -151,6 +163,18 @@ public class AugustLockHandler extends BaseThingHandler {
         properties.put("houseName", lockResponse.houseName);
 
         return properties;
+    }
+
+    /**
+     * Stops this thing's polling future
+     */
+    private void stopScheduledUpdate() {
+        statusFuture.ifPresent(future -> {
+            if (!future.isCancelled()) {
+                future.cancel(true);
+            }
+            statusFuture = Optional.empty();
+        });
     }
 
     @Override
@@ -193,11 +217,12 @@ public class AugustLockHandler extends BaseThingHandler {
                 logger.info("{} Querying lock/performing operation for lock state", config.lockId);
                 final RemoteOperateLockRequest operateLockRequest = new RemoteOperateLockRequest(config.lockId,
                         getOperationFromCommand(command));
-                RemoteOperateLockResponse rsp = apiBridge.sendRequest(operateLockRequest,
+                RemoteOperateLockResponse rsp = restApiClient.sendRequest(operateLockRequest,
                         new TypeToken<RemoteOperateLockResponse>() {
                         }.getType());
 
-                updateState(channelUID, rsp.lockStatus.equals("kAugLockState_Unlocked") ? OnOffType.OFF : OnOffType.ON);
+                // updateState(channelUID, rsp.lockStatus.equals("kAugLockState_Unlocked") ? OnOffType.OFF :
+                // OnOffType.ON);
             } catch (AugustException e) {
                 logger.warn("{} Error contacting lock", config.lockId, e);
                 updateState(channelUID, UnDefType.UNDEF);
@@ -227,26 +252,73 @@ public class AugustLockHandler extends BaseThingHandler {
         }
     }
 
-    /**
-     * Stops this thing's polling future
-     */
-    private void stopScheduledUpdate() {
-        statusFuture.ifPresent(future -> {
-            if (!future.isCancelled()) {
-                future.cancel(true);
-            }
-            statusFuture = Optional.empty();
-        });
+    @Override
+    public void onConnect(String channelName) {
+        logger.info("PubNub connected");
+        updateStatus(ThingStatus.ONLINE);
     }
 
     @Override
-    public boolean isInitialized() {
-        return initialized;
+    public void onDisconnect(String channelName) {
+        logger.info("PubNub disconnected");
+        stopScheduledUpdate();
+        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Server push message connection lost");
+    }
+
+    @Override
+    public void onPushMessage(String channelName, JsonElement message) {
+
+        try {
+            logger.info("Received pubsub message {}", gson.toJson(message));
+            JsonElement remoteEvent = message.getAsJsonObject().get("remoteEvent");
+            if (remoteEvent != null) {
+                logger.info("Unhandled EVENT");
+            } else {
+                LockStatusDTO asyncStatus = gson.fromJson(message, new TypeToken<LockStatusDTO>() {
+                }.getType());
+
+                State lockState = UnDefType.UNDEF;
+                switch (asyncStatus.lockStatus) {
+                    case "locked":
+                        lockState = OnOffType.ON;
+                        break;
+                    case "unlocked":
+                        lockState = OnOffType.OFF;
+                        break;
+                    default:
+                        logger.warn("Unexpected lockState from async message {}", asyncStatus.lockStatus);
+                }
+
+                updateState(CHANNEL_LOCK_STATE, lockState);
+
+                State doorState = UnDefType.UNDEF;
+                switch (asyncStatus.doorStatus) {
+                    case "open":
+                        doorState = OpenClosedType.OPEN;
+                        break;
+                    case "closed":
+                        doorState = OpenClosedType.CLOSED;
+                        break;
+                    default:
+                        logger.warn("Unexpected doorState from async message {}", asyncStatus.doorStatus);
+                }
+
+                updateState(CHANNEL_DOOR_STATE, doorState);
+
+            }
+        } catch (Exception e) {
+            logger.error("Error handling pubnub message on channel {}: {}", channelName, message, e);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "AugustLockHandler{" + "config=" + config + '}';
     }
 
     /**
      * Only used for testing, need to make public for mocking purposes
-     * 
+     *
      * @return
      */
     @Override

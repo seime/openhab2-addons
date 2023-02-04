@@ -20,7 +20,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.openhab.binding.august.internal.ApiBridge.HEADER_ACCESS_TOKEN;
+import static org.openhab.binding.august.internal.comm.RestApiClient.HEADER_ACCESS_TOKEN;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -33,8 +33,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.openhab.binding.august.internal.ApiBridge;
 import org.openhab.binding.august.internal.BindingConstants;
+import org.openhab.binding.august.internal.GsonFactory;
+import org.openhab.binding.august.internal.comm.PubNubListener;
+import org.openhab.binding.august.internal.comm.PubNubMessageSubscriber;
+import org.openhab.binding.august.internal.comm.RestApiClient;
 import org.openhab.binding.august.internal.config.LockConfiguration;
 import org.openhab.binding.august.internal.dto.RemoteOperateLockRequest;
 import org.openhab.core.config.core.Configuration;
@@ -42,10 +45,10 @@ import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.OpenClosedType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.unit.Units;
-import org.openhab.core.storage.Storage;
 import org.openhab.core.test.storage.VolatileStorage;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingUID;
 import org.openhab.core.thing.binding.ThingHandlerCallback;
@@ -55,6 +58,9 @@ import org.openhab.core.thing.internal.ThingImpl;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 /**
  *
@@ -62,7 +68,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
  */
 
 @ExtendWith(MockitoExtension.class)
-public class AugustLockHandlerTest {
+class AugustLockHandlerTest implements PubNubListener {
 
     private WireMockServer wireMockServer;
 
@@ -71,9 +77,21 @@ public class AugustLockHandlerTest {
     private @Mock Configuration configuration;
     private @Mock Bridge bridge;
 
-    private Storage<String> storage;
+    private @Mock AugustAccountHandler accountHandler;
 
-    private ApiBridge apiBridge;
+    private RestApiClient restApiClient;
+    private PubNubMessageSubscriber messageSubscriber;
+    private VolatileStorage<Object> storage;
+
+    private Gson gson = GsonFactory.create();
+
+    private Thing thing;
+
+    private AugustLockHandler lockHandler;
+
+    private ThingHandlerCallback thingHandlerCallback;
+
+    LockConfiguration lockConfiguration;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -82,14 +100,33 @@ public class AugustLockHandlerTest {
 
         int port = wireMockServer.port();
         WireMock.configureFor("localhost", port);
-        ApiBridge.API_ENDPOINT = "http://localhost:" + port;
+        RestApiClient.API_ENDPOINT = "http://localhost:" + port;
 
         httpClient = new HttpClient();
         httpClient.start();
 
-        apiBridge = new ApiBridge(httpClient);
-        apiBridge.init(new ThingUID("august:bridge:1"), updatedAccessToken -> {
+        restApiClient = new RestApiClient(httpClient, gson);
+        restApiClient.init(new ThingUID("august:bridge:1"), updatedAccessToken -> {
         });
+
+        restApiClient.setAccessToken("ACCESSTOKEN");
+
+        messageSubscriber = new PubNubMessageSubscriber();
+        messageSubscriber.init("null", this);
+
+        lockConfiguration = new LockConfiguration();
+        lockConfiguration.lockId = "LockId1";
+        when(configuration.as(LockConfiguration.class)).thenReturn(lockConfiguration);
+
+        thing = createLockThing();
+        lockHandler = Mockito.spy(new AugustLockHandler(thing, gson));
+        thingHandlerCallback = Mockito.mock(ThingHandlerCallback.class);
+        lockHandler.setCallback(thingHandlerCallback);
+
+        when(bridge.getStatus()).thenReturn(ThingStatus.ONLINE);
+        when(lockHandler.getBridge()).thenReturn(bridge);
+        when(bridge.getHandler()).thenReturn(accountHandler);
+        when(accountHandler.getApiBridge()).thenReturn(restApiClient);
 
         storage = new VolatileStorage<>();
     }
@@ -97,79 +134,67 @@ public class AugustLockHandlerTest {
     @AfterEach
     public void shutdown() throws Exception {
         httpClient.stop();
+        lockHandler.dispose();
+        verify(accountHandler).deregisterForEvents(eq(lockHandler));
     }
 
     @Test
-    public void testInitialize() throws IOException {
-        // Setup account
-        final LockConfiguration lockConfiguration = new LockConfiguration();
-        lockConfiguration.lockId = "LockId1";
-        when(configuration.as(eq(LockConfiguration.class))).thenReturn(lockConfiguration);
-
-        ThingImpl lockThing = createLockThing();
-
-        apiBridge.setAccessToken("ACCESSTOKEN");
+    void testInitialize() throws IOException, InterruptedException {
 
         // Setup get lock response
-        prepareGetNetworkResponse("/locks/" + lockConfiguration.lockId, "/get_lock_response.json", 200);
+        prepareGetNetworkResponse("/locks/" + lockConfiguration.lockId, "/mock_responses/get_lock_response.json", 200);
 
-        AugustLockHandler lockHandler = Mockito.spy(new AugustLockHandler(lockThing, apiBridge));
-        ThingHandlerCallback thingHandlerCallback = Mockito.mock(ThingHandlerCallback.class);
-        lockHandler.setCallback(thingHandlerCallback);
-
-        when(bridge.getStatus()).thenReturn(ThingStatus.ONLINE);
-        when(lockHandler.getBridge()).thenReturn(bridge);
         lockHandler.initialize();
-        lockHandler.doPoll();
 
-        verify(thingHandlerCallback).stateUpdated(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_BATTERY),
+        Thread.sleep(2000);
+
+        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_BATTERY),
                 new QuantityType<>(47.75072124321014, Units.PERCENT));
-        verify(thingHandlerCallback)
-                .stateUpdated(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_LOCK_STATE), OnOffType.ON);
-        verify(thingHandlerCallback).stateUpdated(
-                new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_DOOR_STATE), OpenClosedType.CLOSED);
+        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
+                OnOffType.ON);
+        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_DOOR_STATE),
+                OpenClosedType.CLOSED);
+
+        lockHandler.onConnect("ignored");
+
+        verify(accountHandler).registerForEvents(eq(lockHandler), eq("PubsubChannelUUID"));
     }
 
     @Test
-    public void testUnlockDoor() throws IOException {
+    void testUnlockDoor() throws IOException, InterruptedException {
         // Setup account
-        final LockConfiguration lockConfiguration = new LockConfiguration();
-        lockConfiguration.lockId = "LockId1";
-        when(configuration.as(eq(LockConfiguration.class))).thenReturn(lockConfiguration);
-
-        ThingImpl lockThing = createLockThing();
-
-        apiBridge.setAccessToken("ACCESSTOKEN");
 
         // Setup get lock response
-        prepareGetNetworkResponse("/locks/" + lockConfiguration.lockId, "/get_lock_response.json", 200);
+        prepareGetNetworkResponse("/locks/" + lockConfiguration.lockId, "/mock_responses/get_lock_response.json", 200);
 
-        AugustLockHandler lockHandler = Mockito.spy(new AugustLockHandler(lockThing, apiBridge));
-        ThingHandlerCallback thingHandlerCallback = Mockito.mock(ThingHandlerCallback.class);
-        lockHandler.setCallback(thingHandlerCallback);
-
-        when(bridge.getStatus()).thenReturn(ThingStatus.ONLINE);
-        when(lockHandler.getBridge()).thenReturn(bridge);
         lockHandler.initialize();
-        lockHandler.doPoll();
 
-        verify(thingHandlerCallback).stateUpdated(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_BATTERY),
+        Thread.sleep(2000);
+
+        // await().until(() -> lockHandler.getThing().getStatus() == ThingStatus.ONLINE);
+
+        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_BATTERY),
                 new QuantityType<>(47.75072124321014, Units.PERCENT));
-        verify(thingHandlerCallback)
-                .stateUpdated(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_LOCK_STATE), OnOffType.ON);
-        verify(thingHandlerCallback).stateUpdated(
-                new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_DOOR_STATE), OpenClosedType.CLOSED);
+        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
+                OnOffType.ON);
+        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_DOOR_STATE),
+                OpenClosedType.CLOSED);
+
+        lockHandler.onConnect("ignored");
+
+        verify(accountHandler).registerForEvents(eq(lockHandler), eq("PubsubChannelUUID"));
 
         preparePutNetworkResponse(
                 String.format("/remoteoperate/%s/%s", lockConfiguration.lockId,
                         RemoteOperateLockRequest.Operation.UNLOCK.getUrlWord()),
-                "/remoteoperate_lock_response.json", 200);
+                "/mock_responses/remoteoperate_lock_response.json", 200);
 
-        lockHandler.handleCommand(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
+        lockHandler.handleCommand(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE), OnOffType.OFF);
+
+        lockHandler.onPushMessage("ignored",
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/lock_status_async.json")));
+        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
                 OnOffType.OFF);
-
-        verify(thingHandlerCallback)
-                .stateUpdated(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_LOCK_STATE), OnOffType.OFF);
     }
 
     private ThingImpl createLockThing() {
@@ -198,5 +223,17 @@ public class AugustLockHandlerTest {
 
     private String getClasspathJSONContent(String path) throws IOException {
         return new String(getClass().getResourceAsStream(path).readAllBytes(), StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public void onPushMessage(String channelName, JsonElement message) {
+    }
+
+    @Override
+    public void onDisconnect(String channelName) {
+    }
+
+    @Override
+    public void onConnect(String channelName) {
     }
 }

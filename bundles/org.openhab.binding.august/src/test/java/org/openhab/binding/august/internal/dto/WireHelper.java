@@ -31,24 +31,17 @@ public class WireHelper {
         gson = GsonFactory.create();
     }
 
-    public <T> T deSerializeResponse(final String jsonClasspathName, final Type type) throws IOException {
-        final String json = new String(WireHelper.class.getResourceAsStream(jsonClasspathName).readAllBytes(),
-                StandardCharsets.UTF_8);
-
-        return gson.fromJson(json, type);
-    }
-
     public <T> T deSerializeFromClasspathResource(final String jsonClasspathName, final Type type) throws IOException {
         final String json = new String(WireHelper.class.getResourceAsStream(jsonClasspathName).readAllBytes(),
                 StandardCharsets.UTF_8);
         return deSerializeFromString(json, type);
     }
 
-    public <T> T deSerializeFromString(final String json, final Type type) throws IOException {
+    public <T> T deSerializeFromString(final String json, final Type type) {
         return gson.fromJson(json, type);
     }
 
-    public <T> String serialize(final AbstractRequest req) throws IOException {
+    public <T> String serialize(final AbstractRequest req) {
         return gson.toJson(req);
     }
 }

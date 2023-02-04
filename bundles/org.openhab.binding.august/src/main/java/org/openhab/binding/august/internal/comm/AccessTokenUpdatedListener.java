@@ -10,21 +10,13 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.august.internal.config;
+package org.openhab.binding.august.internal.comm;
 
 /**
- * The {@link LockConfiguration} class contains fields mapping thing configuration parameters.
- *
+ * The {@link AccessTokenUpdatedListener} is a callback interface if the access token returned from the service changes
+ * 
  * @author Arne Seime - Initial contribution
  */
-public class LockConfiguration {
-    /*
-     * Lock Id
-     */
-    public String lockId;
-
-    @Override
-    public String toString() {
-        return "LockConfiguration{" + "lockId='" + lockId + '\'' + '}';
-    }
+public interface AccessTokenUpdatedListener {
+    void onAccessTokenUpdated(String updatedAccessToken);
 }

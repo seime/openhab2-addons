@@ -18,7 +18,7 @@ package org.openhab.binding.august.internal.dto;
  *
  * @author Arne Seime - Initial contribution.
  */
-public class GetLocksRequest extends AbstractRequest {
+public class GetLocksRequest implements AbstractRequest {
     @Override
     public String getRequestUrl() {
         return "/users/locks/mine";

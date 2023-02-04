@@ -26,4 +26,7 @@ public class GetSessionResponse {
 
     // If true, installId is verified - no need for 2 factor check
     public boolean hasInstallId;
+
+    // UserId logged in - used for async message subscription
+    public String userId;
 }

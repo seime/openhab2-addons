@@ -21,7 +21,7 @@ import com.google.gson.annotations.SerializedName;
  * @author Arne Seime - Initial contribution.
  */
 
-public class GetSessionRequest extends AbstractRequest {
+public class GetSessionRequest implements AbstractRequest {
 
     @SerializedName("identifier")
     public String loginId;
