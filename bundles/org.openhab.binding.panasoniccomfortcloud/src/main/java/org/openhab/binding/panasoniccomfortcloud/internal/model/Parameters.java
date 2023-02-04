@@ -12,7 +12,8 @@
  */
 package org.openhab.binding.panasoniccomfortcloud.internal.model;
 
-import org.openhab.binding.panasoniccomfortcloud.internal.BindingConstants;
+import java.util.Set;
+
 import org.openhab.binding.panasoniccomfortcloud.internal.dto.ParametersDTO;
 
 /**
@@ -20,7 +21,7 @@ import org.openhab.binding.panasoniccomfortcloud.internal.dto.ParametersDTO;
  */
 public class Parameters {
 
-    public static final int INVALID_TEMPERATURE_READING = 126;
+    public static final Set<Object> INVALID_TEMPERATURE_READINGS = Set.of(126, -255);
     private Parameters shadowParameters = null;
     private AirSwingUpDown swingUpDown;
     private AirSwingSideways airSwingSideways;
@@ -55,18 +56,14 @@ public class Parameters {
         nanoeMode = NanoeMode.parseValue(dto.nanoe);
         actualNanoeMode = NanoeMode.parseValue(dto.actualNanoe);
         masterSwitch = dto.operate != null && dto.operate != 0;
-        targetTemperature = dto.temperatureSet;
 
-        if (BindingConstants.DEVICE_TYPE_WIFI_DONGLE.equals(device.getType())) {
-            // Bug in WiFi dongles reporting invalid temperature
-            if (dto.insideTemperature != INVALID_TEMPERATURE_READING) {
-                insideTemperature = dto.insideTemperature;
-            }
-            if (dto.outTemperature != INVALID_TEMPERATURE_READING) {
-                outsideTemperature = dto.outTemperature;
-            }
-        } else {
+        if (!INVALID_TEMPERATURE_READINGS.contains(dto.temperatureSet)) {
+            targetTemperature = dto.temperatureSet;
+        }
+        if (!INVALID_TEMPERATURE_READINGS.contains(dto.insideTemperature)) {
             insideTemperature = dto.insideTemperature;
+        }
+        if (!INVALID_TEMPERATURE_READINGS.contains(dto.outTemperature)) {
             outsideTemperature = dto.outTemperature;
         }
 

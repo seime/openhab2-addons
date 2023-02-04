@@ -268,8 +268,12 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
 
     private void handleTargetTemperatureCommand(ChannelUID channelUID, Command command, Device device) {
         if (command instanceof RefreshType) {
-            updateState(channelUID, new QuantityType<>(device.getCurrentParameters().getTargetTemperature(),
-                    device.getTemperatureUnit()));
+            if (device.getCurrentParameters().getTargetTemperature() == null) {
+                updateState(channelUID, UnDefType.UNDEF);
+            } else {
+                updateState(channelUID, new QuantityType<>(device.getCurrentParameters().getTargetTemperature(),
+                        device.getTemperatureUnit()));
+            }
         } else {
             double targetTemperature = -1;
             if (command instanceof QuantityType) {
@@ -361,7 +365,6 @@ public class PanasonicComfortCloudAirconditionHandler extends PanasonicComfortCl
     private void sendParameters(ChannelUID channelUID, Device device, Parameters newParameters,
             State newStateIfSuccessfulUpdate) {
         try {
-
             SetDevicePropertiesResponse rsp = accountHandler.getApiBridge().sendRequest(
                     new SetDevicePropertiesRequest(device.getDeviceId(), newParameters.toParametersDTO(device)),
                     SetDevicePropertiesResponse.class);
