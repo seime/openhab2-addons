@@ -4,9 +4,12 @@
 
 	<feature name="openhab-binding-august" description="August Binding" version="${project.version}">
 		<feature>openhab-runtime-base</feature>
-		<bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.okhttp/4.10.0_3</bundle>
-		<bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.okio/3.2.0_2</bundle>
-		<bundle dependency="true">mvn:org.json/json/20200518</bundle>
+		<bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/2.12.7</bundle>
+		<bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/2.12.7</bundle>
+		<bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/2.12.7.1</bundle>
+		<bundle dependency="true">mvn:com.google.code.gson/gson/2.8.9</bundle>
+		<bundle dependency="true">mvn:org.json/json/20180813</bundle>
+
 		<bundle start-level="80">mvn:org.openhab.addons.bundles/org.openhab.binding.august/${project.version}</bundle>
 
 	</feature>
