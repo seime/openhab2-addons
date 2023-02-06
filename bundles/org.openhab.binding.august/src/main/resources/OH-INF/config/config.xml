@@ -7,16 +7,16 @@ https://openhab.org/schemas/config-description-1.0.0.xsd">
 
 	<config-description uri="thing-type:august:account">
 		<parameter name="phone" type="text" required="true">
-			<label>Account phone number</label>
+			<label>Yale Access/August account phone number</label>
 			<description>Your registered app phone number</description>
 		</parameter>
 		<parameter name="email" type="text" required="true">
-			<label>Account email address</label>
+			<label>Yale Access/August account email address</label>
 			<description>Your registered app email address</description>
 		</parameter>
 		<parameter name="password" type="text" required="true">
-			<label>Account password</label>
-			<description>Your August app password</description>
+			<label>Yale Access/August account password</label>
+			<description>Your registered app password</description>
 			<context>password</context>
 		</parameter>
 		<parameter name="validationCode" type="text" required="false">
@@ -27,7 +27,7 @@ https://openhab.org/schemas/config-description-1.0.0.xsd">
 
 		<parameter name="refreshIntervalSeconds" type="integer" min="30" unit="s">
 			<label>Refresh Interval</label>
-			<description>How often in seconds to fetch updates from August service (polling interval)</description>
+			<description>How often in seconds to fetch account updates from August service (polling interval). Note that locks receive push messages and needs no polling.</description>
 			<default>3600</default>
 			<advanced>true</advanced>
 		</parameter>
@@ -36,7 +36,7 @@ https://openhab.org/schemas/config-description-1.0.0.xsd">
 	<config-description uri="thing-type:august:lock">
 		<parameter name="lockId" type="text" required="true">
 			<label>Lock ID</label>
-			<description>Id of lock</description>
+			<description>Id of lock, format 32 digits/characters</description>
 		</parameter>
 	</config-description>
 
