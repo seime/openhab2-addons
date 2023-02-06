@@ -18,6 +18,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.openhab.binding.august.internal.comm.RestApiClient.HEADER_ACCESS_TOKEN;
@@ -44,6 +45,7 @@ import org.openhab.core.config.core.Configuration;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.OpenClosedType;
 import org.openhab.core.library.types.QuantityType;
+import org.openhab.core.library.types.StringType;
 import org.openhab.core.library.unit.Units;
 import org.openhab.core.test.storage.VolatileStorage;
 import org.openhab.core.thing.Bridge;
@@ -197,6 +199,26 @@ class AugustLockHandlerTest implements PubNubListener {
                 OnOffType.OFF);
     }
 
+    @Test
+    void testAsyncCallback() throws IOException, InterruptedException {
+        prepareGetNetworkResponse("/locks/" + lockConfiguration.lockId, "/mock_responses/get_lock_response.json", 200);
+
+        lockHandler.initialize();
+
+        Thread.sleep(2000);
+
+        reset(thingHandlerCallback);
+
+        lockHandler.onPushMessage("ignored",
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/lock_status_async.json")));
+        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
+                OnOffType.OFF);
+        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_DOOR_STATE),
+                OpenClosedType.CLOSED);
+        verify(thingHandlerCallback).stateUpdated(
+                new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_CHANGED_BY_USER), new StringType("Manual"));
+    }
+
     private ThingImpl createLockThing() {
         ThingImpl lockThing = new ThingImpl(BindingConstants.THING_TYPE_LOCK, "LockId1");
         lockThing.addChannel(
@@ -205,6 +227,8 @@ class AugustLockHandlerTest implements PubNubListener {
                 ChannelBuilder.create(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_DOOR_STATE)).build());
         lockThing.addChannel(
                 ChannelBuilder.create(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_BATTERY)).build());
+        lockThing.addChannel(ChannelBuilder
+                .create(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_CHANGED_BY_USER)).build());
         lockThing.setConfiguration(configuration);
         return lockThing;
     }

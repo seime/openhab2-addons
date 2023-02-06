@@ -53,4 +53,7 @@ public class GetLockResponse {
     public String currentFirmwareVersion;
 
     public String pubsubChannel;
+
+    @SerializedName("pins")
+    public UserListDTO userList;
 }

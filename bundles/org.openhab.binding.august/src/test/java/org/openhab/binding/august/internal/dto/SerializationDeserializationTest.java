@@ -150,6 +150,14 @@ class SerializationDeserializationTest {
         assertEquals(true, message.lockStatus.isLockStatusChanged);
         assertEquals(true, message.lockStatus.valid);
         assertEquals("closed", message.lockStatus.doorStatus);
+
+        assertEquals(2, message.userList.loaded.size());
+        UserDTO user1 = message.userList.loaded.get(0);
+        assertEquals("FirstName", user1.firstName);
+        assertEquals("LastName", user1.lastName);
+        UserDTO user2 = message.userList.loaded.get(1);
+        assertEquals("FirstName2", user2.firstName);
+        assertEquals("LastName2", user2.lastName);
     }
 
     @Test

@@ -11,12 +11,15 @@
 
 		<label>Door lock</label>
 		<description>Door lock</description>
+		<category>Lock</category>
 
 		<channels>
 			<channel id="doorState" typeId="doorState"/>
 			<channel id="lockState" typeId="lockState"/>
 			<channel id="battery" typeId="battery"/>
+			<channel id="changedByUser" typeId="changedByUser"/>
 		</channels>
+
 
 		<representation-property>lockId</representation-property>
 		<config-description-ref uri="thing-type:august:lock"/>
