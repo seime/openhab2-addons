@@ -1,31 +1,36 @@
 # Yale Access / August Binding for internet connected locks
 
-This binding integrates some Yale/August locks that are linked to a Yale/August Connect WiFi Bridge.
+This binding integrates some Yale/August locks that are linked to a Yale/August Connect WiFi Bridge - or have WiFi
+builtin.
 
 ## Supported Things
 
-This binding supports door locks that are connected to the internet via a Yale Connect WiFi bridge and can be controlled
-via the Yale Access app.
-
-Only tested with Yale Doorman over WiFi bridge, but other August locks such as Yale Linus *may* work as well.
-Please report back if your lock work/do not work.
+Door locks only.
 
 * `account` = August/Yale Access account
 * `lock` = A door lock connected with a WiFi bridge
+
+Confirmed working devices:
+
+* Yale Doorman L3 with Yale/August Connect WiFi Bridge
+* Yale Doorman V2N with Access module and WiFi bridge
+* August Smart Lock Pro, 3rd Generation
+
+Others may work as well, just not tested yet. Please report back if your lock work/do not work.
 
 ## Login (READ THIS!)
 
 Yale Access uses 2-factor authentication at first login.
 
 1. Add a new `account` thing with phone, email and password
-2. Check your email for the 6 digit code
+2. Check your email for the 6-digit code
 3. Update the thing configuration with the code
 
 ## Thing Configuration
 
 See full example below for how to configure using thing files.
 
-To find the `lockId`, add the bridge and let it discover your locks
+To find the `lockId`, add the bridge and let it discover your locks.
 
 ### Account
 
@@ -33,21 +38,12 @@ To find the `lockId`, add the bridge and let it discover your locks
 * `phone` = Mobile number used in the mobile app. Use full number with country code, ie `+4712345678`
 * `password` = Same as you use in the mobile app
 * `refreshInterval` = number of seconds between refresh calls to the server. This applies to the bridge itself, not the
-  locks. Defaults to once every hour
+  locks. Defaults to once every hour.
 * `validationCode` = one time code requested from the service after authenticating with email + phone + password.
 
 ### Lock
 
 * `lockId` = id of lock, typically a long string of numbers and letters
-
-## TODO
-
-* Support 2-factor code via SMS
-
-## Tested devices
-
-* Yale Doorman L3 with Yale/August Connect WiFi Bridge
-* Yale Doorman V2N with Access module and WiFi bridge
 
 ## Channels
 
@@ -65,6 +61,10 @@ in [lock details response](src/test/resources/get_lock_response.json) and report
 
 Sending a `RefreshType` command to the `lockState` channel will query the lock itself instead of relying on the cloud
 status. This may take 10-20 seconds to complete, but you get the latest and most accurate state.
+
+## TODO
+
+* Support 2-factor code via SMS. Only email is supported.
 
 ## Full Example
 
