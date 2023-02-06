@@ -14,7 +14,8 @@ Confirmed working devices:
 
 * Yale Doorman L3 with Yale/August Connect WiFi Bridge
 * Yale Doorman V2N with Access module and WiFi bridge
-* August Smart Lock Pro, 3rd Generation
+* August ASL-03 Smart Lock Pro, 3rd Generation
+* Yale YR C/D 226/246/256
 
 Others may work as well, just not tested yet. Please report back if your lock work/do not work.
 
