@@ -51,7 +51,9 @@ public class PubNubMessageSubscriber {
 
     private final Set<String> channels = new HashSet<>();
 
-    private PubNub pub;
+    private PubNub pub = null;
+
+    private boolean initialized = false;
 
     public void init(String userIdString, PubNubListener messageListener) throws PubNubMessageException {
 
@@ -207,12 +209,19 @@ public class PubNubMessageSubscriber {
                 }
             });
 
+            initialized = true;
+
         } catch (PubNubException e) {
             throw new PubNubMessageException("Error creating PubNub subscription", e);
         }
     }
 
     public synchronized void addListener(String channelName) {
+
+        if (!initialized) {
+            logger.debug("Cannot add listener before component is initialized");
+            return;
+        }
 
         boolean added = channels.add(channelName);
         if (added) {
@@ -224,10 +233,15 @@ public class PubNubMessageSubscriber {
     }
 
     public synchronized void removeListener(String channelName) {
-        logger.debug("Removing listener for channel {}", channelName);
+
+        if (!initialized) {
+            logger.debug("Cannot remove listener before component is initialized");
+            return;
+        }
 
         boolean removed = channels.remove(channelName);
         if (removed) {
+            logger.debug("Removing listener for channel {}", channelName);
             pub.unsubscribe().channels(List.of(channelName)).execute();
         } else {
             logger.warn("Listener for channel {} not found, cannot remove", channelName);
@@ -235,9 +249,11 @@ public class PubNubMessageSubscriber {
     }
 
     public void dispose() {
-        pub.unsubscribeAll();
-        pub.disconnect();
-        pub.destroy();
-        channels.clear();
+        if (initialized) {
+            pub.unsubscribeAll();
+            pub.disconnect();
+            pub.destroy();
+            channels.clear();
+        }
     }
 }
