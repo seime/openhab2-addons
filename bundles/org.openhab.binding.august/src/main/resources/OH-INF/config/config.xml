@@ -27,7 +27,8 @@ https://openhab.org/schemas/config-description-1.0.0.xsd">
 
 		<parameter name="refreshIntervalSeconds" type="integer" min="30" unit="s">
 			<label>Refresh Interval</label>
-			<description>How often in seconds to fetch account updates from August service (polling interval). Note that locks receive push messages and needs no polling.</description>
+			<description>How often in seconds to fetch account updates from August service (polling interval). Note that locks
+				receive push messages and needs no polling.</description>
 			<default>3600</default>
 			<advanced>true</advanced>
 		</parameter>
