@@ -210,9 +210,13 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
 
     private void handleDoorStateCommand(ChannelUID channelUID, Command command) {
         if (command == null || command instanceof RefreshType) {
-            logger.info("{} Updating door state channel with cloud state", config.lockId);
-            updateState(channelUID,
-                    "closed".equals(lock.lockStatus.doorStatus) ? OpenClosedType.CLOSED : OpenClosedType.OPEN);
+            if (lock.lockStatus.doorStatus != null) {
+                logger.info("{} Updating door state channel with cloud state", config.lockId);
+                updateState(channelUID,
+                        "closed".equals(lock.lockStatus.doorStatus) ? OpenClosedType.CLOSED : OpenClosedType.OPEN);
+            } else {
+                updateState(channelUID, UnDefType.UNDEF);
+            }
         } else {
             logger.debug(ERROR_MESSAGE_UNSUPPORTED_COMMAND, command, channelUID);
         }
@@ -285,33 +289,36 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
                 }.getType());
 
                 State lockState = UnDefType.UNDEF;
-                switch (asyncStatus.lockStatus) {
-                    case "locked":
-                        lockState = OnOffType.ON;
-                        break;
-                    case "unlocked":
-                        lockState = OnOffType.OFF;
-                        break;
-                    default:
-                        logger.warn("Unexpected lockState from async message {}", asyncStatus.lockStatus);
+                if (asyncStatus.lockStatus != null) {
+                    switch (asyncStatus.lockStatus) {
+                        case "locked":
+                            lockState = OnOffType.ON;
+                            break;
+                        case "unlocked":
+                            lockState = OnOffType.OFF;
+                            break;
+                        default:
+                            logger.warn("Unexpected lockState from async message {}", asyncStatus.lockStatus);
+                    }
                 }
 
                 updateState(CHANNEL_LOCK_STATE, lockState);
 
                 State doorState = UnDefType.UNDEF;
-                switch (asyncStatus.doorStatus) {
-                    case "open":
-                        doorState = OpenClosedType.OPEN;
-                        break;
-                    case "closed":
-                        doorState = OpenClosedType.CLOSED;
-                        break;
-                    default:
-                        logger.warn("Unexpected doorState from async message {}", asyncStatus.doorStatus);
+                if (asyncStatus.doorStatus != null) {
+                    switch (asyncStatus.doorStatus) {
+                        case "open":
+                            doorState = OpenClosedType.OPEN;
+                            break;
+                        case "closed":
+                            doorState = OpenClosedType.CLOSED;
+                            break;
+                        default:
+                            logger.warn("Unexpected doorState from async message {}", asyncStatus.doorStatus);
+                    }
+
                 }
-
                 updateState(CHANNEL_DOOR_STATE, doorState);
-
                 updateState(CHANNEL_CHANGED_BY_USER, getLastChangeBy(asyncStatus.callingUserID));
 
             }
@@ -337,7 +344,10 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
     }
 
     private void parseUserMap(GetLockResponse lock) {
-        lock.userList.loaded.forEach(e -> userIdToName.put(e.userID, String.format("%s %s", e.firstName, e.lastName)));
+        if (lock.userList != null) {
+            lock.userList.loaded
+                    .forEach(e -> userIdToName.put(e.userID, String.format("%s %s", e.firstName, e.lastName)));
+        }
     }
 
     @Override

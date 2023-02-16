@@ -52,12 +52,12 @@ Only a few channels have been added so far, but quite a bit more data is availab
 If you feel something important is missing, take a look
 in [lock details response](src/test/resources/get_lock_response.json) and report back/create a PR.
 
-| Channel       | Read/write | Item type            | Description                                                      |
-|---------------|------------|----------------------|------------------------------------------------------------------|
-| lockState     | R/W        | Switch               | State of locking bolt, ON = locked, OFF = unlocked               |
-| doorState     | R          | Contact              | Whether the door is OPEN or CLOSED                               |
-| battery       | R          | Number:Dimensionless | Remaining battery percentage                                     |
-| changedByUser | R          | String               | User last locking/unlocking the door. `Manual` if door knob used |
+| Channel       | Read/write | Item type            | Description                                                                                           |
+|---------------|------------|----------------------|-------------------------------------------------------------------------------------------------------|
+| lockState     | R/W        | Switch               | State of locking bolt, ON = locked, OFF = unlocked                                                    |
+| doorState     | R          | Contact              | Whether the door is OPEN or CLOSED. Not all doors report this, in that case the channel reports UNDEF |
+| battery       | R          | Number:Dimensionless | Remaining battery percentage                                                                          |
+| changedByUser | R          | String               | User last locking/unlocking the door. `Manual` if door knob used                                      |
 
 ## Requesting latest status from lock
 

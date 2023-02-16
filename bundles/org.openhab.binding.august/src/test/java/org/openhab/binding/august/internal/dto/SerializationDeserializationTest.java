@@ -173,12 +173,24 @@ class SerializationDeserializationTest {
     }
 
     @Test
-    void testLockPushMessage() throws IOException {
+    void testLockAndDoorPushMessage() throws IOException {
         final Type type = new TypeToken<LockStatusDTO>() {
         }.getType();
 
         final LockStatusDTO message = wireHelper
                 .deSerializeFromClasspathResource("/mock_responses/lock_status_async.json", type);
+
+        assertEquals("unlocked", message.lockStatus);
+        assertEquals("closed", message.doorStatus);
+    }
+
+    @Test
+    void testLockPushMessage() throws IOException {
+        final Type type = new TypeToken<LockStatusDTO>() {
+        }.getType();
+
+        final LockStatusDTO message = wireHelper
+                .deSerializeFromClasspathResource("/mock_responses/lock_status_no_doorstate_async.json", type);
 
         assertEquals("unlocked", message.lockStatus);
         assertEquals("closed", message.doorStatus);
