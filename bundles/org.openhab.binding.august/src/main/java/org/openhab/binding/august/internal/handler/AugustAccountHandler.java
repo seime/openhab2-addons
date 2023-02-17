@@ -191,10 +191,14 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
                     break;
             }
 
+        } catch (RestCommunicationException f) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, f.getMessage());
+            logger.warn("Error communicating with API. Will retry in 2 minutes", f);
+            statusFuture = Optional.of(scheduler.schedule(this::initialize, 2, TimeUnit.MINUTES));
         } catch (AugustException e) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                    "Internal error: " + e.getMessage());
-            logger.warn("Error logging in", e);
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Internal error: " + e.getMessage()
+                    + "\nNew 2 factor login must be done by disabling and re-enabling bridge.");
+            logger.warn("Error logging in. Clearing all data, new l", e);
             clearStorage();
         }
     }

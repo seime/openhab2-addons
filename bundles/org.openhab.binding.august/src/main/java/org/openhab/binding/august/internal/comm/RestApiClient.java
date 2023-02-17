@@ -107,46 +107,51 @@ public class RestApiClient {
     public <T> T sendRequestInternal(final Request httpRequest, final AbstractRequest req, final Type responseType)
             throws AugustException, ExecutionException, InterruptedException, TimeoutException {
 
-        final ContentResponse contentResponse = httpRequest.send();
-        String newAccessToken = contentResponse.getHeaders().get(HEADER_ACCESS_TOKEN);
-        if (accessToken == null || !accessToken.equals(newAccessToken)) {
-            listener.onAccessTokenUpdated(newAccessToken);
-        }
-        accessToken = newAccessToken;
-
-        final String responseJson = contentResponse.getContentAsString();
-        if (contentResponse.getStatus() == HttpStatus.OK_200) {
-            final JsonObject o = JsonParser.parseString(responseJson).getAsJsonObject();
-            if (o.has("message")) {
-                throw new RestCommunicationException(req, o.get("message").getAsString());
-            } else {
-                return gson.fromJson(responseJson, responseType);
+        try {
+            final ContentResponse contentResponse = httpRequest.send();
+            String newAccessToken = contentResponse.getHeaders().get(HEADER_ACCESS_TOKEN);
+            if (accessToken == null || !accessToken.equals(newAccessToken)) {
+                listener.onAccessTokenUpdated(newAccessToken);
             }
-        } else if (contentResponse.getStatus() == HttpStatus.UNAUTHORIZED_401) {
-            if (accessToken == null) {
-                throw new RestCommunicationException("Could not renew token");
+            accessToken = newAccessToken;
+
+            final String responseJson = contentResponse.getContentAsString();
+            if (contentResponse.getStatus() == HttpStatus.OK_200) {
+                final JsonObject o = JsonParser.parseString(responseJson).getAsJsonObject();
+                if (o.has("message")) {
+                    throw new RestCommunicationException(req, o.get("message").getAsString());
+                } else {
+                    return gson.fromJson(responseJson, responseType);
+                }
+            } else if (contentResponse.getStatus() == HttpStatus.UNAUTHORIZED_401) {
+                if (accessToken == null) {
+                    throw new RestCommunicationException("Could not renew token");
+                } else {
+                    accessToken = null; // expired
+                    return sendRequest(req, responseType); // Retry login + request
+                }
+
+                // See some error codes here;
+                // https://github.com/snjoetw/py-august/blob/78b25da03194d68d70115f36bf926a3a6443e555/august/api_async.py#L260
+
+            } else if (contentResponse.getStatus() == HttpStatus.FORBIDDEN_403) {
+                throw new ConfigurationException("Invalid credentials");
+            } else if (contentResponse.getStatus() == HttpStatus.REQUEST_TIMEOUT_408) {
+                throw new RestCommunicationException(
+                        "The operation timed out because the bridge (connect) failed to respond");
+            } else if (contentResponse.getStatus() == HttpStatus.LOCKED_423) {
+                throw new RestCommunicationException("The operation failed because the bridge (connect) is in use");
+            } else if (contentResponse.getStatus() == HttpStatus.UNPROCESSABLE_ENTITY_422) {
+                throw new RestCommunicationException("The operation failed because the bridge (connect) is offline.");
+            } else if (contentResponse.getStatus() == HttpStatus.TOO_MANY_REQUESTS_429) {
+                throw new RestCommunicationException("Too many requests, reduce polling time");
             } else {
-                accessToken = null; // expired
-                return sendRequest(req, responseType); // Retry login + request
+                throw new RestCommunicationException("Error sending request to server. Server responded with "
+                        + contentResponse.getStatus() + " and payload " + responseJson);
             }
-
-            // See some error codes here;
-            // https://github.com/snjoetw/py-august/blob/78b25da03194d68d70115f36bf926a3a6443e555/august/api_async.py#L260
-
-        } else if (contentResponse.getStatus() == HttpStatus.FORBIDDEN_403) {
-            throw new ConfigurationException("Invalid credentials");
-        } else if (contentResponse.getStatus() == HttpStatus.REQUEST_TIMEOUT_408) {
+        } catch (Exception e) {
             throw new RestCommunicationException(
-                    "The operation timed out because the bridge (connect) failed to respond");
-        } else if (contentResponse.getStatus() == HttpStatus.LOCKED_423) {
-            throw new RestCommunicationException("The operation failed because the bridge (connect) is in use");
-        } else if (contentResponse.getStatus() == HttpStatus.UNPROCESSABLE_ENTITY_422) {
-            throw new RestCommunicationException("The operation failed because the bridge (connect) is offline.");
-        } else if (contentResponse.getStatus() == HttpStatus.TOO_MANY_REQUESTS_429) {
-            throw new RestCommunicationException("Too many requests, reduce polling time");
-        } else {
-            throw new RestCommunicationException("Error sending request to server. Server responded with "
-                    + contentResponse.getStatus() + " and payload " + responseJson);
+                    String.format("Exception caught trying to communicate with API: %s", e.getMessage()), e);
         }
     }
 

@@ -285,42 +285,47 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
             if (remoteEvent != null) {
                 logger.info("Unhandled EVENT");
             } else {
-                AsyncLockStatusDTO asyncStatus = gson.fromJson(message, new TypeToken<AsyncLockStatusDTO>() {
-                }.getType());
 
-                if (asyncStatus.lockStatus != null) {
-                    State lockState = UnDefType.UNDEF;
-                    switch (asyncStatus.lockStatus) {
-                        case "locked":
-                            lockState = OnOffType.ON;
-                            break;
-                        case "unlocked":
-                            lockState = OnOffType.OFF;
-                            break;
-                        default:
-                            logger.warn("Unexpected lockState from async message {}", asyncStatus.lockStatus);
+                if (message.getAsJsonObject().has("bridgeID")) {
+                    logger.debug("Skipping bridge status push message");
+                } else {
+
+                    AsyncLockStatusDTO asyncStatus = gson.fromJson(message, new TypeToken<AsyncLockStatusDTO>() {
+                    }.getType());
+
+                    if (asyncStatus.lockStatus != null) {
+                        State lockState = UnDefType.UNDEF;
+                        switch (asyncStatus.lockStatus) {
+                            case "locked":
+                                lockState = OnOffType.ON;
+                                break;
+                            case "unlocked":
+                                lockState = OnOffType.OFF;
+                                break;
+                            default:
+                                logger.warn("Unexpected lockState from async message {}", asyncStatus.lockStatus);
+                        }
+                        updateState(CHANNEL_LOCK_STATE, lockState);
                     }
-                    updateState(CHANNEL_LOCK_STATE, lockState);
-                }
 
-                if (asyncStatus.doorStatus != null) {
-                    State doorState = UnDefType.UNDEF;
-                    switch (asyncStatus.doorStatus) {
-                        case "open":
-                            doorState = OpenClosedType.OPEN;
-                            break;
-                        case "closed":
-                            doorState = OpenClosedType.CLOSED;
-                            break;
-                        default:
-                            logger.warn("Unexpected doorState from async message {}", asyncStatus.doorStatus);
+                    if (asyncStatus.doorStatus != null) {
+                        State doorState = UnDefType.UNDEF;
+                        switch (asyncStatus.doorStatus) {
+                            case "open":
+                                doorState = OpenClosedType.OPEN;
+                                break;
+                            case "closed":
+                                doorState = OpenClosedType.CLOSED;
+                                break;
+                            default:
+                                logger.warn("Unexpected doorState from async message {}", asyncStatus.doorStatus);
+                        }
+                        updateState(CHANNEL_DOOR_STATE, doorState);
                     }
-                    updateState(CHANNEL_DOOR_STATE, doorState);
+                    if (asyncStatus.callingUserID != null) {
+                        updateState(CHANNEL_CHANGED_BY_USER, getLastChangeBy(asyncStatus.callingUserID));
+                    }
                 }
-                if (asyncStatus.callingUserID != null) {
-                    updateState(CHANNEL_CHANGED_BY_USER, getLastChangeBy(asyncStatus.callingUserID));
-                }
-
             }
         } catch (Exception e) {
             logger.error("Error handling pubnub message on channel {}: {}", channelName, message, e);
