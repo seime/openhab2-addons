@@ -95,6 +95,29 @@ class AugustAccountHandlerTest {
     }
 
     @Test
+    void testCredentialsError() throws IOException {
+        // Setup account
+        final AccountConfiguration accountConfig = new AccountConfiguration();
+        accountConfig.email = "email@address.com";
+        accountConfig.phone = "+4700000000";
+        accountConfig.password = "password";
+        when(configuration.as(AccountConfiguration.class)).thenReturn(accountConfig);
+
+        // Setup get session response
+        preparePostNetworkResponse("/session", "/mock_responses/get_session_response_error.json", 200);
+
+        when(bridge.getConfiguration()).thenReturn(configuration);
+        when(bridge.getUID()).thenReturn(new ThingUID("august:account:thinguid"));
+
+        AugustAccountHandler accountHandler = Mockito.spy(new AugustAccountHandler(bridge, restApiClient, storage));
+
+        // First init
+        accountHandler.initialize();
+
+        assertAuthState(AuthenticationStatus.NOT_VALIDATED);
+    }
+
+    @Test
     void testInitial2FactorLogin() throws IOException {
         // Setup account
         final AccountConfiguration accountConfig = new AccountConfiguration();

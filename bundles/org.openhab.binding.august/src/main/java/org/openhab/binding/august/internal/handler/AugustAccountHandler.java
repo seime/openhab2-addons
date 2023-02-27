@@ -140,27 +140,32 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
                     String installationId = "openHAB-" + UUID.randomUUID();
                     storage.put(STORAGE_KEY_INSTALLID, installationId);
 
-                    obtainNewSession();
+                    boolean loginOK = obtainNewSession();
+                    if (loginOK) {
 
-                    // Initiate 2 factor
-                    GetValidationCodeRequest validationCodeRequest = new GetValidationCodeRequest(config.email);
-                    GetValidationCodeResponse validationCodeResponse = restApiClient.sendRequest(validationCodeRequest,
-                            new TypeToken<GetValidationCodeResponse>() {
-                            }.getType());
-                    if ("sent".equals(validationCodeResponse.code)) {
-                        logger.info(
-                                "Validation code has been sent to {}. Enter the code in the thing configuration and save",
-                                validationCodeResponse.value);
-                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_PENDING, String.format(
-                                "A verification code has been sent to %s. Enter the code and save configuration",
-                                validationCodeResponse.value));
-                        storage.put(STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATION_REQUESTED.toString());
+                        // Initiate 2 factor
+                        GetValidationCodeRequest validationCodeRequest = new GetValidationCodeRequest(config.email);
+                        GetValidationCodeResponse validationCodeResponse = restApiClient
+                                .sendRequest(validationCodeRequest, new TypeToken<GetValidationCodeResponse>() {
+                                }.getType());
+                        if ("sent".equals(validationCodeResponse.code)) {
+                            logger.info(
+                                    "Validation code has been sent to {}. Enter the code in the thing configuration and save",
+                                    validationCodeResponse.value);
+                            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_PENDING, String.format(
+                                    "A verification code has been sent to %s. Enter the code and save configuration",
+                                    validationCodeResponse.value));
+                            storage.put(STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATION_REQUESTED.toString());
+                        } else {
+                            logger.warn("2 factor authentication failed, code {}", validationCodeResponse.code);
+                            // Something went wrong, update state and reset storage
+                            clearStorage();
+                            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                                    String.format("Expected validation code to be sent, but received '%s'",
+                                            validationCodeResponse.code));
+                        }
                     } else {
-                        logger.warn("2 factor authentication failed, code {}", validationCodeResponse.code);
-                        // Something went wrong, update state and reset storage
-                        clearStorage();
-                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, String.format(
-                                "Expected validation code to be sent, but received '%s'", validationCodeResponse.code));
+                        loginError();
                     }
 
                     break;
@@ -198,31 +203,48 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         } catch (AugustException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Internal error: " + e.getMessage()
                     + "\nNew 2 factor login must be done by disabling and re-enabling bridge.");
-            logger.warn("Error logging in. Clearing all data, new l", e);
+            logger.warn("Error logging in. Clearing all data, new 2 factor auth necessary", e);
             clearStorage();
         }
     }
 
     private void loginComplete() throws AugustException {
-        obtainNewSession();
-        messageSubscriber.init(storage.get(STORAGE_KEY_USERID), this);
-        doPoll();
-        statusFuture = Optional.of(scheduler.scheduleWithFixedDelay(this::doPoll, config.refreshIntervalSeconds,
-                config.refreshIntervalSeconds, TimeUnit.SECONDS));
+        boolean loginOK = obtainNewSession();
+        if (loginOK) {
+            messageSubscriber.init(storage.get(STORAGE_KEY_USERID), this);
+            doPoll();
+            statusFuture = Optional.of(scheduler.scheduleWithFixedDelay(this::doPoll, config.refreshIntervalSeconds,
+                    config.refreshIntervalSeconds, TimeUnit.SECONDS));
+        } else {
+            loginError();
+        }
     }
 
-    private void obtainNewSession() throws AugustException {
+    private void loginError() {
+        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                "Check email / phone / password / validation code");
+    }
+
+    private boolean obtainNewSession() throws AugustException {
         GetSessionRequest getSessionRequestRefresh = new GetSessionRequest(config.email, config.password,
                 storage.get(STORAGE_KEY_INSTALLID));
         GetSessionResponse getSessionResponseRefresh = restApiClient.sendRequest(getSessionRequestRefresh,
                 new TypeToken<GetSessionResponse>() {
                 }.getType());
 
-        logger.debug("New access token obtained, expiry {}", getSessionResponseRefresh.expiresAt);
+        if (StringUtils.trimToNull(getSessionResponseRefresh.userId) != null) {
+            logger.debug("New access token obtained, expiry {}", getSessionResponseRefresh.expiresAt);
 
-        storage.put(STORAGE_KEY_ACCESS_TOKEN, restApiClient.getLastAccessTokenFromHeader());
-        storage.put(STORAGE_KEY_ACCESS_TOKEN_EXPIRY, getSessionResponseRefresh.expiresAt.toString());
-        storage.put(STORAGE_KEY_USERID, getSessionResponseRefresh.userId);
+            storage.put(STORAGE_KEY_ACCESS_TOKEN, restApiClient.getLastAccessTokenFromHeader());
+            storage.put(STORAGE_KEY_ACCESS_TOKEN_EXPIRY, getSessionResponseRefresh.expiresAt.toString());
+            storage.put(STORAGE_KEY_USERID, getSessionResponseRefresh.userId);
+            return true;
+        } else {
+            storage.remove(STORAGE_KEY_ACCESS_TOKEN);
+            storage.remove(STORAGE_KEY_ACCESS_TOKEN_EXPIRY);
+            storage.remove(STORAGE_KEY_USERID);
+            return false;
+        }
     }
 
     private void clearStorage() {
@@ -245,7 +267,11 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         logger.info("Polling for new account status/lock overview");
         try {
             if (isSessionExpired()) {
-                obtainNewSession();
+                boolean loginOK = obtainNewSession();
+                if (!loginOK) {
+                    loginError();
+                    return;
+                }
             }
 
             GetLocksRequest getLocksRequest = new GetLocksRequest();
