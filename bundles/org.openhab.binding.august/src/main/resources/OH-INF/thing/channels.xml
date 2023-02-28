@@ -7,13 +7,15 @@
 	<channel-type id="doorState">
 		<item-type>Contact</item-type>
 		<label>Door status</label>
-		<category>Motion</category>
+		<category>FrontDoor</category>
 		<state readOnly="true" pattern="%s"/>
 		<autoUpdatePolicy>veto</autoUpdatePolicy>
 	</channel-type>
 	<channel-type id="lockState">
 		<item-type>Switch</item-type>
 		<label>Lock status</label>
+		<category>Lock</category>
+		<autoUpdatePolicy>veto</autoUpdatePolicy>
 	</channel-type>
 	<channel-type id="battery">
 		<item-type>Number</item-type>
@@ -24,7 +26,13 @@
 	<channel-type id="changedByUser">
 		<item-type>String</item-type>
 		<label>Last locked/unlocked by user</label>
-		<category>Text</category>
+		<category>Motion</category>
+		<state readOnly="true"/>
+	</channel-type>
+	<channel-type id="unlockedByUser">
+		<item-type>String</item-type>
+		<label>Last unlocked by user</label>
+		<category>Motion</category>
 		<state readOnly="true"/>
 	</channel-type>
 </thing:thing-descriptions>

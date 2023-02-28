@@ -11,13 +11,14 @@
 
 		<label>Door Lock</label>
 		<description>WiFi enabled door lock possibly via a WiFi Bridge</description>
-		<category>Lock</category>
+		<category>FrontDoor</category>
 
 		<channels>
 			<channel id="doorState" typeId="doorState"/>
 			<channel id="lockState" typeId="lockState"/>
 			<channel id="battery" typeId="battery"/>
 			<channel id="changedByUser" typeId="changedByUser"/>
+			<channel id="unlockedByUser" typeId="unlockedByUser"/>
 		</channels>
 
 

@@ -30,7 +30,7 @@ public class GetLockResponse {
     public String lockId;
 
     @SerializedName("Type")
-    Integer type;
+    public Integer type;
 
     @SerializedName("HouseName")
     public String houseName;

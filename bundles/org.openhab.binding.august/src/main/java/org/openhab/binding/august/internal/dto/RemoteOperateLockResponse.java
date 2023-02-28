@@ -23,9 +23,24 @@ import com.google.gson.annotations.SerializedName;
 
 public class RemoteOperateLockResponse {
     @SerializedName("status")
-    public String lockStatus;
+    public String lockState;
 
-    // If true, installId is verified - no need for 2 factor check
-    @SerializedName("doorState")
-    public String doorStatus;
+    public String doorState;
+
+    public Info info;
+
+    public static class Info {
+        public String lockType;
+        @SerializedName("serialNumber")
+        public String lockSerialNumber;
+
+        @SerializedName("bluetoothRSSI")
+        public Integer rssi;
+
+        public Integer wlanRSSI;
+
+        // Bridge serial?
+        @SerializedName("serial")
+        public String bridgeSerialNumber;
+    }
 }

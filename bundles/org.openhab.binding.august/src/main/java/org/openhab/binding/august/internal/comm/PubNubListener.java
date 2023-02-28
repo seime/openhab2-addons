@@ -26,7 +26,7 @@ public interface PubNubListener {
 
     void onPushMessage(String channelName, JsonElement message);
 
-    void onDisconnect(String channelName);
+    void onPubNubDisconnect(String channelName);
 
-    void onConnect(String channelName);
+    void onPubNubConnect(String channelName);
 }

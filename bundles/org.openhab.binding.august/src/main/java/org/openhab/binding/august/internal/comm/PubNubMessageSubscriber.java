@@ -55,6 +55,8 @@ public class PubNubMessageSubscriber {
 
     private boolean initialized = false;
 
+    SubscribeCallback callback = null;
+
     public void init(String userIdString, PubNubListener messageListener) throws PubNubMessageException {
 
         try {
@@ -68,7 +70,7 @@ public class PubNubMessageSubscriber {
 
             logger.debug("Starting PubNub subscription");
 
-            pub.addListener(new SubscribeCallback() {
+            callback = new SubscribeCallback() {
 
                 // PubNub status
                 @Override
@@ -84,7 +86,7 @@ public class PubNubMessageSubscriber {
                             switch (status.getCategory()) {
                                 case PNConnectedCategory:
                                 case PNReconnectedCategory:
-                                    status.getAffectedChannels().forEach(e -> messageListener.onConnect(e));
+                                    status.getAffectedChannels().forEach(e -> messageListener.onPubNubConnect(e));
                                     break;
                                 // Subscribe temporarily failed but reconnected.
                                 // There is no longer any issue.
@@ -92,7 +94,7 @@ public class PubNubMessageSubscriber {
                                 case PNUnexpectedDisconnectCategory:
                                     // Usually an issue with the internet connection.
                                     // This is an error: handle appropriately.
-                                    status.getAffectedChannels().forEach(e -> messageListener.onDisconnect(e));
+                                    status.getAffectedChannels().forEach(e -> messageListener.onPubNubDisconnect(e));
                                     break;
                                 case PNAccessDeniedCategory:
                                     // PAM does not allow this client to subscribe to this
@@ -207,7 +209,9 @@ public class PubNubMessageSubscriber {
                     logger.debug("File file.name: {}", pnFileEventResult.getFile().getName());
                     logger.debug("File file.url: {}", pnFileEventResult.getFile().getUrl());
                 }
-            });
+            };
+
+            pub.addListener(callback);
 
             initialized = true;
 
@@ -249,10 +253,15 @@ public class PubNubMessageSubscriber {
     }
 
     public void dispose() {
+        logger.debug("Disposing pubNub");
         if (initialized) {
             pub.unsubscribeAll();
+            if (callback != null) {
+                pub.removeListener(callback);
+            }
             pub.disconnect();
             pub.destroy();
+            pub.forceDestroy();
             channels.clear();
         }
     }

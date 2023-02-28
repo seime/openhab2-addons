@@ -23,9 +23,9 @@ import com.google.gson.annotations.SerializedName;
 public class AsyncLockStatusDTO {
 
     @SerializedName("status")
-    public String lockStatus;
-    @SerializedName("doorState")
-    public String doorStatus;
+    public String lockState;
+
+    public String doorState;
 
     public String callingUserID;
 }

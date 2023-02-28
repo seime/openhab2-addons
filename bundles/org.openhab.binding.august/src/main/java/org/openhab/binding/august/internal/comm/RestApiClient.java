@@ -42,7 +42,7 @@ import com.google.gson.JsonParser;
  */
 public class RestApiClient {
     public static final String HEADER_ACCESS_TOKEN = "x-august-access-token";
-    public static final String CONTENT_TYPE_APPLICATION_JSON = "application/json";
+    public static final String HEADER_CONTENT_TYPE_APPLICATION_JSON = "application/json";
     public static String API_ENDPOINT = "https://api-production.august.com";
     private static final String API_KEY = "79fd0eb6-381d-4adf-95a0-47721289d1d9";
 
@@ -72,8 +72,8 @@ public class RestApiClient {
         request.getHeaders().remove(HttpHeader.USER_AGENT);
         request.getHeaders().remove(HttpHeader.ACCEPT);
         request.header(HttpHeader.USER_AGENT, "August/2019.12.16.4708 CFNetwork/1121.2.2 Darwin/19.3.0");
-        request.header(HttpHeader.ACCEPT, CONTENT_TYPE_APPLICATION_JSON);
-        request.header(HttpHeader.CONTENT_TYPE, CONTENT_TYPE_APPLICATION_JSON);
+        request.header(HttpHeader.ACCEPT, HEADER_CONTENT_TYPE_APPLICATION_JSON);
+        request.header(HttpHeader.CONTENT_TYPE, HEADER_CONTENT_TYPE_APPLICATION_JSON);
         request.header("Accept-Version", "0.0.1");
         request.header("x-kease-api-key", API_KEY);
         request.header("x-august-api-key", API_KEY);
@@ -84,7 +84,7 @@ public class RestApiClient {
         if (!req.getMethod().contentEquals(HttpMethod.GET.asString())) { // POST, PATCH, PUT
             final String reqJson = gson.toJson(req);
             request = request.content(new BytesContentProvider(reqJson.getBytes(StandardCharsets.UTF_8)),
-                    CONTENT_TYPE_APPLICATION_JSON);
+                    HEADER_CONTENT_TYPE_APPLICATION_JSON);
         }
 
         requestLogger.listenTo(request, new String[] {});

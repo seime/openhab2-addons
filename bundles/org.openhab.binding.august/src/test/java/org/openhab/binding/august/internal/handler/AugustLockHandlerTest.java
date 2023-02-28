@@ -157,7 +157,7 @@ class AugustLockHandlerTest implements PubNubListener {
         verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_DOOR_STATE),
                 OpenClosedType.CLOSED);
 
-        lockHandler.onConnect("ignored");
+        lockHandler.onPubNubConnect("ignored");
 
         verify(accountHandler).registerForEvents(eq(lockHandler), eq("PubsubChannelUUID"));
     }
@@ -182,7 +182,7 @@ class AugustLockHandlerTest implements PubNubListener {
         verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_DOOR_STATE),
                 OpenClosedType.CLOSED);
 
-        lockHandler.onConnect("ignored");
+        lockHandler.onPubNubConnect("ignored");
 
         verify(accountHandler).registerForEvents(eq(lockHandler), eq("PubsubChannelUUID"));
 
@@ -194,7 +194,7 @@ class AugustLockHandlerTest implements PubNubListener {
         lockHandler.handleCommand(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE), OnOffType.OFF);
 
         lockHandler.onPushMessage("ignored",
-                JsonParser.parseString(getClasspathJSONContent("/mock_responses/lock_status_async.json")));
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/lock_status_unlocked_async.json")));
         verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
                 OnOffType.OFF);
     }
@@ -209,12 +209,35 @@ class AugustLockHandlerTest implements PubNubListener {
 
         reset(thingHandlerCallback);
 
+        // Unlock
         lockHandler.onPushMessage("ignored",
-                JsonParser.parseString(getClasspathJSONContent("/mock_responses/lock_status_async.json")));
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/lock_status_unlocked_async.json")));
         verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
                 OnOffType.OFF);
         verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_DOOR_STATE),
                 OpenClosedType.CLOSED);
+        verify(thingHandlerCallback).stateUpdated(
+                new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_CHANGED_BY_USER), new StringType("Manual"));
+
+        // Lock
+        Mockito.reset(thingHandlerCallback);
+        lockHandler.onPushMessage("ignored",
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/lock_status_locked_async.json")));
+        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
+                OnOffType.ON);
+        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_DOOR_STATE),
+                OpenClosedType.CLOSED);
+        verify(thingHandlerCallback).stateUpdated(
+                new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_CHANGED_BY_USER), new StringType("Manual"));
+
+        // Unlock that should generate unlocked by user channel update
+        Mockito.reset(thingHandlerCallback);
+        lockHandler.onPushMessage("ignored",
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/lock_status_no_doorstate_async.json")));
+        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
+                OnOffType.OFF);
+        verify(thingHandlerCallback).stateUpdated(
+                new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_UNLOCKED_BY_USER), new StringType("Manual"));
         verify(thingHandlerCallback).stateUpdated(
                 new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_CHANGED_BY_USER), new StringType("Manual"));
     }
@@ -229,6 +252,8 @@ class AugustLockHandlerTest implements PubNubListener {
                 ChannelBuilder.create(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_BATTERY)).build());
         lockThing.addChannel(ChannelBuilder
                 .create(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_CHANGED_BY_USER)).build());
+        lockThing.addChannel(ChannelBuilder
+                .create(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_UNLOCKED_BY_USER)).build());
         lockThing.setConfiguration(configuration);
         return lockThing;
     }
@@ -254,10 +279,10 @@ class AugustLockHandlerTest implements PubNubListener {
     }
 
     @Override
-    public void onDisconnect(String channelName) {
+    public void onPubNubDisconnect(String channelName) {
     }
 
     @Override
-    public void onConnect(String channelName) {
+    public void onPubNubConnect(String channelName) {
     }
 }

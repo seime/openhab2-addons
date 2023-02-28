@@ -1,5 +1,4 @@
 {
   "status": "unlocked",
-  "callingUserID": "manuallock",
-  "doorState": "closed"
+  "callingUserID": "manualunlock"
 }

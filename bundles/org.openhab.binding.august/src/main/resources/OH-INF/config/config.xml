@@ -37,7 +37,7 @@ https://openhab.org/schemas/config-description-1.0.0.xsd">
 	<config-description uri="thing-type:august:lock">
 		<parameter name="lockId" type="text" required="true">
 			<label>Lock ID</label>
-			<description>Id of lock, format 32 digits/characters</description>
+			<description>Id of lock, format 32 digits/characters (hex string)</description>
 		</parameter>
 	</config-description>
 

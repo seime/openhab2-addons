@@ -14,8 +14,8 @@
     "wlanRSSI": -55,
     "wlanSNR": 44,
     "duration": 3750,
-    "lockID": "92968A1940BEEC48B9F99C6FA898A6B9",
-    "bridgeID": "62cabfd28f1a166652dc7b7c",
+    "lockID": "LockID",
+    "bridgeID": "BridgeID",
     "lockStatusChanged": false,
     "serial": "C5W0X005ZX"
   },

@@ -52,12 +52,13 @@ Only a few channels have been added so far, but quite a bit more data is availab
 If you feel something important is missing, take a look
 in [lock details response](src/test/resources/get_lock_response.json) and report back/create a PR.
 
-| Channel       | Read/write | Item type            | Description                                                                                           |
-|---------------|------------|----------------------|-------------------------------------------------------------------------------------------------------|
-| lockState     | R/W        | Switch               | State of locking bolt, ON = locked, OFF = unlocked                                                    |
-| doorState     | R          | Contact              | Whether the door is OPEN or CLOSED. Not all doors report this, in that case the channel reports UNDEF |
-| battery       | R          | Number:Dimensionless | Remaining battery percentage                                                                          |
-| changedByUser | R          | String               | User last locking/unlocking the door. `Manual` if door knob used                                      |
+| Channel        | Read/write | Item type            | Description                                                                                           |
+|----------------|------------|----------------------|-------------------------------------------------------------------------------------------------------|
+| lockState      | R/W        | Switch               | State of locking bolt, ON = locked, OFF = unlocked                                                    |
+| doorState      | R          | Contact              | Whether the door is OPEN or CLOSED. Not all doors report this, in that case the channel reports UNDEF |
+| battery        | R          | Number:Dimensionless | Remaining battery percentage                                                                          |
+| changedByUser  | R          | String               | User last locking/unlocking the door. `Manual` if door knob used                                      |
+| unlockedByUser | R          | String               | User last unlocking the door. `Manual` if door knob used                                              |
 
 ## Requesting latest status from lock
 
@@ -85,4 +86,5 @@ Switch Front_Door_Lock "Front door lock" <lock>  {channel="august:lock:accountNa
 Contact Front_Door_Contact "Front door ajar [%s]" <door>   {channel="august:lock:accountName:344KJLK32KJ234LKJ234JLKJK34:doorState"} 
 Number:Dimensionless Front_Door_Battery "Front door battery [%d%unit%]" <battery>   {channel="august:lock:accountName:344KJLK32KJ234LKJ234JLKJK34:battery"} 
 String Front_Door_Changed_By_User "Door last changed by [%s]" <door> (gRestoreOnStartup)   {channel="august:lock:accountName:frontdoor:changedByUser"} 
+String Front_Door_Unlocked_By_User "Door last unlocked by [%s]" <door> (gRestoreOnStartup)   {channel="august:lock:accountName:frontdoor:unlockedByUser"} 
 ```

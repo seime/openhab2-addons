@@ -16,6 +16,7 @@ import static org.openhab.binding.august.internal.BindingConstants.CHANNEL_BATTE
 import static org.openhab.binding.august.internal.BindingConstants.CHANNEL_CHANGED_BY_USER;
 import static org.openhab.binding.august.internal.BindingConstants.CHANNEL_DOOR_STATE;
 import static org.openhab.binding.august.internal.BindingConstants.CHANNEL_LOCK_STATE;
+import static org.openhab.binding.august.internal.BindingConstants.CHANNEL_UNLOCKED_BY_USER;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +35,7 @@ import org.openhab.binding.august.internal.dto.GetLockRequest;
 import org.openhab.binding.august.internal.dto.GetLockResponse;
 import org.openhab.binding.august.internal.dto.RemoteOperateLockRequest;
 import org.openhab.binding.august.internal.dto.RemoteOperateLockResponse;
+import org.openhab.binding.august.internal.model.LockStatus;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.OpenClosedType;
 import org.openhab.core.library.types.QuantityType;
@@ -84,6 +86,8 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
 
     private GetLockResponse lock;
 
+    private LockStatus lockStatus = new LockStatus();
+
     // Map of userIds to human-readable names.
     private Map<String, String> userIdToName = new HashMap<>();
 
@@ -94,7 +98,7 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
         updateStatus(ThingStatus.UNKNOWN);
         config = getConfigAs(LockConfiguration.class);
 
-        logger.info("Initializing lock {}", config.lockId);
+        logger.info("{} Initializing lock", config.lockId);
         stopScheduledUpdate(); // If any
 
         // Workaround for testing - need to inject RestApiClient but having difficulties injecting the bridge handler in
@@ -102,10 +106,10 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
         // tests
         Bridge bridge = getBridge();
         if (bridge != null) {
-            AugustAccountHandler handler = (AugustAccountHandler) bridge.getHandler();
-            if (handler != null) {
-                restApiClient = handler.getApiBridge();
-                this.handler = handler;
+            AugustAccountHandler accountHandler = (AugustAccountHandler) bridge.getHandler();
+            if (accountHandler != null) {
+                restApiClient = accountHandler.getApiBridge();
+                this.handler = accountHandler;
             }
         }
 
@@ -145,9 +149,8 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
             }.getType());
 
             parseUserMap(lock);
+            updateThingProperties(lock);
 
-            Map<String, String> properties = createProperties(lock);
-            updateThing(editThing().withProperties(properties).build());
             thing.getChannels().forEach(e -> handleCommandInternal(e.getUID(), null));
             // Register listener
             handler.registerForEvents(this, lock.pubsubChannel);
@@ -161,15 +164,25 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
         statusFuture = Optional.of(scheduler.schedule(this::doPoll, LOCK_POLLING_SECONDS, TimeUnit.SECONDS));
     }
 
-    private Map<String, String> createProperties(GetLockResponse lockResponse) {
-        Map<String, String> properties = new HashMap<>();
+    private void updateThingProperties(GetLockResponse lockResponse) {
+        Map<String, String> properties = editProperties();
         properties.put("macAddress", lockResponse.macAddress);
         properties.put("firmwareVersion", lockResponse.currentFirmwareVersion);
         properties.put("skuNumber", lockResponse.skuNumber);
         properties.put("lockName", lockResponse.lockName);
         properties.put("houseName", lockResponse.houseName);
+        properties.put("lockSerialNumber", lockResponse.serialNumber);
+        properties.put("lockType", "" + lockResponse.type);
 
-        return properties;
+        updateThing(editThing().withProperties(properties).build());
+    }
+
+    private void updateThingProperties(RemoteOperateLockResponse.Info info) {
+        Map<String, String> properties = editProperties();
+        if (info.bridgeSerialNumber != null) {
+            properties.put("bridgeSerialNumber", info.bridgeSerialNumber);
+        }
+        updateProperties(properties);
     }
 
     /**
@@ -200,6 +213,7 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
             case CHANNEL_DOOR_STATE:
                 handleDoorStateCommand(channelUID, command);
                 break;
+            case CHANNEL_UNLOCKED_BY_USER:
             case CHANNEL_CHANGED_BY_USER:
                 // No support for RefreshType
                 break;
@@ -212,8 +226,7 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
         if (command == null || command instanceof RefreshType) {
             if (lock.lockStatus.doorStatus != null) {
                 logger.info("{} Updating door state channel with cloud state", config.lockId);
-                updateState(channelUID,
-                        "closed".equals(lock.lockStatus.doorStatus) ? OpenClosedType.CLOSED : OpenClosedType.OPEN);
+                updateState(channelUID, parseDoorState(lock.lockStatus.doorStatus));
             } else {
                 updateState(channelUID, UnDefType.UNDEF);
             }
@@ -225,15 +238,14 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
     private void handleLockStateCommand(ChannelUID channelUID, Command command) {
         if (command == null) {
             logger.info("{} Updating lock state channel with cloud state", config.lockId);
-            updateState(channelUID, "locked".equals(lock.lockStatus.lockStatus) ? OnOffType.ON : OnOffType.OFF);
+            updateState(channelUID, parseLockState(lock.lockStatus.lockStatus));
         } else if (command instanceof OnOffType || command instanceof RefreshType) {
             try {
                 logger.info("{} Querying lock/performing operation for lock state", config.lockId);
                 final RemoteOperateLockRequest operateLockRequest = new RemoteOperateLockRequest(config.lockId,
                         getOperationFromCommand(command));
-                RemoteOperateLockResponse rsp = restApiClient.sendRequest(operateLockRequest,
-                        new TypeToken<RemoteOperateLockResponse>() {
-                        }.getType());
+                restApiClient.sendRequest(operateLockRequest, new TypeToken<RemoteOperateLockResponse>() {
+                }.getType());
             } catch (AugustException e) {
                 logger.warn("{} Error contacting lock", config.lockId, e);
                 updateState(channelUID, UnDefType.UNDEF);
@@ -264,14 +276,14 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
     }
 
     @Override
-    public void onConnect(String channelName) {
-        logger.info("PubNub connected");
+    public void onPubNubConnect(String channelName) {
+        logger.info("{} PubNub connected", lock.lockId);
         updateStatus(ThingStatus.ONLINE);
     }
 
     @Override
-    public void onDisconnect(String channelName) {
-        logger.info("PubNub disconnected");
+    public void onPubNubDisconnect(String channelName) {
+        logger.info("{} PubNub disconnected", lock.lockId);
         stopScheduledUpdate();
         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "Server push message connection lost");
     }
@@ -280,56 +292,115 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
     public void onPushMessage(String channelName, JsonElement message) {
 
         try {
-            logger.info("Received pubsub message {}", gson.toJson(message));
-            JsonElement remoteEvent = message.getAsJsonObject().get("remoteEvent");
-            if (remoteEvent != null) {
-                logger.info("Unhandled EVENT");
+            logger.info("{} Received pubsub message {}", lock.lockId, gson.toJson(message));
+            JsonElement eventType = message.getAsJsonObject().get("remoteEvent");
+            if (eventType != null) {
+                handleRemoteEventPushMessage(message, eventType);
             } else {
 
                 if (message.getAsJsonObject().has("bridgeID")) {
                     logger.debug("Skipping bridge status push message");
                 } else {
 
-                    AsyncLockStatusDTO asyncStatus = gson.fromJson(message, new TypeToken<AsyncLockStatusDTO>() {
-                    }.getType());
-
-                    if (asyncStatus.lockStatus != null) {
-                        State lockState = UnDefType.UNDEF;
-                        switch (asyncStatus.lockStatus) {
-                            case "locked":
-                                lockState = OnOffType.ON;
-                                break;
-                            case "unlocked":
-                                lockState = OnOffType.OFF;
-                                break;
-                            default:
-                                logger.warn("Unexpected lockState from async message {}", asyncStatus.lockStatus);
-                        }
-                        updateState(CHANNEL_LOCK_STATE, lockState);
-                    }
-
-                    if (asyncStatus.doorStatus != null) {
-                        State doorState = UnDefType.UNDEF;
-                        switch (asyncStatus.doorStatus) {
-                            case "open":
-                                doorState = OpenClosedType.OPEN;
-                                break;
-                            case "closed":
-                                doorState = OpenClosedType.CLOSED;
-                                break;
-                            default:
-                                logger.warn("Unexpected doorState from async message {}", asyncStatus.doorStatus);
-                        }
-                        updateState(CHANNEL_DOOR_STATE, doorState);
-                    }
-                    if (asyncStatus.callingUserID != null) {
-                        updateState(CHANNEL_CHANGED_BY_USER, getLastChangeBy(asyncStatus.callingUserID));
-                    }
+                    handleSimplePushMessage(message);
                 }
             }
-        } catch (Exception e) {
+        } catch (
+
+        Exception e) {
             logger.error("Error handling pubnub message on channel {}: {}", channelName, message, e);
         }
+    }
+
+    private void handleSimplePushMessage(JsonElement message) {
+        AsyncLockStatusDTO asyncStatus = gson.fromJson(message, new TypeToken<AsyncLockStatusDTO>() {
+        }.getType());
+
+        if (asyncStatus.lockState != null) {
+            State newLockState = parseLockState(asyncStatus.lockState);
+
+            if (asyncStatus.callingUserID != null && !newLockState.equals(lockStatus.lockState)
+                    && asyncStatus.doorState == null && newLockState == OnOffType.OFF) {
+                // Lock unlocked
+                updateState(CHANNEL_UNLOCKED_BY_USER, getLastChangeBy(asyncStatus.callingUserID));
+            }
+            lockStatus.lockState = newLockState;
+            updateState(CHANNEL_LOCK_STATE, newLockState);
+
+        }
+
+        if (asyncStatus.doorState != null) {
+            State doorState = parseDoorState(asyncStatus.doorState);
+            updateState(CHANNEL_DOOR_STATE, doorState);
+        }
+        if (asyncStatus.callingUserID != null) {
+            updateState(CHANNEL_CHANGED_BY_USER, getLastChangeBy(asyncStatus.callingUserID));
+        }
+    }
+
+    private void handleRemoteEventPushMessage(JsonElement message, JsonElement eventType) {
+        switch (eventType.getAsInt()) {
+            case 1:
+                RemoteOperateLockResponse remoteEvent = gson.fromJson(message,
+                        new TypeToken<RemoteOperateLockResponse>() {
+                        }.getType());
+                if (remoteEvent.info != null) {
+                    updateThingProperties(remoteEvent.info);
+                }
+
+                if (remoteEvent.lockState != null && !"kAugLockState_Unlocking".equals(remoteEvent.lockState)
+                        && !"kAugLockState_Locking".equals(remoteEvent.lockState)) {
+                    State lockState = parseLockState(remoteEvent.lockState);
+                    updateState(CHANNEL_LOCK_STATE, lockState);
+                    lockStatus.lockState = lockState;
+
+                }
+                if (remoteEvent.doorState != null) {
+                    updateState(CHANNEL_DOOR_STATE, parseDoorState(remoteEvent.doorState));
+                }
+
+                break;
+            // Other events may occur
+            default:
+                logger.info("Unhandled EVENT of type {}", eventType);
+        }
+    }
+
+    private State parseLockState(String lockStateString) {
+        State lockState = UnDefType.UNDEF;
+        switch (lockStateString) {
+            case "locked":
+            case "kAugLockState_Locked":
+                lockState = OnOffType.ON;
+                break;
+            case "unlocked":
+            case "kAugLockState_Unlocked":
+                lockState = OnOffType.OFF;
+                break;
+            default:
+                logger.warn("Unexpected lockState from async message {}", lockStateString);
+
+        }
+        return lockState;
+    }
+
+    private State parseDoorState(String doorStateString) {
+        State doorState = UnDefType.UNDEF;
+        switch (doorStateString) {
+            case "open":
+            case "kAugDoorState_Open":
+            case "kAugLockDoorState_Open":
+                doorState = OpenClosedType.OPEN;
+                break;
+            case "closed":
+            case "kAugDoorState_Closed":
+            case "kAugLockDoorState_Closed":
+                doorState = OpenClosedType.CLOSED;
+                break;
+            default:
+                logger.warn("Unexpected doorState from async message {}", doorStateString);
+        }
+        return doorState;
     }
 
     private State getLastChangeBy(String callingUserID) {
@@ -350,8 +421,8 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
 
     private void parseUserMap(GetLockResponse lock) {
         if (lock.userList != null) {
-            lock.userList.loaded
-                    .forEach(e -> userIdToName.put(e.userID, String.format("%s %s", e.firstName, e.lastName)));
+            lock.userList.loaded.forEach(
+                    user -> userIdToName.put(user.userID, String.format("%s %s", user.firstName, user.lastName)));
         }
     }
 

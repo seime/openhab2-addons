@@ -1,4 +1,4 @@
-2023-01-10 05:42:50.022 [WARN ] [t.internal.handler.AugustLockHandler] - 92968A1940BEEC48B9F99C6FA898A6B9 Error
+2023-01-10 05:42:50.022 [WARN ] [t.internal.handler.AugustLockHandler] - XX Error
 contacting lock
 org.openhab.binding.august.internal.RestCommunicationException: Error sending request to server. Server responded with
 531

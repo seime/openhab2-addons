@@ -168,8 +168,8 @@ class SerializationDeserializationTest {
         final RemoteOperateLockResponse message = wireHelper
                 .deSerializeFromClasspathResource("/mock_responses/remoteoperate_lock_response.json", type);
 
-        assertEquals("kAugLockState_Unlocked", message.lockStatus);
-        assertEquals("kAugDoorState_Closed", message.doorStatus);
+        assertEquals("kAugLockState_Unlocked", message.lockState);
+        assertEquals("kAugDoorState_Closed", message.doorState);
     }
 
     @Test
@@ -178,7 +178,7 @@ class SerializationDeserializationTest {
         }.getType();
 
         final LockStatusDTO message = wireHelper
-                .deSerializeFromClasspathResource("/mock_responses/lock_status_async.json", type);
+                .deSerializeFromClasspathResource("/mock_responses/lock_status_unlocked_async.json", type);
 
         assertEquals("unlocked", message.lockStatus);
         assertEquals("closed", message.doorStatus);
@@ -193,6 +193,5 @@ class SerializationDeserializationTest {
                 .deSerializeFromClasspathResource("/mock_responses/lock_status_no_doorstate_async.json", type);
 
         assertEquals("unlocked", message.lockStatus);
-        assertEquals("closed", message.doorStatus);
     }
 }

@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -71,14 +72,14 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
     private final Logger logger = LoggerFactory.getLogger(AugustAccountHandler.class);
     private Optional<ScheduledFuture<?>> statusFuture = Optional.empty();
     @Nullable
-    AccountConfiguration config;
+    private AccountConfiguration config;
     private RestApiClient restApiClient;
 
     private PubNubMessageSubscriber messageSubscriber;
     private Storage<String> storage;
 
     private Map<String, Lock> locks = new HashMap<>();
-    private Map<String, PubNubListener> eventListeners = new HashMap<>();
+    private Map<String, PubNubListener> eventListeners = new ConcurrentHashMap<>();
 
     public AugustAccountHandler(final Bridge bridge, RestApiClient restApiClient, Storage<String> storage) {
         super(bridge);
@@ -86,15 +87,6 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         this.storage = storage;
         this.messageSubscriber = new PubNubMessageSubscriber();
         restApiClient.init(bridge.getUID(), this);
-    }
-
-    @Override
-    public void handleCommand(final ChannelUID channelUID, final Command command) {
-        // Ignore commands as none are supported
-    }
-
-    public Map<String, Lock> getLocks() {
-        return locks;
     }
 
     @Override
@@ -110,6 +102,7 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         if ((null == config.email || null == config.phone || null == config.password)) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                     "Provide email address, phone number and password");
+            return;
         }
 
         AuthenticationStatus status;
@@ -136,60 +129,10 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
             switch (status) {
                 case NOT_VALIDATED:
                     // First time usage, installation must be validated
-                    logger.info("No initial setup, performing 2 factor authentication");
-                    String installationId = "openHAB-" + UUID.randomUUID();
-                    storage.put(STORAGE_KEY_INSTALLID, installationId);
-
-                    boolean loginOK = obtainNewSession();
-                    if (loginOK) {
-
-                        // Initiate 2 factor
-                        GetValidationCodeRequest validationCodeRequest = new GetValidationCodeRequest(config.email);
-                        GetValidationCodeResponse validationCodeResponse = restApiClient
-                                .sendRequest(validationCodeRequest, new TypeToken<GetValidationCodeResponse>() {
-                                }.getType());
-                        if ("sent".equals(validationCodeResponse.code)) {
-                            logger.info(
-                                    "Validation code has been sent to {}. Enter the code in the thing configuration and save",
-                                    validationCodeResponse.value);
-                            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_PENDING, String.format(
-                                    "A verification code has been sent to %s. Enter the code and save configuration",
-                                    validationCodeResponse.value));
-                            storage.put(STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATION_REQUESTED.toString());
-                        } else {
-                            logger.warn("2 factor authentication failed, code {}", validationCodeResponse.code);
-                            // Something went wrong, update state and reset storage
-                            clearStorage();
-                            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                                    String.format("Expected validation code to be sent, but received '%s'",
-                                            validationCodeResponse.code));
-                        }
-                    } else {
-                        loginError();
-                    }
-
+                    handleAccountNotValidated();
                     break;
                 case VALIDATION_REQUESTED:
-                    if (null == config.validationCode || !StringUtils.isNumeric(config.validationCode)
-                            || config.validationCode.length() != 6) {
-                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                                String.format("Verification code is not a 6 digit number: %s. Enter code again",
-                                        config.validationCode));
-                    } else {
-                        logger.info("Verifying 2 factor code");
-                        ValidateCodeRequest validateCodeRequest = new ValidateCodeRequest(config.validationCode,
-                                config.email, config.phone);
-                        ValidateCodeResponse validateCodeResponse = restApiClient.sendRequest(validateCodeRequest,
-                                new TypeToken<ValidateCodeResponse>() {
-                                }.getType());
-                        if ("token_incomplete".equals(validateCodeResponse.resolution)) {
-                            // All good
-                            logger.info("2 factor authentication complete");
-                            getThing().getConfiguration().remove("validationCode");
-                            storage.put(STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATED.toString());
-                            loginComplete();
-                        }
-                    }
+                    handleAccountValidationRequested();
                     break;
                 case VALIDATED:
                     loginComplete();
@@ -205,6 +148,60 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
                     + "\nNew 2 factor login must be done by disabling and re-enabling bridge.");
             logger.warn("Error logging in. Clearing all data, new 2 factor auth necessary", e);
             clearStorage();
+        }
+    }
+
+    private void handleAccountValidationRequested() throws AugustException {
+        if (null == config.validationCode || !StringUtils.isNumeric(config.validationCode)
+                || config.validationCode.length() != 6) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, String
+                    .format("Verification code is not a 6 digit number: %s. Enter code again", config.validationCode));
+        } else {
+            logger.info("Verifying 2 factor code");
+            ValidateCodeRequest validateCodeRequest = new ValidateCodeRequest(config.validationCode, config.email,
+                    config.phone);
+            ValidateCodeResponse validateCodeResponse = restApiClient.sendRequest(validateCodeRequest,
+                    new TypeToken<ValidateCodeResponse>() {
+                    }.getType());
+            if ("token_incomplete".equals(validateCodeResponse.resolution)) {
+                // All good
+                logger.info("2 factor authentication complete");
+                getThing().getConfiguration().remove("validationCode");
+                storage.put(STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATED.toString());
+                loginComplete();
+            }
+        }
+    }
+
+    private void handleAccountNotValidated() throws AugustException {
+        logger.info("No initial setup, performing 2 factor authentication");
+        String installationId = "openHAB-" + UUID.randomUUID();
+        storage.put(STORAGE_KEY_INSTALLID, installationId);
+
+        boolean loginOK = obtainNewSession();
+        if (loginOK) {
+
+            // Initiate 2 factor
+            GetValidationCodeRequest validationCodeRequest = new GetValidationCodeRequest(config.email);
+            GetValidationCodeResponse validationCodeResponse = restApiClient.sendRequest(validationCodeRequest,
+                    new TypeToken<GetValidationCodeResponse>() {
+                    }.getType());
+            if ("sent".equals(validationCodeResponse.code)) {
+                logger.info("Validation code has been sent to {}. Enter the code in the thing configuration and save",
+                        validationCodeResponse.value);
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_PENDING,
+                        String.format("A verification code has been sent to %s. Enter the code and save configuration",
+                                validationCodeResponse.value));
+                storage.put(STORAGE_KEY_AUTH_STATUS, AuthenticationStatus.VALIDATION_REQUESTED.toString());
+            } else {
+                logger.warn("2 factor authentication failed, code {}", validationCodeResponse.code);
+                // Something went wrong, update state and reset storage
+                clearStorage();
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, String
+                        .format("Expected validation code to be sent, but received '%s'", validationCodeResponse.code));
+            }
+        } else {
+            loginError();
         }
     }
 
@@ -247,6 +244,15 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         }
     }
 
+    @Override
+    public void handleCommand(final ChannelUID channelUID, final Command command) {
+        // Ignore commands as none are supported
+    }
+
+    public Map<String, Lock> getLocks() {
+        return locks;
+    }
+
     private void clearStorage() {
         storage.remove(STORAGE_KEY_ACCESS_TOKEN);
         storage.remove(STORAGE_KEY_ACCESS_TOKEN_EXPIRY);
@@ -280,7 +286,7 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
                     }.getType());
 
             locks = getLocksResponse.entrySet().stream()
-                    .collect(Collectors.toMap(e -> e.getKey(), e -> new Lock(e.getValue())));
+                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> new Lock(entry.getValue())));
             updateStatus(ThingStatus.ONLINE);
             logger.info("Fetching lock overview success, found {} lock(s)", locks.size());
         } catch (final RestCommunicationException e) {
@@ -333,20 +339,22 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
     }
 
     @Override
-    public void onDisconnect(String channelName) {
+    public void onPubNubDisconnect(String channelName) {
         // Forward to lock handler
         PubNubListener pubNubListener = eventListeners.get(channelName);
         if (pubNubListener != null) {
-            pubNubListener.onDisconnect(channelName);
+            pubNubListener.onPubNubDisconnect(channelName);
         }
     }
 
     @Override
-    public void onConnect(String channelName) {
+    public void onPubNubConnect(String channelName) {
         // Forward to lock handler
         PubNubListener pubNubListener = eventListeners.get(channelName);
         if (pubNubListener != null) {
-            pubNubListener.onConnect(channelName);
+            pubNubListener.onPubNubConnect(channelName);
+        } else {
+            logger.warn("No listener registered for channel {}", channelName);
         }
     }
 
@@ -356,6 +364,8 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         PubNubListener pubNubListener = eventListeners.get(channelName);
         if (pubNubListener != null) {
             pubNubListener.onPushMessage(channelName, message);
+        } else {
+            logger.warn("No message listener on channel {}, discarding message", channelName);
         }
     }
 
@@ -366,14 +376,16 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
             String channelName = e.getKey();
             messageSubscriber.removeListener(channelName);
             eventListeners.remove(channelName);
-
         });
+        if (first.isEmpty()) {
+            logger.error("No listener found for {}", augustLockHandler);
+        }
     }
 
     public void registerForEvents(AugustLockHandler augustLockHandler, String channelName) {
-        if (!eventListeners.containsKey(channelName)) {
-            eventListeners.put(channelName, augustLockHandler);
+        eventListeners.computeIfAbsent(channelName, k -> {
             messageSubscriber.addListener(channelName);
-        }
+            return augustLockHandler;
+        });
     }
 }

@@ -5,8 +5,8 @@
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
 	<bridge-type id="account">
-		<label>August Account</label>
-		<description>This bridge represents the gateway to August Account</description>
+		<label>Yale Access/August Account</label>
+		<description>This bridge represents the gateway to Yale Access/August Account</description>
 		<category>WebService</category>
 		<config-description-ref uri="thing-type:august:account"/>
 	</bridge-type>

@@ -60,12 +60,12 @@ class PubNubMessageSubscriberTest implements PubNubListener {
     }
 
     @Override
-    public void onDisconnect(String channelName) {
+    public void onPubNubDisconnect(String channelName) {
         logger.debug("Channel {} disconnected", channelName);
     }
 
     @Override
-    public void onConnect(String channelName) {
+    public void onPubNubConnect(String channelName) {
         logger.debug("Channel {} connected", channelName);
     }
 }
