@@ -195,8 +195,8 @@ class AugustLockHandlerTest implements PubNubListener {
 
         lockHandler.handleCommand(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE), OnOffType.OFF);
 
-        lockHandler.onPushMessage("ignored",
-                JsonParser.parseString(getClasspathJSONContent("/mock_responses/lock_status_unlocked_async.json")));
+        lockHandler.onPushMessage("ignored", JsonParser
+                .parseString(getClasspathJSONContent("/mock_responses/pubnub/lock_status_unlocked_async.json")));
         verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
                 OnOffType.OFF);
     }

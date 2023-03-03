@@ -364,23 +364,27 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
     private void handleRemoteEventPushMessage(JsonElement message, JsonElement eventType) {
         switch (eventType.getAsInt()) {
             case 1:
-                RemoteOperateLockResponse remoteEvent = gson.fromJson(message,
-                        new TypeToken<RemoteOperateLockResponse>() {
-                        }.getType());
-                if (remoteEvent.info != null) {
-                    updateThingProperties(remoteEvent.info);
-                }
+                if (!message.getAsJsonObject().get("error").isJsonNull()) {
+                    logger.debug("Ignoring error message from bridge");
+                } else {
 
-                if (remoteEvent.lockState != null && !"kAugLockState_Unlocking".equals(remoteEvent.lockState)
-                        && !"kAugLockState_Locking".equals(remoteEvent.lockState)) {
-                    State lockState = parseLockState(remoteEvent.lockState);
-                    updateState(CHANNEL_LOCK_STATE, lockState);
+                    RemoteOperateLockResponse remoteEvent = gson.fromJson(message,
+                            new TypeToken<RemoteOperateLockResponse>() {
+                            }.getType());
+                    if (remoteEvent.info != null) {
+                        updateThingProperties(remoteEvent.info);
+                    }
 
-                }
-                if (remoteEvent.doorState != null) {
-                    updateState(CHANNEL_DOOR_STATE, parseDoorState(remoteEvent.doorState));
-                }
+                    if (remoteEvent.lockState != null && !"kAugLockState_Unlocking".equals(remoteEvent.lockState)
+                            && !"kAugLockState_Locking".equals(remoteEvent.lockState)) {
+                        State lockState = parseLockState(remoteEvent.lockState);
+                        updateState(CHANNEL_LOCK_STATE, lockState);
 
+                    }
+                    if (remoteEvent.doorState != null) {
+                        updateState(CHANNEL_DOOR_STATE, parseDoorState(remoteEvent.doorState));
+                    }
+                }
                 break;
             // Other events may occur
             default:

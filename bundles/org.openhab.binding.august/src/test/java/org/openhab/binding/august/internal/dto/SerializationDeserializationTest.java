@@ -178,7 +178,7 @@ class SerializationDeserializationTest {
         }.getType();
 
         final LockStatusDTO message = wireHelper
-                .deSerializeFromClasspathResource("/mock_responses/lock_status_unlocked_async.json", type);
+                .deSerializeFromClasspathResource("/mock_responses/pubnub/lock_status_unlocked_async.json", type);
 
         assertEquals("unlocked", message.lockStatus);
         assertEquals("closed", message.doorStatus);
@@ -190,7 +190,7 @@ class SerializationDeserializationTest {
         }.getType();
 
         final LockStatusDTO message = wireHelper
-                .deSerializeFromClasspathResource("/mock_responses/lock_status_no_doorstate_async.json", type);
+                .deSerializeFromClasspathResource("/mock_responses/pubnub/lock_status_no_doorstate_async.json", type);
 
         assertEquals("unlocked", message.lockStatus);
     }
