@@ -17,7 +17,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -203,43 +205,109 @@ class AugustLockHandlerTest implements PubNubListener {
     void testAsyncCallback() throws IOException, InterruptedException {
         prepareGetNetworkResponse("/locks/" + lockConfiguration.lockId, "/mock_responses/get_lock_response.json", 200);
 
+        String knownUser = "Specific User";
+        String manualUser = "Manual";
+
         lockHandler.initialize();
+        lockHandler.addUser("knownUserID", knownUser);
 
         Thread.sleep(2000);
 
         reset(thingHandlerCallback);
 
-        // Unlock
+        // Remote lock
         lockHandler.onPushMessage("ignored",
-                JsonParser.parseString(getClasspathJSONContent("/mock_responses/lock_status_unlocked_async.json")));
-        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
-                OnOffType.OFF);
-        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_DOOR_STATE),
-                OpenClosedType.CLOSED);
-        verify(thingHandlerCallback).stateUpdated(
-                new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_CHANGED_BY_USER), new StringType("Manual"));
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/pubnub/1_lock_remote.json")));
+        verifyChannelUpdates(OnOffType.ON, OpenClosedType.CLOSED, null);
 
-        // Lock
+        // Manual unlock, door closed
+        Mockito.reset(thingHandlerCallback);
+        lockHandler.onPushMessage("ignored", JsonParser
+                .parseString(getClasspathJSONContent("/mock_responses/pubnub/2_manual_unlock_door_closed.json")));
+        Thread.sleep(3000);
+        verifyChannelUpdates(OnOffType.OFF, OpenClosedType.CLOSED, manualUser);
+
+        // Manual lock, door closed
         Mockito.reset(thingHandlerCallback);
         lockHandler.onPushMessage("ignored",
-                JsonParser.parseString(getClasspathJSONContent("/mock_responses/lock_status_locked_async.json")));
-        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
-                OnOffType.ON);
-        verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_DOOR_STATE),
-                OpenClosedType.CLOSED);
-        verify(thingHandlerCallback).stateUpdated(
-                new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_CHANGED_BY_USER), new StringType("Manual"));
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/pubnub/3_manual_lock.json")));
+        verifyChannelUpdates(OnOffType.ON, OpenClosedType.CLOSED, null);
 
-        // Unlock that should generate unlocked by user channel update
+        // Manual unlock, door closed
         Mockito.reset(thingHandlerCallback);
         lockHandler.onPushMessage("ignored",
-                JsonParser.parseString(getClasspathJSONContent("/mock_responses/lock_status_no_doorstate_async.json")));
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/pubnub/4_manual_unlock.json")));
+        Thread.sleep(3000);
+        verifyChannelUpdates(OnOffType.OFF, OpenClosedType.CLOSED, manualUser);
+
+        // Door opened
+        Mockito.reset(thingHandlerCallback);
+        lockHandler.onPushMessage("ignored",
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/pubnub/5_door_open.json")));
+        verifyChannelUpdates(OnOffType.OFF, OpenClosedType.OPEN, null);
+
+        // Door closed
+        Mockito.reset(thingHandlerCallback);
+        lockHandler.onPushMessage("ignored",
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/pubnub/6_door_closed.json")));
+        verifyChannelUpdates(OnOffType.OFF, OpenClosedType.CLOSED, null);
+
+        // Manual lock outside
+        Mockito.reset(thingHandlerCallback);
+        lockHandler.onPushMessage("ignored",
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/pubnub/7_manual_lock.json")));
+        verifyChannelUpdates(OnOffType.ON, OpenClosedType.CLOSED, null);
+
+        // Pin code unlock outside (sent with manualuser apparently)
+        Mockito.reset(thingHandlerCallback);
+        lockHandler.onPushMessage("ignored", JsonParser
+                .parseString(getClasspathJSONContent("/mock_responses/pubnub/8_pin_unlock_door_closed.json")));
+        verifyChannelUpdates(OnOffType.OFF, OpenClosedType.CLOSED, null);
+
+        // Pin code unlock outside - now with username
+        Mockito.reset(thingHandlerCallback);
+        lockHandler.onPushMessage("ignored", JsonParser.parseString(
+                getClasspathJSONContent("/mock_responses/pubnub/9_pin_unlock_door_closed_with_username.json")));
+        verifyChannelUpdates(OnOffType.OFF, null, knownUser);
+
+        // Door opened
+        Mockito.reset(thingHandlerCallback);
+        lockHandler.onPushMessage("ignored",
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/pubnub/10_door_open.json")));
+        verifyChannelUpdates(OnOffType.OFF, OpenClosedType.OPEN, null);
+
+        // Door closed
+        Mockito.reset(thingHandlerCallback);
+        lockHandler.onPushMessage("ignored",
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/pubnub/11_door_closed.json")));
+        verifyChannelUpdates(OnOffType.OFF, OpenClosedType.CLOSED, null);
+
+        // Door locked
+        Mockito.reset(thingHandlerCallback);
+        lockHandler.onPushMessage("ignored",
+                JsonParser.parseString(getClasspathJSONContent("/mock_responses/pubnub/12_auto_lock.json")));
+        verifyChannelUpdates(OnOffType.ON, OpenClosedType.CLOSED, null);
+    }
+
+    private void verifyChannelUpdates(OnOffType lockState, OpenClosedType doorState, String unlockedByUser) {
         verify(thingHandlerCallback).stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_LOCK_STATE),
-                OnOffType.OFF);
-        verify(thingHandlerCallback).stateUpdated(
-                new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_UNLOCKED_BY_USER), new StringType("Manual"));
-        verify(thingHandlerCallback).stateUpdated(
-                new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_CHANGED_BY_USER), new StringType("Manual"));
+                lockState);
+        if (doorState == null) {
+            verify(thingHandlerCallback, never())
+                    .stateUpdated(eq(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_DOOR_STATE)), any());
+
+        } else {
+            verify(thingHandlerCallback)
+                    .stateUpdated(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_DOOR_STATE), doorState);
+        }
+        if (unlockedByUser == null) {
+            verify(thingHandlerCallback, never())
+                    .stateUpdated(eq(new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_UNLOCKED_BY_USER)), any());
+        } else {
+            verify(thingHandlerCallback).stateUpdated(
+                    new ChannelUID(thing.getUID(), BindingConstants.CHANNEL_UNLOCKED_BY_USER),
+                    new StringType(unlockedByUser));
+        }
     }
 
     private ThingImpl createLockThing() {
@@ -250,8 +318,6 @@ class AugustLockHandlerTest implements PubNubListener {
                 ChannelBuilder.create(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_DOOR_STATE)).build());
         lockThing.addChannel(
                 ChannelBuilder.create(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_BATTERY)).build());
-        lockThing.addChannel(ChannelBuilder
-                .create(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_CHANGED_BY_USER)).build());
         lockThing.addChannel(ChannelBuilder
                 .create(new ChannelUID(lockThing.getUID(), BindingConstants.CHANNEL_UNLOCKED_BY_USER)).build());
         lockThing.setConfiguration(configuration);

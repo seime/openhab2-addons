@@ -13,7 +13,6 @@
 package org.openhab.binding.august.internal.handler;
 
 import static org.openhab.binding.august.internal.BindingConstants.CHANNEL_BATTERY;
-import static org.openhab.binding.august.internal.BindingConstants.CHANNEL_CHANGED_BY_USER;
 import static org.openhab.binding.august.internal.BindingConstants.CHANNEL_DOOR_STATE;
 import static org.openhab.binding.august.internal.BindingConstants.CHANNEL_LOCK_STATE;
 import static org.openhab.binding.august.internal.BindingConstants.CHANNEL_UNLOCKED_BY_USER;
@@ -35,7 +34,6 @@ import org.openhab.binding.august.internal.dto.GetLockRequest;
 import org.openhab.binding.august.internal.dto.GetLockResponse;
 import org.openhab.binding.august.internal.dto.RemoteOperateLockRequest;
 import org.openhab.binding.august.internal.dto.RemoteOperateLockResponse;
-import org.openhab.binding.august.internal.model.LockStatus;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.OpenClosedType;
 import org.openhab.core.library.types.QuantityType;
@@ -85,8 +83,6 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
     }
 
     private GetLockResponse lock;
-
-    private LockStatus lockStatus = new LockStatus();
 
     // Map of userIds to human-readable names.
     private Map<String, String> userIdToName = new HashMap<>();
@@ -214,7 +210,6 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
                 handleDoorStateCommand(channelUID, command);
                 break;
             case CHANNEL_UNLOCKED_BY_USER:
-            case CHANNEL_CHANGED_BY_USER:
                 // No support for RefreshType
                 break;
             default:
@@ -312,29 +307,57 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
         }
     }
 
+    ScheduledFuture<?> unlockCommandStatus = null;
+
+    State previousLockState = UnDefType.UNDEF;
+
+    State previousDoorState = UnDefType.UNDEF;
+
     private void handleSimplePushMessage(JsonElement message) {
         AsyncLockStatusDTO asyncStatus = gson.fromJson(message, new TypeToken<AsyncLockStatusDTO>() {
         }.getType());
 
         if (asyncStatus.lockState != null) {
             State newLockState = parseLockState(asyncStatus.lockState);
-
-            if (asyncStatus.callingUserID != null && !newLockState.equals(lockStatus.lockState)
-                    && asyncStatus.doorState == null && newLockState == OnOffType.OFF) {
-                // Lock unlocked
-                updateState(CHANNEL_UNLOCKED_BY_USER, getLastChangeBy(asyncStatus.callingUserID));
-            }
-            lockStatus.lockState = newLockState;
             updateState(CHANNEL_LOCK_STATE, newLockState);
 
+            State newDoorState = parseDoorState(asyncStatus.doorState);
+            if ((!previousDoorState.equals(newDoorState) && newDoorState != UnDefType.UNDEF)
+                    && newLockState.equals(previousLockState)) {
+                logger.debug("Ignoring only door state changed");
+            } else if (asyncStatus.callingUserID != null && newLockState == OnOffType.OFF
+                    && (newDoorState == OpenClosedType.CLOSED || newDoorState == UnDefType.UNDEF)) {
+                // Lock unlocked, cancel any future
+                cancelUnlockedByUserFuture();
+                if ("manualunlock".equals(asyncStatus.callingUserID) && previousLockState == OnOffType.ON) {
+                    logger.debug("Delaying unlock status for manual user in case a real username follows");
+                    unlockCommandStatus = scheduler.schedule(() -> {
+                        logger.debug("Updating unlock channel with manual user");
+                        updateState(CHANNEL_UNLOCKED_BY_USER, translateUserIdToName(asyncStatus.callingUserID));
+                    }, 2, TimeUnit.SECONDS);
+                } else {
+                    logger.info("Updating unlock channel with current user {}", asyncStatus.callingUserID);
+                    updateState(CHANNEL_UNLOCKED_BY_USER, translateUserIdToName(asyncStatus.callingUserID));
+                }
+
+            } else if (newLockState == OnOffType.ON) {
+                cancelUnlockedByUserFuture();
+            }
+            previousLockState = newLockState;
         }
 
         if (asyncStatus.doorState != null) {
-            State doorState = parseDoorState(asyncStatus.doorState);
-            updateState(CHANNEL_DOOR_STATE, doorState);
+            State updatedDoorState = parseDoorState(asyncStatus.doorState);
+            updateState(CHANNEL_DOOR_STATE, updatedDoorState);
+            previousDoorState = updatedDoorState;
         }
-        if (asyncStatus.callingUserID != null) {
-            updateState(CHANNEL_CHANGED_BY_USER, getLastChangeBy(asyncStatus.callingUserID));
+    }
+
+    private void cancelUnlockedByUserFuture() {
+        if (unlockCommandStatus != null && !unlockCommandStatus.isCancelled()) {
+            logger.debug("Cancelling lock update future");
+            unlockCommandStatus.cancel(false);
+            unlockCommandStatus = null;
         }
     }
 
@@ -352,7 +375,6 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
                         && !"kAugLockState_Locking".equals(remoteEvent.lockState)) {
                     State lockState = parseLockState(remoteEvent.lockState);
                     updateState(CHANNEL_LOCK_STATE, lockState);
-                    lockStatus.lockState = lockState;
 
                 }
                 if (remoteEvent.doorState != null) {
@@ -386,24 +408,26 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
 
     private State parseDoorState(String doorStateString) {
         State doorState = UnDefType.UNDEF;
-        switch (doorStateString) {
-            case "open":
-            case "kAugDoorState_Open":
-            case "kAugLockDoorState_Open":
-                doorState = OpenClosedType.OPEN;
-                break;
-            case "closed":
-            case "kAugDoorState_Closed":
-            case "kAugLockDoorState_Closed":
-                doorState = OpenClosedType.CLOSED;
-                break;
-            default:
-                logger.warn("Unexpected doorState from async message {}", doorStateString);
+        if (doorStateString != null) {
+            switch (doorStateString) {
+                case "open":
+                case "kAugDoorState_Open":
+                case "kAugLockDoorState_Open":
+                    doorState = OpenClosedType.OPEN;
+                    break;
+                case "closed":
+                case "kAugDoorState_Closed":
+                case "kAugLockDoorState_Closed":
+                    doorState = OpenClosedType.CLOSED;
+                    break;
+                default:
+                    logger.warn("Unexpected doorState from async message {}", doorStateString);
+            }
         }
         return doorState;
     }
 
-    private State getLastChangeBy(String callingUserID) {
+    private State translateUserIdToName(String callingUserID) {
 
         if (callingUserID == null) {
             return UnDefType.UNDEF;
@@ -439,5 +463,9 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
     @Override
     public @Nullable Bridge getBridge() {
         return super.getBridge();
+    }
+
+    void addUser(String userId, String name) {
+        userIdToName.put(userId, name);
     }
 }

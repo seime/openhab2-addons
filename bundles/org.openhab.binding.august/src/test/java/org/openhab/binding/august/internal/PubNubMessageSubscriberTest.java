@@ -32,8 +32,8 @@ class PubNubMessageSubscriberTest implements PubNubListener {
 
     private static final Logger logger = LoggerFactory.getLogger(PubNubMessageSubscriberTest.class);
 
-    private String userId = "d1174952-e923-4e76-bc8c-05c6cad5f654";// = "INSERT_USERID_FROM_GET_SESSION_RESPONSE";
-    private String channelName = "54aece2f-b021-4362-9d0f-2cdcd400f3e6";// = "INSERT_PUBSUBCHANNEL_FROM_LOCKS_RESPONSE";
+    private String userId = "INSERT_USERID_FROM_GET_SESSION_RESPONSE";
+    private String channelName = "INSERT_PUBSUBCHANNEL_FROM_LOCKS_RESPONSE";
 
     private Gson gson = new Gson();
 

@@ -31,6 +31,5 @@ public class BindingConstants {
     public static final String CHANNEL_LOCK_STATE = "lockState";
     public static final String CHANNEL_DOOR_STATE = "doorState";
     public static final String CHANNEL_BATTERY = "battery";
-    public static final String CHANNEL_CHANGED_BY_USER = "changedByUser";
     public static final String CHANNEL_UNLOCKED_BY_USER = "unlockedByUser";
 }

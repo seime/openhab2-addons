@@ -23,12 +23,6 @@
 		<category>BatteryLevel</category>
 		<state readOnly="true" pattern="%d"/>
 	</channel-type>
-	<channel-type id="changedByUser">
-		<item-type>String</item-type>
-		<label>Last locked/unlocked by user</label>
-		<category>Motion</category>
-		<state readOnly="true"/>
-	</channel-type>
 	<channel-type id="unlockedByUser">
 		<item-type>String</item-type>
 		<label>Last unlocked by user</label>
