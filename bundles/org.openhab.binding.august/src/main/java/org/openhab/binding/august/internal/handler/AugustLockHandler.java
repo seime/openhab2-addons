@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -80,9 +81,28 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
     public AugustLockHandler(Thing thing, Gson gson) {
         super(thing);
         this.gson = gson;
+
+        addKnownLockType("1002", "Yale Doorman V2N");
+        addKnownLockType("7", "Yale Doorman L3");
+        lockTypeToLockName.put("", "(Not reported)");
+    }
+
+    private void addKnownLockType(String lockType, String lockName) {
+        lockTypeToLockName.put(lockType, String.format("%s (Type %s)", lockName, lockType));
+    }
+
+    private String getLockName(String lockType) {
+        String lockName = lockTypeToLockName.get(lockType);
+        if (lockName == null) {
+            lockName = lockType;
+        }
+
+        return lockName;
     }
 
     private GetLockResponse lock;
+
+    private static final Map<String, String> lockTypeToLockName = new ConcurrentHashMap<>();
 
     // Map of userIds to human-readable names.
     private Map<String, String> userIdToName = new HashMap<>();
@@ -168,7 +188,7 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
         properties.put("lockName", lockResponse.lockName);
         properties.put("houseName", lockResponse.houseName);
         properties.put("lockSerialNumber", lockResponse.serialNumber);
-        properties.put("lockType", "" + lockResponse.type);
+        properties.put("lockType", getLockName("" + lockResponse.type));
 
         updateThing(editThing().withProperties(properties).build());
     }
