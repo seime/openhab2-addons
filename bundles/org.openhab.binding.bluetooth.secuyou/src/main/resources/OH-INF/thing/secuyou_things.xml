@@ -29,7 +29,7 @@
 				<label>Address</label>
 				<description>Bluetooth address in XX:XX:XX:XX:XX:XX format</description>
 			</parameter>
-			<parameter name="pinCode" type="integer" min="0" max="99999">
+			<parameter name="pinCode" type="text" max="5" min="5">
 				<label>Pin code</label>
 				<description>Pin code as selected in the Secuyou app. Must be 5 digits</description>
 				<context>password</context>
@@ -48,7 +48,8 @@
 			<parameter name="attemptLockRescue" type="boolean">
 				<label>Try lock "rescue" when lock stuck at LOCKING_OPERATION_IN_PROGRESS</label>
 				<description>When lock reports LOCKING_OPERATION_IN_PROGRESS, try to toggle the lock twice to get accurate state
-					reading without actually changing the lock position</description>
+					reading without actually changing the lock position
+				</description>
 				<default>false</default>
 			</parameter>
 			<parameter name="treatLockingInProgressAsLocked" type="boolean">
