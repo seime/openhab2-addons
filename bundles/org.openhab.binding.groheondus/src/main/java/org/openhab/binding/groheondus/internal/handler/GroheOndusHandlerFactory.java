@@ -21,13 +21,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.groheondus.internal.discovery.GroheOndusDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryService;
 import org.openhab.core.persistence.PersistenceServiceRegistry;
-import org.openhab.core.storage.StorageService;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingTypeUID;
@@ -36,13 +36,10 @@ import org.openhab.core.thing.binding.BaseThingHandlerFactory;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerFactory;
 import org.openhab.core.thing.link.ItemChannelLinkRegistry;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.http.HttpService;
 
 /**
  * @author Florian Schmidt and Arne Wohlert - Initial contribution
@@ -53,25 +50,19 @@ public class GroheOndusHandlerFactory extends BaseThingHandlerFactory {
 
     private final Map<ThingUID, ServiceRegistration<?>> discoveryServiceRegs = new HashMap<>();
 
-    private HttpService httpService;
-    private StorageService storageService;
-
     private PersistenceServiceRegistry persistenceServiceRegistry;
     private ItemChannelLinkRegistry itemChannelLinkRegistry;
-    private int thingCounter = 0;
-
-    @Activate
-    public GroheOndusHandlerFactory(@Reference HttpService httpService, @Reference StorageService storageService,
-            @Reference PersistenceServiceRegistry persistenceServiceRegistry,
-            @Reference ItemChannelLinkRegistry itemChannelLinkRegistry) {
-        this.httpService = httpService;
-        this.storageService = storageService;
-        this.persistenceServiceRegistry = persistenceServiceRegistry;
-        this.itemChannelLinkRegistry = itemChannelLinkRegistry;
-    }
+    private AtomicInteger thingCounter = new AtomicInteger(0);
 
     private static final Collection<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Arrays.asList(THING_TYPE_SENSEGUARD,
             THING_TYPE_SENSE, THING_TYPE_BRIDGE_ACCOUNT);
+
+    @Activate
+    public GroheOndusHandlerFactory(@Reference PersistenceServiceRegistry persistenceServiceRegistry,
+            @Reference ItemChannelLinkRegistry itemChannelLinkRegistry) {
+        this.persistenceServiceRegistry = persistenceServiceRegistry;
+        this.itemChannelLinkRegistry = itemChannelLinkRegistry;
+    }
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -83,16 +74,14 @@ public class GroheOndusHandlerFactory extends BaseThingHandlerFactory {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
         if (THING_TYPE_BRIDGE_ACCOUNT.equals(thingTypeUID)) {
-            GroheOndusAccountHandler handler = new GroheOndusAccountHandler((Bridge) thing,
-                    storageService.getStorage(thing.getUID().toString(),
-                            FrameworkUtil.getBundle(getClass()).adapt(BundleWiring.class).getClassLoader()));
+            GroheOndusAccountHandler handler = new GroheOndusAccountHandler((Bridge) thing);
             onAccountCreated(thing, handler);
             return handler;
         } else if (THING_TYPE_SENSEGUARD.equals(thingTypeUID)) {
-            return new GroheOndusSenseGuardHandler(thing, thingCounter++, persistenceServiceRegistry,
+            return new GroheOndusSenseGuardHandler(thing, thingCounter.incrementAndGet(), persistenceServiceRegistry,
                     itemChannelLinkRegistry);
         } else if (THING_TYPE_SENSE.equals(thingTypeUID)) {
-            return new GroheOndusSenseHandler(thing, thingCounter++, persistenceServiceRegistry,
+            return new GroheOndusSenseHandler(thing, thingCounter.incrementAndGet(), persistenceServiceRegistry,
                     itemChannelLinkRegistry);
         }
 

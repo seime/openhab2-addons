@@ -11,11 +11,11 @@
 		</description>
 
 		<config-description>
-			<parameter name="username" type="text" required="false">
+			<parameter name="username" type="text" required="true">
 				<label>Username</label>
 				<description>Username as used in the GROHE ONDUS App, usually your e-mail address.</description>
 			</parameter>
-			<parameter name="password" type="text" required="false">
+			<parameter name="password" type="text" required="true">
 				<label>Password</label>
 				<context>password</context>
 				<description>Password as used in the GROHE ONDUS App.</description>

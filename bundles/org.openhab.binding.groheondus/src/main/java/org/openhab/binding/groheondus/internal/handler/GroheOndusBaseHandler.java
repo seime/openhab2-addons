@@ -25,6 +25,7 @@ import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.ThingStatusInfo;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.thing.binding.BridgeHandler;
 import org.openhab.core.thing.link.ItemChannelLinkRegistry;
@@ -65,7 +66,19 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
         this.itemChannelLinkRegistry = itemChannelLinkRegistry;
     }
 
+    @Override
+    public void bridgeStatusChanged(ThingStatusInfo bridgeStatusInfo) {
+        super.bridgeStatusChanged(bridgeStatusInfo);
+        if (bridgeStatusInfo.getStatus() == ThingStatus.ONLINE) {
+            schedulePolling();
+        } else if (bridgeStatusInfo.getStatus() == ThingStatus.OFFLINE) {
+            cancelTimer();
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE, "@text/error.noservice");
+        }
+    }
+
     protected void schedulePolling() {
+        cancelTimer(); // Cancel any pending timers to avoid duplicates
         OndusService ondusService = getOndusService();
         if (ondusService == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE, "@text/error.noservice");
@@ -79,11 +92,7 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
             return;
         }
         int pollingInterval = getPollingInterval(appliance);
-        if (poller != null) {
-            // Cancel any previous polling
-            poller.cancel(true);
-        }
-        poller = scheduler.scheduleWithFixedDelay(this::updateChannels, thingCounter, pollingInterval,
+        poller = scheduler.scheduleWithFixedDelay(this::updateChannels, thingCounter * 5, pollingInterval,
                 TimeUnit.SECONDS);
         logger.debug("Scheduled polling every {}s for appliance {}", pollingInterval, thing.getUID());
     }
@@ -91,10 +100,15 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
     @Override
     public void dispose() {
         logger.debug("Disposing scheduled updater for thing {}", thing.getUID());
+        cancelTimer();
+        super.dispose();
+    }
+
+    private void cancelTimer() {
         if (poller != null) {
             poller.cancel(true);
+            poller = null;
         }
-        super.dispose();
     }
 
     @Override
@@ -104,12 +118,13 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
     }
 
     public void updateChannels() {
-        logger.debug("Updating channels for appliance {}", thing.getUID());
+        @Nullable
         OndusService ondusService = getOndusService();
-        if (ondusService == null) {
+        if (getBridge().getStatus() != ThingStatus.ONLINE || ondusService == null) {
+            logger.debug("Bridge status {}, ondusService {},  stopping", getBridge().getStatus(), ondusService);
+            cancelTimer();
+            getThing().getChannels().forEach(e -> updateState(e.getUID(), UnDefType.UNDEF));
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE, "@text/error.noservice");
-            // Update channels to UNDEF
-
             return;
         }
 
@@ -117,6 +132,9 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
         T appliance = getAppliance(ondusService);
         if (appliance == null) {
             logger.debug("Updating channels failed since appliance is null, thing {}", thing.getUID());
+            cancelTimer();
+            getThing().getChannels().forEach(e -> updateState(e.getUID(), UnDefType.UNDEF));
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE, "@text/error.noservice");
             return;
         }
 
@@ -125,7 +143,9 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
             getThing().getChannels().forEach(channel -> updateChannel(channel.getUID(), appliance, measurement));
             updateStatus(ThingStatus.ONLINE);
         } else {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, "@text/error.failedtoloaddata");
+            cancelTimer();
+            getThing().getChannels().forEach(e -> updateState(e.getUID(), UnDefType.UNDEF));
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.BRIDGE_OFFLINE, "@text/error.noservice");
         }
     }
 
@@ -169,12 +189,14 @@ public abstract class GroheOndusBaseHandler<T extends BaseAppliance, M> extends 
                 return (T) appliance;
             } else {
                 logger.debug("getAppliance for thing {} returned null", thing.getUID());
+                cancelTimer();
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                         "@text/error.failedtoloaddata");
                 getThing().getChannels().forEach(channel -> updateState(channel.getUID(), UnDefType.UNDEF));
             }
 
         } catch (IOException e) {
+            cancelTimer();
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
             getThing().getChannels().forEach(channel -> updateState(channel.getUID(), UnDefType.UNDEF));
             logger.debug("Could not load appliance", e);
