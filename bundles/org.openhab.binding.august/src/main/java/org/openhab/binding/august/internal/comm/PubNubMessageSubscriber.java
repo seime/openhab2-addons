@@ -76,6 +76,7 @@ public class PubNubMessageSubscriber {
                 @Override
                 public void status(@NotNull PubNub pubnub, @NotNull PNStatus status) {
                     logger.debug("Event {} ", status);
+
                     switch (status.getOperation()) {
                         // combine unsubscribe and subscribe handling for ease of use
                         case PNSubscribeOperation:
@@ -90,11 +91,13 @@ public class PubNubMessageSubscriber {
                                     break;
                                 // Subscribe temporarily failed but reconnected.
                                 // There is no longer any issue.
-                                case PNDisconnectedCategory:
+                                case PNBadRequestCategory:
+                                    // case PNDisconnectedCategory:
                                 case PNUnexpectedDisconnectCategory:
                                     // Usually an issue with the internet connection.
                                     // This is an error: handle appropriately.
                                     status.getAffectedChannels().forEach(e -> messageListener.onPubNubDisconnect(e));
+                                    pub.reconnect();
                                     break;
                                 case PNAccessDeniedCategory:
                                     // PAM does not allow this client to subscribe to this

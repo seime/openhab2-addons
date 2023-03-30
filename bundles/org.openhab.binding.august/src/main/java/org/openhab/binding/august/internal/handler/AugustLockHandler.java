@@ -384,8 +384,8 @@ public class AugustLockHandler extends BaseThingHandler implements PubNubListene
     private void handleRemoteEventPushMessage(JsonElement message, JsonElement eventType) {
         switch (eventType.getAsInt()) {
             case 1:
-                if (!message.getAsJsonObject().get("error").isJsonNull()) {
-                    logger.debug("Ignoring error message from bridge");
+                if (message.getAsJsonObject().get("error") != null) {
+                    logger.debug("Ignoring error message from bridge: {}", message.getAsJsonObject().get("error"));
                 } else {
 
                     RemoteOperateLockResponse remoteEvent = gson.fromJson(message,
