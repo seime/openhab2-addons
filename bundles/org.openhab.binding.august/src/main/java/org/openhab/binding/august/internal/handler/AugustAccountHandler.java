@@ -34,6 +34,7 @@ import org.openhab.binding.august.internal.comm.PubNubMessageSubscriber;
 import org.openhab.binding.august.internal.comm.RestApiClient;
 import org.openhab.binding.august.internal.comm.RestCommunicationException;
 import org.openhab.binding.august.internal.config.AccountConfiguration;
+import org.openhab.binding.august.internal.config.EcoSystem;
 import org.openhab.binding.august.internal.dto.GetLocksRequest;
 import org.openhab.binding.august.internal.dto.GetLocksResponse;
 import org.openhab.binding.august.internal.dto.GetSessionRequest;
@@ -69,6 +70,7 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
     public static final String STORAGE_KEY_ACCESS_TOKEN = "ACCESS_TOKEN";
     public static final String STORAGE_KEY_ACCESS_TOKEN_EXPIRY = "ACCESS_TOKEN_EXPIRY";
     public static final String STORAGE_KEY_USERID = "USERID";
+    public static final String STORAGE_KEY_PREVIOUS_ECOSYSTEM = "ECO_SYSTEM";
     private final Logger logger = LoggerFactory.getLogger(AugustAccountHandler.class);
     private Optional<ScheduledFuture<?>> statusFuture = Optional.empty();
     @Nullable
@@ -103,6 +105,23 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                     "Provide email address, phone number and password");
             return;
+        }
+
+        // Set urls
+        @Nullable
+        String previousEcoSystem = storage.get(STORAGE_KEY_PREVIOUS_ECOSYSTEM);
+        if (previousEcoSystem != null && config.ecoSystem != EcoSystem.valueOf(previousEcoSystem)) {
+            // Reset configuration
+            clearStorage();
+        }
+
+        storage.put(STORAGE_KEY_PREVIOUS_ECOSYSTEM, config.ecoSystem.toString());
+
+        // Set baseurl to use for communication
+        if (restApiClient.getApiEndpoint() == null) {
+            restApiClient.setApiEndpoint(config.ecoSystem.getUrl());
+        } else {
+            logger.warn("Not setting API endpoint as it was already set to {}", restApiClient.getApiEndpoint());
         }
 
         AuthenticationStatus status;
@@ -149,6 +168,12 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
             logger.warn("Error logging in. Clearing all data, new 2 factor auth necessary", e);
             clearStorage();
         }
+    }
+
+    @Override
+    public void handleConfigurationUpdate(Map<String, Object> configurationParameters) {
+        super.handleConfigurationUpdate(configurationParameters);
+        initialize();
     }
 
     private void handleAccountValidationRequested() throws AugustException {
@@ -259,6 +284,7 @@ public class AugustAccountHandler extends BaseBridgeHandler implements AccessTok
         storage.remove(STORAGE_KEY_INSTALLID);
         storage.remove(STORAGE_KEY_AUTH_STATUS);
         storage.remove(STORAGE_KEY_USERID);
+        storage.remove(STORAGE_KEY_PREVIOUS_ECOSYSTEM);
     }
 
     @Override

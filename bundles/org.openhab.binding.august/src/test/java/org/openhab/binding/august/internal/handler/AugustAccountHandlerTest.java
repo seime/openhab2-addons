@@ -79,12 +79,12 @@ class AugustAccountHandlerTest {
 
         int port = wireMockServer.port();
         WireMock.configureFor("localhost", port);
-        RestApiClient.API_ENDPOINT = "http://localhost:" + port;
 
         httpClient = new HttpClient();
         httpClient.start();
 
         restApiClient = new RestApiClient(httpClient, gson);
+        restApiClient.setApiEndpoint("http://localhost:" + port);
 
         storage = new VolatileStorage<>();
     }

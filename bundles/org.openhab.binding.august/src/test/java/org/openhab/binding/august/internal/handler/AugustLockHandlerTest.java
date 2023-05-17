@@ -104,12 +104,12 @@ class AugustLockHandlerTest implements PubNubListener {
 
         int port = wireMockServer.port();
         WireMock.configureFor("localhost", port);
-        RestApiClient.API_ENDPOINT = "http://localhost:" + port;
 
         httpClient = new HttpClient();
         httpClient.start();
 
         restApiClient = new RestApiClient(httpClient, gson);
+        restApiClient.setApiEndpoint("http://localhost:" + port);
         restApiClient.init(new ThingUID("august:bridge:1"), updatedAccessToken -> {
         });
 

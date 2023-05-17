@@ -37,6 +37,8 @@ public class AccountConfiguration {
 
     public int refreshIntervalSeconds = 3600;
 
+    public EcoSystem ecoSystem = EcoSystem.AUGUST;
+
     @java.lang.Override
     public java.lang.String toString() {
         return "AccountConfiguration{" + "email='" + email + '\'' + ", password='REDACTED'" + ", phone='" + phone + '\''

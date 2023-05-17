@@ -23,7 +23,8 @@ Others may work as well, just not tested yet. Please report back if your lock wo
 
 Yale Access uses 2-factor authentication at first login.
 
-1. Add a new `account` thing with phone, email and password
+1. Add a new `account` thing with phone, email and password. Make sure you select the correct eco system (either legacy
+   August or new Yale Home depending on whether you have migrated your account yet by logging into Yale Home App)
 2. Check your email for the 6-digit code
 3. Update the thing configuration with the code
 
@@ -35,6 +36,7 @@ To find the `lockId`, add the bridge and let it discover your locks.
 
 ### Account
 
+* `ecoSystem`, either legacy `August` (`AUGUST`) or `Yale Home` (`YALE_HOME`)
 * `email` = Email address used in the mobile app
 * `phone` = Mobile number used in the mobile app. Use full number with country code, ie `+4712345678`
 * `password` = Same as you use in the mobile app

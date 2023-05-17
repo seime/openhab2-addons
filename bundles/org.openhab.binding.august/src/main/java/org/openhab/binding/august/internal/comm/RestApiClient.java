@@ -14,6 +14,7 @@ package org.openhab.binding.august.internal.comm;
 
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -43,13 +44,15 @@ import com.google.gson.JsonParser;
 public class RestApiClient {
     public static final String HEADER_ACCESS_TOKEN = "x-august-access-token";
     public static final String HEADER_CONTENT_TYPE_APPLICATION_JSON = "application/json";
-    public static String API_ENDPOINT = "https://api-production.august.com";
     private static final String API_KEY = "79fd0eb6-381d-4adf-95a0-47721289d1d9";
 
     private HttpClient httpClient;
 
     @Nullable
     private String accessToken = null;
+
+    @Nullable
+    private String apiEndpoint;
 
     private Gson gson;
     @Nullable
@@ -61,13 +64,24 @@ public class RestApiClient {
         this.gson = gson;
     }
 
+    public void setApiEndpoint(String apiEndpoint) {
+        this.apiEndpoint = apiEndpoint;
+    }
+
+    public String getApiEndpoint() {
+        return apiEndpoint;
+    }
+
     public void init(ThingUID bridgeUid, AccessTokenUpdatedListener listener) {
         this.requestLogger = new RequestLogger(bridgeUid.getId(), gson);
         this.listener = listener;
     }
 
     private Request buildRequest(final AbstractRequest req) {
-        Request request = httpClient.newRequest(API_ENDPOINT + req.getRequestUrl()).method(req.getMethod());
+
+        Objects.requireNonNull(apiEndpoint, "API endpoint not set");
+
+        Request request = httpClient.newRequest(apiEndpoint + req.getRequestUrl()).method(req.getMethod());
 
         request.getHeaders().remove(HttpHeader.USER_AGENT);
         request.getHeaders().remove(HttpHeader.ACCEPT);

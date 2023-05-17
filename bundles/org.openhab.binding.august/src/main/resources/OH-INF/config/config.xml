@@ -6,6 +6,17 @@
 https://openhab.org/schemas/config-description-1.0.0.xsd">
 
 	<config-description uri="thing-type:august:account">
+		<parameter name="ecoSystem" type="text">
+			<label>Ecosystem</label>
+			<description>Use 'Yale Home' if you have already migrated your account to the new Yale Home App, 'August' otherwise.
+				NOTE: If you currently are on August, but migrate to the new Yale Home App, a new 2 factor login is required.</description>
+			<default>AUGUST</default>
+			<options>
+				<option value="AUGUST">August</option>
+				<option value="YALE_HOME">Yale Home</option>
+			</options>
+		</parameter>
+
 		<parameter name="phone" type="text" required="true">
 			<label>Yale Access/August account phone number</label>
 			<description>Your registered app phone number</description>
