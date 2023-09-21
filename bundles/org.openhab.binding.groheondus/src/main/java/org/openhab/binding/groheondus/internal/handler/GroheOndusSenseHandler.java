@@ -19,7 +19,7 @@ import static org.openhab.binding.groheondus.internal.GroheOndusBindingConstants
 
 import java.io.IOException;
 import java.time.Instant;
-import java.time.ZonedDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Comparator;
@@ -84,6 +84,12 @@ public class GroheOndusSenseHandler<T, M> extends GroheOndusBaseHandler<Applianc
     @Override
     protected void updateChannel(ChannelUID channelUID, Appliance appliance, ApplianceData.Data data) {
         String channelId = channelUID.getIdWithoutGroup();
+        if (data.measurement.isEmpty()) {
+            logger.debug("No data available for {}", appliance.getName());
+            updateState(channelUID, UnDefType.UNDEF);
+
+            return;
+        }
         Measurement lastMeasurement = data.getMeasurement().get(data.getMeasurement().size() - 1);
         State newState = UnDefType.UNDEF;
         switch (channelId) {
@@ -131,9 +137,9 @@ public class GroheOndusSenseHandler<T, M> extends GroheOndusBaseHandler<Applianc
                 // Persist new
                 measurements.forEach(measurement -> {
                     QuantityType state = mappingFunction.apply(measurement);
-                    persistenceService.store(item, ZonedDateTime.parse(measurement.timestamp), state);
+                    persistenceService.store(item, measurement.date.atZone(ZoneId.systemDefault()), state);
                     logger.info("Persisting previous reading {} for item {} at {}", state, item.getName(),
-                            measurement.timestamp);
+                            measurement.date.atZone(ZoneId.systemDefault()));
                 });
 
             });
@@ -159,7 +165,7 @@ public class GroheOndusSenseHandler<T, M> extends GroheOndusBaseHandler<Applianc
         ApplianceData.Data data = applianceData.getData();
 
         List<Measurement> measurementList = data.getMeasurement();
-        Collections.sort(measurementList, Comparator.comparing(e -> ZonedDateTime.parse(e.timestamp)));
+        Collections.sort(measurementList, Comparator.comparing(e -> e.date));
         return data;
     }
 
