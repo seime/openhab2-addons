@@ -18,7 +18,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * The {@link MillheatModel} represents the home structure as designed by the user in the Millheat app.
@@ -46,24 +45,12 @@ public class MillheatModel {
         return lastUpdated;
     }
 
-    public Optional<Heater> findHeaterById(final Long id) {
-        return findHeaters().filter(heater -> id.equals(heater.getId())).findFirst();
-    }
-
     public Optional<Heater> findHeaterByMac(final String macAddress) {
+        if (macAddress == null) {
+            return Optional.empty();
+        }
+
         return findHeaters().filter(heater -> macAddress.equals(heater.getMacAddress())).findFirst();
-    }
-
-    public Optional<Heater> findHeaterByMacOrId(@Nullable final String macAddress, @Nullable final Long id) {
-        Optional<Heater> heater = Optional.empty();
-
-        if (macAddress != null) {
-            heater = findHeaterByMac(macAddress);
-        }
-        if (heater.isEmpty() && id != null) {
-            heater = findHeaterById(id);
-        }
-        return heater;
     }
 
     private Stream<Heater> findHeaters() {
@@ -72,23 +59,19 @@ public class MillheatModel {
                 homes.stream().flatMap(room -> room.getIndependentHeaters().stream()));
     }
 
-    public Optional<Room> findRoomById(final Long id) {
+    public Optional<Room> findRoomById(final String id) {
+        if (id == null) {
+            return Optional.empty();
+        }
         return homes.stream().flatMap(home -> home.getRooms().stream()).filter(room -> id.equals(room.getId()))
                 .findFirst();
     }
 
-    public Optional<Home> findHomeByRoomId(final Long id) {
-        for (final Home home : homes) {
-            for (final Room room : home.getRooms()) {
-                if (id.equals(room.getId())) {
-                    return Optional.of(home);
-                }
-            }
+    public Optional<Home> findHomeById(String id) {
+        if (id == null) {
+            return Optional.empty();
         }
-        return Optional.empty();
-    }
 
-    public Optional<Home> findHomeById(Long homeId) {
-        return homes.stream().filter(e -> e.getId().equals(homeId)).findFirst();
+        return homes.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 }

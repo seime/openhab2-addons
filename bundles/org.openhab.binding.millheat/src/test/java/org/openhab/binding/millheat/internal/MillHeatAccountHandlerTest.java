@@ -67,8 +67,7 @@ public class MillHeatAccountHandlerTest {
         httpClient = new HttpClient();
         httpClient.start();
 
-        MillheatAccountHandler.authEndpoint = "http://localhost:" + port + "/zc-account/v1/";
-        MillheatAccountHandler.serviceEndpoint = "http://localhost:" + port + "/millService/v1/";
+        MillheatAccountHandler.serviceEndpoint = "http://localhost:" + port + "/";
     }
 
     @AfterEach
@@ -80,24 +79,31 @@ public class MillHeatAccountHandlerTest {
 
     @Test
     public void testUpdateModel() throws InterruptedException, IOException, MillheatCommunicationException {
+        final String loginResponse = new String(
+                getClass().getResourceAsStream("/v2/login_response_ok.json").readAllBytes(), StandardCharsets.UTF_8);
         final String getHomesResponse = new String(
-                getClass().getResourceAsStream("/select_home_list_ok.json").readAllBytes(), StandardCharsets.UTF_8);
+                getClass().getResourceAsStream("/v2/get_houses_ok.json").readAllBytes(), StandardCharsets.UTF_8);
         final String getRoomsByHomeResponse = new String(
-                getClass().getResourceAsStream("/get_rooms_by_home_ok.json").readAllBytes(), StandardCharsets.UTF_8);
+                getClass().getResourceAsStream("/v2/get_rooms_ok.json").readAllBytes(), StandardCharsets.UTF_8);
         final String getDeviceByRoomResponse = new String(
-                getClass().getResourceAsStream("/get_device_by_room_ok.json").readAllBytes(), StandardCharsets.UTF_8);
-        final String getIndependentDevicesResponse = new String(
-                getClass().getResourceAsStream("/get_independent_devices_ok.json").readAllBytes(),
-                StandardCharsets.UTF_8);
+                getClass().getResourceAsStream("/v2/get_devices_ok.json").readAllBytes(), StandardCharsets.UTF_8);
+        // final String getIndependentDevicesResponse = new String(
+        // getClass().getResourceAsStream("/v1/get_independent_devices_ok.json").readAllBytes(),
+        // StandardCharsets.UTF_8);
 
-        stubFor(post(urlEqualTo("/millService/v1/selectHomeList"))
-                .willReturn(aResponse().withStatus(200).withBody(getHomesResponse)));
-        stubFor(post(urlEqualTo("/millService/v1/selectRoombyHome"))
+        stubFor(post(urlEqualTo("/customer/auth/sign-in"))
+                .willReturn(aResponse().withStatus(200).withBody(loginResponse)));
+        stubFor(get(urlEqualTo("/houses")).willReturn(aResponse().withStatus(200).withBody(getHomesResponse)));
+        stubFor(get(urlEqualTo("/houses/HOUSEID/rooms"))
                 .willReturn(aResponse().withStatus(200).withBody(getRoomsByHomeResponse)));
-        stubFor(post(urlEqualTo("/millService/v1/selectDevicebyRoom"))
+        stubFor(get(urlEqualTo("/houses/HOUSEID/devices"))
                 .willReturn(aResponse().withStatus(200).withBody(getDeviceByRoomResponse)));
-        stubFor(post(urlEqualTo("/millService/v1/getIndependentDevices"))
-                .willReturn(aResponse().withStatus(200).withBody(getIndependentDevicesResponse)));
+        stubFor(get(urlEqualTo("/houses/HOUSEID2/rooms"))
+                .willReturn(aResponse().withStatus(200).withBody(getRoomsByHomeResponse)));
+        stubFor(get(urlEqualTo("/houses/HOUSEID2/devices"))
+                .willReturn(aResponse().withStatus(200).withBody(getDeviceByRoomResponse)));
+        // stubFor(post(urlEqualTo("/millService/v1/getIndependentDevices"))
+        // .willReturn(aResponse().withStatus(200).withBody(getIndependentDevicesResponse)));
 
         when(millheatAccountMock.getConfiguration()).thenReturn(configuration);
         when(millheatAccountMock.getUID()).thenReturn(new ThingUID("millheat:account:thinguid"));
@@ -109,12 +115,16 @@ public class MillHeatAccountHandlerTest {
 
         final MillheatAccountHandler subject = new MillheatAccountHandler(millheatAccountMock, httpClient,
                 bundleContext);
-        MillheatModel model = subject.refreshModel();
-        assertEquals(1, model.getHomes().size());
+        subject.initialize();
 
-        verify(postRequestedFor(urlMatching("/millService/v1/selectHomeList")));
-        verify(postRequestedFor(urlMatching("/millService/v1/selectRoombyHome")));
-        verify(postRequestedFor(urlMatching("/millService/v1/selectDevicebyRoom")));
-        verify(postRequestedFor(urlMatching("/millService/v1/getIndependentDevices")));
+        MillheatModel model = subject.refreshModel();
+        assertEquals(2, model.getHomes().size());
+
+        verify(postRequestedFor(urlMatching("/customer/auth/sign-in")));
+        verify(getRequestedFor(urlMatching("/houses")));
+        verify(getRequestedFor(urlMatching("/houses/HOUSEID/rooms")));
+        verify(getRequestedFor(urlMatching("/houses/HOUSEID/devices")));
+        verify(getRequestedFor(urlMatching("/houses/HOUSEID2/rooms")));
+        verify(getRequestedFor(urlMatching("/houses/HOUSEID2/devices")));
     }
 }

@@ -15,12 +15,18 @@ package org.openhab.binding.millheat.internal.dto;
 import org.eclipse.jetty.http.HttpMethod;
 
 /**
- * The {@link AbstractRequest} class is implemented by all service requests
- **
+ * This DTO class wraps the selectHomeList request
+ *
  * @author Arne Seime - Initial contribution
  */
-public interface AbstractRequest {
-    String getRequestUrl();
+public class GetHousesRequest implements AbstractRequest {
+    @Override
+    public String getRequestUrl() {
+        return "houses";
+    }
 
-    HttpMethod getMethod();
+    @Override
+    public HttpMethod getMethod() {
+        return HttpMethod.GET;
+    }
 }

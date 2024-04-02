@@ -26,13 +26,9 @@
 	</config-description>
 
 	<config-description uri="thing-type:millheat:heater">
-		<parameter name="macAddress" type="text">
+		<parameter name="macAddress" type="text" required="true">
 			<label>MAC Address</label>
-			<description>Either MAC address or heaterId is required</description>
-		</parameter>
-		<parameter name="heaterId" type="integer">
-			<label>Heater ID</label>
-			<description>Either MAC address or heaterId is required</description>
+			<description>MAC address of heater</description>
 		</parameter>
 		<parameter name="power" type="integer">
 			<label>Heating Power</label>

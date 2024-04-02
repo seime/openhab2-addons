@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.millheat.internal.dto;
 
-import org.openhab.binding.millheat.internal.model.Home;
+import org.eclipse.jetty.http.HttpMethod;
 import org.openhab.binding.millheat.internal.model.Room;
 
 /**
@@ -22,22 +22,26 @@ import org.openhab.binding.millheat.internal.model.Room;
  * @author Arne Seime - Initial contribution
  */
 public class SetRoomTempRequest implements AbstractRequest {
-    public final long roomId;
-    public int comfortTemp;
-    public int sleepTemp;
-    public int awayTemp;
-    public final int homeType;
 
-    public SetRoomTempRequest(final Home home, final Room room) {
+    public final String roomId;
+    public double roomComfortTemperature;
+    public double roomSleepTemperature;
+    public double roomAwayTemperature;
+
+    public SetRoomTempRequest(final Room room) {
         roomId = room.getId();
-        homeType = home.getType();
-        comfortTemp = room.getComfortTemp();
-        sleepTemp = room.getSleepTemp();
-        awayTemp = room.getAwayTemp();
+        roomComfortTemperature = room.getComfortTemp();
+        roomSleepTemperature = room.getSleepTemp();
+        roomAwayTemperature = room.getAwayTemp();
     }
 
     @Override
     public String getRequestUrl() {
-        return "changeRoomModeTempInfo";
+        return "/rooms/" + roomId + "/temperature";
+    }
+
+    @Override
+    public HttpMethod getMethod() {
+        return HttpMethod.POST;
     }
 }

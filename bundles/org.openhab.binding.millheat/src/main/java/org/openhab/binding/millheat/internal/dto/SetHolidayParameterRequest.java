@@ -15,13 +15,15 @@ package org.openhab.binding.millheat.internal.dto;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jetty.http.HttpMethod;
+
 import com.google.gson.annotations.SerializedName;
 
 /**
  * This DTO class wraps the set holiday parameter request
  *
- * @see HomeDTO
- * @see GetHomesResponse
+ * @see HouseDTO
+ * @see GetHousesResponse
  * @author Arne Seime - Initial contribution
  */
 public class SetHolidayParameterRequest implements AbstractRequest {
@@ -44,7 +46,7 @@ public class SetHolidayParameterRequest implements AbstractRequest {
      * isHoliday (boolean), holidayTempType (0 == advanced vacation mode - room uses it's own away temp, 1 == uses
      * holidayTemp)
      */
-    public SetHolidayParameterRequest(Long homeId, String timeZone, String parameter, Object value) {
+    public SetHolidayParameterRequest(String homeId, String timeZone, String parameter, Object value) {
         homeList.add(new HomeID(homeId));
         this.timeZone = timeZone;
         this.key = parameter;
@@ -56,11 +58,16 @@ public class SetHolidayParameterRequest implements AbstractRequest {
         return "holidayChooseHome";
     }
 
+    @Override
+    public HttpMethod getMethod() {
+        return null;
+    }
+
     private class HomeID {
         @SuppressWarnings("unused")
-        public Long homeId;
+        public String homeId;
 
-        public HomeID(Long homeId) {
+        public HomeID(String homeId) {
             super();
             this.homeId = homeId;
         }

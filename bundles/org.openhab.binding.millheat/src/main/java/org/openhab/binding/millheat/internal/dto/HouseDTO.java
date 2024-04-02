@@ -19,23 +19,29 @@ import com.google.gson.annotations.SerializedName;
  *
  * @author Arne Seime - Initial contribution
  */
-public class HomeDTO {
-    public long homeId;
-    @SerializedName("homeAlways")
-    public boolean alwaysHome;
-    @SerializedName("homeName")
+public class HouseDTO {
+    public String id;
+
+    @SerializedName("name")
     public String name;
-    @SerializedName("isHoliday")
-    public boolean holiday;
+    public String timezone;
+
+    public String mode;
+
+    @SerializedName("vacationStartDate")
     public Long holidayStartTime;
-    public String timeZone;
-    public Integer modeMinute;
-    public Long modeStartTime;
-    public Integer holidayTemp;
-    public Integer modeHour;
-    public Integer currentMode;
+    @SerializedName("vacationEndDate")
     public Long holidayEndTime;
-    public Integer homeType;
-    public String programId;
-    public int holidayTempType;
+
+    @SerializedName("vacationTemperature")
+    public Double holidayTemp;
+
+    public String vacationModeType;
+
+    @SerializedName("isVacationModeActive")
+    public boolean holiday;
+
+    public Object overrideModeType;
+
+    public Long overrideEndDate;
 }

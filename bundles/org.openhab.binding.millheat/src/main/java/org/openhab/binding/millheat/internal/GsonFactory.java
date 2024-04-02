@@ -10,17 +10,21 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.millheat.internal.dto;
+package org.openhab.binding.millheat.internal;
 
-import org.eclipse.jetty.http.HttpMethod;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /**
- * The {@link AbstractRequest} class is implemented by all service requests
- **
+ * Factory for creating a GSON instance with the appropriate datatype converters for api calls
+ * 
  * @author Arne Seime - Initial contribution
  */
-public interface AbstractRequest {
-    String getRequestUrl();
 
-    HttpMethod getMethod();
+public class GsonFactory {
+
+    public static Gson create() {
+
+        return new GsonBuilder().setPrettyPrinting().setLenient().create();
+    }
 }

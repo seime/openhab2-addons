@@ -12,23 +12,13 @@
  */
 package org.openhab.binding.millheat.internal.dto;
 
-import java.util.Date;
-
-import com.google.gson.annotations.SerializedName;
-
 /**
  * This DTO class wraps the login response
  * 
  * @author Arne Seime - Initial contribution
  */
 public class LoginResponse extends AbstractResponse {
-    public String email;
-    @SerializedName("nickName")
-    public String nickname;
-    public String phone;
+
+    public String idToken;
     public String refreshToken;
-    public Date refreshTokenExpire;
-    public String token;
-    public Date tokenExpire;
-    public Integer userId;
 }

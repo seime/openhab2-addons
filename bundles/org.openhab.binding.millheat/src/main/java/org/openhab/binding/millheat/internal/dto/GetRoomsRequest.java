@@ -12,14 +12,27 @@
  */
 package org.openhab.binding.millheat.internal.dto;
 
-import com.google.gson.annotations.SerializedName;
+import org.eclipse.jetty.http.HttpMethod;
 
 /**
- * This DTO class wraps the select room by home response
+ * This DTO class wraps the select room by home request
  * 
  * @author Arne Seime - Initial contribution
  */
-public class SelectRoomByHomeResponse extends AbstractResponse {
-    @SerializedName("roomInfo")
-    public RoomDTO[] rooms = new RoomDTO[0];
+public class GetRoomsRequest implements AbstractRequest {
+    public final transient String homeId;
+
+    public GetRoomsRequest(final String homeId) {
+        this.homeId = homeId;
+    }
+
+    @Override
+    public String getRequestUrl() {
+        return "houses/" + homeId + "/rooms";
+    }
+
+    @Override
+    public HttpMethod getMethod() {
+        return HttpMethod.GET;
+    }
 }

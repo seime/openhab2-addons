@@ -12,22 +12,29 @@
  */
 package org.openhab.binding.millheat.internal.dto;
 
+import org.eclipse.jetty.http.HttpMethod;
+
 /**
  * This DTO class wraps the login request
  * 
  * @author Arne Seime - Initial contribution
  */
 public class LoginRequest implements AbstractRequest {
-    public final String account;
+    public final String login;
     public final String password;
 
-    public LoginRequest(final String username, final String password) {
-        this.account = username;
+    public LoginRequest(final String login, final String password) {
+        this.login = login;
         this.password = password;
     }
 
     @Override
     public String getRequestUrl() {
-        return "login";
+        return "customer/auth/sign-in";
+    }
+
+    @Override
+    public HttpMethod getMethod() {
+        return HttpMethod.POST;
     }
 }

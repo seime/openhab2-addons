@@ -76,31 +76,36 @@ public class MillheatDiscoveryService extends AbstractDiscoveryService {
                     final ThingUID roomUID = new ThingUID(MillheatBindingConstants.THING_TYPE_ROOM, accountUID,
                             String.valueOf(room.getId()));
                     final DiscoveryResult discoveryResultRoom = DiscoveryResultBuilder.create(roomUID)
-                            .withBridge(accountUID).withLabel(room.getName()).withProperty("roomId", room.getId())
-                            .withRepresentationProperty("roomId").build();
+                            .withBridge(accountUID).withLabel(home.getName() + " / " + room.getName())
+                            .withProperty("roomId", room.getId()).withRepresentationProperty("roomId").build();
                     thingDiscovered(discoveryResultRoom);
                     for (final Heater heater : room.getHeaters()) {
                         final ThingUID heaterUID = new ThingUID(MillheatBindingConstants.THING_TYPE_HEATER, accountUID,
-                                String.valueOf(heater.getId()));
+                                toUID(heater.getMacAddress()));
                         final DiscoveryResult discoveryResultHeater = DiscoveryResultBuilder.create(heaterUID)
-                                .withBridge(accountUID).withLabel(heater.getName())
-                                .withProperty("heaterId", heater.getId()).withRepresentationProperty("macAddress")
+                                .withBridge(accountUID).withLabel(home.getName() + " / " + heater.getName())
+                                .withRepresentationProperty("macAddress")
                                 .withProperty("macAddress", heater.getMacAddress()).build();
                         thingDiscovered(discoveryResultHeater);
                     }
                 }
                 for (final Heater heater : home.getIndependentHeaters()) {
                     final ThingUID heaterUID = new ThingUID(MillheatBindingConstants.THING_TYPE_HEATER, accountUID,
-                            String.valueOf(heater.getId()));
+                            toUID(heater.getMacAddress()));
                     final DiscoveryResult discoveryResultHeater = DiscoveryResultBuilder.create(heaterUID)
-                            .withBridge(accountUID).withLabel(heater.getName()).withRepresentationProperty("heaterId")
-                            .withProperty("heaterId", heater.getId()).build();
+                            .withBridge(accountUID).withLabel(home.getName() + " / " + heater.getName())
+                            .withRepresentationProperty("macAddress").withProperty("macAddress", heater.getMacAddress())
+                            .build();
                     thingDiscovered(discoveryResultHeater);
                 }
             }
         } finally {
             removeOlderResults(getTimestampOfLastScan(), null, accountHandler.getThing().getUID());
         }
+    }
+
+    private String toUID(String macAddress) {
+        return macAddress.replaceAll(":", "").toLowerCase();
     }
 
     @Override

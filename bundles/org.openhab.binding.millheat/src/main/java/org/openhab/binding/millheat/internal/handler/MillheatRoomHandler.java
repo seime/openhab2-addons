@@ -55,7 +55,7 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
         handleCommand(channelUID, command, getMillheatModel());
     }
 
-    private void updateRoomTemperature(final Long roomId, final Command command, final ModeType modeType) {
+    private void updateRoomTemperature(final String roomId, final Command command, final ModeType modeType) {
         getAccountHandler().ifPresent(handler -> {
             handler.updateRoomTemperature(config.roomId, command, modeType);
         });
@@ -64,12 +64,16 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
     @Override
     protected void handleCommand(final ChannelUID channelUID, final Command command, final MillheatModel model) {
         final Optional<Room> optionalRoom = model.findRoomById(config.roomId);
-        if (optionalRoom.isPresent()) {
-            updateStatus(ThingStatus.ONLINE);
+
+        if (verifyAvailableAndUpdateThingStatus(optionalRoom)) {
             final Room room = optionalRoom.get();
             if (CHANNEL_CURRENT_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
-                    updateState(channelUID, new QuantityType<>(room.getCurrentTemp(), SIUnits.CELSIUS));
+                    if (room.getCurrentTemp() != null) {
+                        updateState(channelUID, new QuantityType<>(room.getCurrentTemp(), SIUnits.CELSIUS));
+                    } else {
+                        updateState(channelUID, UnDefType.UNDEF);
+                    }
                 }
             } else if (CHANNEL_CURRENT_MODE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
@@ -99,7 +103,7 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
                 }
             } else if (CHANNEL_TARGET_TEMPERATURE.equals(channelUID.getId())) {
                 if (command instanceof RefreshType) {
-                    final Integer targetTemperature = room.getTargetTemperature();
+                    final Double targetTemperature = room.getTargetTemperature();
                     if (targetTemperature != null) {
                         updateState(channelUID, new QuantityType<>(targetTemperature, SIUnits.CELSIUS));
                     } else {
@@ -114,8 +118,6 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
                 logger.debug("Received command {} on channel {}, but this channel is not handled or supported by {}",
                         channelUID.getId(), command.toString(), this.getThing().getUID());
             }
-        } else {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.GONE);
         }
     }
 
@@ -124,10 +126,21 @@ public class MillheatRoomHandler extends MillheatBaseThingHandler {
         config = getConfigAs(MillheatRoomConfiguration.class);
         logger.debug("Initializing Millheat room using config {}", config);
         final Optional<Room> room = getMillheatModel().findRoomById(config.roomId);
+        verifyAvailableAndUpdateThingStatus(room);
+    }
+
+    private boolean verifyAvailableAndUpdateThingStatus(Optional<Room> room) {
         if (room.isPresent()) {
-            updateStatus(ThingStatus.ONLINE);
+            if (!room.get().isOnline()) {
+                setOffline(ThingStatusDetail.GONE, "Room is offline");
+            } else {
+                updateStatus(ThingStatus.ONLINE);
+                return true;
+            }
         } else {
-            updateStatus(ThingStatus.OFFLINE);
+            setOffline(ThingStatusDetail.CONFIGURATION_ERROR, "Room with id " + config.roomId
+                    + " not found in the Millheat model. Please check the configuration.");
         }
+        return false;
     }
 }

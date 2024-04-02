@@ -1,0 +1,37 @@
+{
+  "ownHouses": [
+    {
+      "id": "HOUSEID",
+      "name": "Hjemme",
+      "postalCode": "99999999",
+      "timezone": "Europe/Berlin",
+      "ownerId": "OWNERID",
+      "mode": "weekly_program",
+      "vacationStartDate": 1601570862,
+      "vacationEndDate": 1604252862,
+      "vacationTemperature": 5,
+      "vacationModeType": "use_vacation_temperature",
+      "isVacationModeActive": false,
+      "overrideModeType": "not_continuous",
+      "overrideEndDate": 0,
+      "createdAt": "2024-01-03T17:22:33.973Z"
+    },
+    {
+      "id": "HOUSEID2",
+      "name": "Leiligheten",
+      "postalCode": "99999999",
+      "timezone": "Europe/Berlin",
+      "ownerId": "OWNERID",
+      "mode": "weekly_program",
+      "vacationStartDate": 1704302780,
+      "vacationEndDate": 1706721960,
+      "vacationTemperature": 7.5,
+      "vacationModeType": "use_vacation_temperature",
+      "isVacationModeActive": false,
+      "overrideModeType": null,
+      "overrideEndDate": 0,
+      "createdAt": "2024-01-03T17:22:33.988Z"
+    }
+  ],
+  "sharedHouses": []
+}

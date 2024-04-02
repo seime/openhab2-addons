@@ -21,7 +21,7 @@ public class MillheatRoomConfiguration {
     /*
      * Room ID
      */
-    public Long roomId;
+    public String roomId;
 
     @Override
     public String toString() {

@@ -15,22 +15,11 @@ package org.openhab.binding.millheat.internal.dto;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * This DTO class wraps the select device by room request
+ * This DTO class wraps the select device by home response
  * 
  * @author Arne Seime - Initial contribution
  */
-public class SelectDeviceByRoomRequest implements AbstractRequest {
-    public final Long roomId;
-    @SerializedName("timeZoneNum")
-    public final String timeZone;
-
-    public SelectDeviceByRoomRequest(final Long roomId, final String timeZone) {
-        this.roomId = roomId;
-        this.timeZone = timeZone;
-    }
-
-    @Override
-    public String getRequestUrl() {
-        return "selectDevicebyRoom";
-    }
+public class GetDevicesResponse extends AbstractResponse {
+    @SerializedName("devices")
+    public DeviceDTO[] devices = new DeviceDTO[0];
 }

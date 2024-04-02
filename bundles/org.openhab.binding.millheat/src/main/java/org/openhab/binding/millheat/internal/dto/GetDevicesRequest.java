@@ -12,25 +12,29 @@
  */
 package org.openhab.binding.millheat.internal.dto;
 
-import com.google.gson.annotations.SerializedName;
+import org.eclipse.jetty.http.HttpMethod;
 
 /**
- * This DTO class wraps the select room by home request
+ * This DTO class wraps the select device by room request
  * 
  * @author Arne Seime - Initial contribution
  */
-public class SelectRoomByHomeRequest implements AbstractRequest {
-    public final Long homeId;
-    @SerializedName("timeZoneNum")
-    public final String timeZone;
+public class GetDevicesRequest implements AbstractRequest {
+    public final transient String homeId;
+    public final transient String timeZone;
 
-    public SelectRoomByHomeRequest(final Long homeId, final String timeZone) {
+    public GetDevicesRequest(final String homeId, final String timeZone) {
         this.homeId = homeId;
         this.timeZone = timeZone;
     }
 
     @Override
     public String getRequestUrl() {
-        return "selectRoombyHome";
+        return "houses/" + homeId + "/devices";
+    }
+
+    @Override
+    public HttpMethod getMethod() {
+        return HttpMethod.GET;
     }
 }

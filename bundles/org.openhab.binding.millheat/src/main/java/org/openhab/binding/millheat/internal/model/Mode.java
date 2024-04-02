@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.millheat.internal.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * The {@link Mode} represents a mode with start and end time
@@ -21,10 +21,10 @@ import java.time.LocalDateTime;
  */
 public class Mode {
     private final ModeType mode;
-    private final LocalDateTime start;
-    private final LocalDateTime end;
+    private final Instant start;
+    private final Instant end;
 
-    public Mode(final ModeType mode, final LocalDateTime start, final LocalDateTime end) {
+    public Mode(final ModeType mode, final Instant start, final Instant end) {
         this.mode = mode;
         this.start = start;
         this.end = end;
@@ -34,11 +34,11 @@ public class Mode {
         return mode;
     }
 
-    public LocalDateTime getStart() {
+    public Instant getStart() {
         return start;
     }
 
-    public LocalDateTime getEnd() {
+    public Instant getEnd() {
         return end;
     }
 }

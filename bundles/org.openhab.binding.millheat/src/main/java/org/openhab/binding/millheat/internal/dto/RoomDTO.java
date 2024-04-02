@@ -20,25 +20,24 @@ import com.google.gson.annotations.SerializedName;
  * @author Arne Seime - Initial contribution
  */
 public class RoomDTO {
-    public long roomId;
-    @SerializedName("roomName")
+    public String id;
+
     public String name;
-    public int comfortTemp;
-    public int sleepTemp;
-    public int awayTemp;
-    @SerializedName("avgTemp")
-    public double currentTemp;
+    public int roomAwayTemperature;
+    public int roomComfortTemperature;
+    public int roomSleepTemperature;
+    @SerializedName("averageTemperature")
+    public Double currentTemp;
     public String roomProgram;
-    public int currentMode = 0;
+
+    public String activeModeFromWeeklyProgram;
     public boolean heatStatus = false;
-    @SerializedName("onLineDeviceNum")
+    @SerializedName("roomOnlineDevicesNumber")
     public int onlineDeviceCount = 0;
-    @SerializedName("offLineDeviceNum")
+    @SerializedName("roomOfflineDevicesNumber")
     public int offLineDeviceCount = 0;
-    @SerializedName("total")
+    @SerializedName("roomTotalDevicesNumber")
     public int totalCount = 0;
-    public int independentCount = 0;
-    @SerializedName("isOffline")
-    public boolean offline = true;
-    public String controlSource;
+    @SerializedName("isRoomOnline")
+    public boolean online;
 }

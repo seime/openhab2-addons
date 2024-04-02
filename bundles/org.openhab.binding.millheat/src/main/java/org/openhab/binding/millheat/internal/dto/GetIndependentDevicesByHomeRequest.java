@@ -12,20 +12,27 @@
  */
 package org.openhab.binding.millheat.internal.dto;
 
+import org.eclipse.jetty.http.HttpMethod;
+
 /**
  * This DTO class wraps the get independent devices request
  * 
  * @author Arne Seime - Initial contribution
  */
 public class GetIndependentDevicesByHomeRequest implements AbstractRequest {
-    public final Long homeId;
+    public final String homeId;
 
-    public GetIndependentDevicesByHomeRequest(final Long homeId, final String timeZone) {
+    public GetIndependentDevicesByHomeRequest(final String homeId, final String timeZone) {
         this.homeId = homeId;
     }
 
     @Override
     public String getRequestUrl() {
         return "getIndependentDevices";
+    }
+
+    @Override
+    public HttpMethod getMethod() {
+        return null;
     }
 }

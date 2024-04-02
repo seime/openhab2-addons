@@ -13,13 +13,10 @@
 package org.openhab.binding.millheat.internal.dto;
 
 /**
- * This DTO class wraps the selectHomeList request
- *
+ * This DTO class wraps the select room by home response
+ * 
  * @author Arne Seime - Initial contribution
  */
-public class GetHomesRequest implements AbstractRequest {
-    @Override
-    public String getRequestUrl() {
-        return "selectHomeList";
-    }
+public class GetRoomsResponse extends AbstractResponse {
+    public RoomDTO[] rooms = new RoomDTO[0];
 }

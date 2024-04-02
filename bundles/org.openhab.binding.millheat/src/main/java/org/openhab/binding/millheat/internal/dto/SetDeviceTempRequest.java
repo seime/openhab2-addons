@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.millheat.internal.dto;
 
+import org.eclipse.jetty.http.HttpMethod;
 import org.openhab.binding.millheat.internal.model.Heater;
 
 /**
@@ -21,13 +22,12 @@ import org.openhab.binding.millheat.internal.model.Heater;
  * @author Arne Seime - Initial contribution
  */
 public class SetDeviceTempRequest implements AbstractRequest {
-    public final int subDomain;
-    public final long deviceId;
+    public final String deviceId;
     public final boolean testStatus = true;
     public final int operation;
     public final boolean status;
     public final boolean windStatus;
-    public final int holdTemp;
+    public final double holdTemp;
     public final int tempType = 0; // FIXED?
     public final int powerLevel = 0; // FIXED?
 
@@ -36,9 +36,13 @@ public class SetDeviceTempRequest implements AbstractRequest {
         return "deviceControl";
     }
 
-    public SetDeviceTempRequest(final Heater heater, final int targetTemperature, final boolean masterSwitch,
+    @Override
+    public HttpMethod getMethod() {
+        return HttpMethod.POST; // May be PUT
+    }
+
+    public SetDeviceTempRequest(final Heater heater, final double targetTemperature, final boolean masterSwitch,
             final boolean fanActive) {
-        this.subDomain = heater.getSubDomain();
         this.deviceId = heater.getId();
         this.holdTemp = targetTemperature;
         this.status = masterSwitch;

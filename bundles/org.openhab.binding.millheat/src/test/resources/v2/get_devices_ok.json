@@ -1,0 +1,378 @@
+[
+  {
+    "roomId": "BEDROOM_UPSTAIRS",
+    "roomName": "Chuck",
+    "devices": [
+      {
+        "deviceId": "DEVICEID_BEDROOM_UPSTAIRS",
+        "macAddress": "MAC_BEDROOM_UPSTAIRS",
+        "deviceType": {
+          "childType": {
+            "id": "CHILD_TYPE1",
+            "name": "GL-Panel Heater G2"
+          },
+          "parentType": {
+            "id": "PARENT_TYPE1",
+            "name": "Heaters"
+          }
+        },
+        "isConnected": true,
+        "customName": "Chuck",
+        "houseId": "HOUSEID",
+        "roomId": "BEDROOM_UPSTAIRS",
+        "controlSource": "mobile_api",
+        "isArchived": false,
+        "isEnabled": true,
+        "createdAt": "2024-01-03 17:23:23.819068+00",
+        "lastMetrics": {
+          "deviceId": "DEVICEID_BEDROOM_UPSTAIRS",
+          "receivedAt": "2024-04-02 07:51:35.153+00",
+          "sentAt": "2024-04-02 07:51:33+00",
+          "temperature": 0,
+          "humidity": 0,
+          "currentPower": 0,
+          "currentOperationMode": 1,
+          "currentTemperatureTypeInWeeklyProgram": 5,
+          "controlSignal": 0,
+          "energyUsage": 0,
+          "timeSinceHeaterStartup": 2031595,
+          "temperatureAmbient": 20,
+          "openWindowsStatus": 0,
+          "powerStatus": 1,
+          "heaterFlag": 0,
+          "time": 1712044293
+        },
+        "deviceSettings": {
+          "reported": {
+            "operation_mode": "weekly_program",
+            "override_weekly_program": {
+              "value_type": "comfort",
+              "ends_at": -1
+            },
+            "regulator_type": null,
+            "weekly_program": {
+              "timers": [
+                {
+                  "value_type": "off",
+                  "timestamp": 0
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 1440
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 2880
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 4320
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 5760
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 7200
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 8640
+                }
+              ]
+            },
+            "non_repeatable_timers": {
+              "timers": []
+            },
+            "temperature_away": 10,
+            "temperature_normal": 22,
+            "temperature_comfort": 18,
+            "temperature_sleep": 11,
+            "temperature_vacation": 5,
+            "temperature_last_set": 22,
+            "vacation_mode": {
+              "start_timestamp": 0,
+              "end_timestamp": 0,
+              "advanced": false
+            },
+            "lock_status": null,
+            "predictive_heating_type": null,
+            "open_window": null,
+            "temperature_calibration_offset": null,
+            "temperature_in_independent_mode": 22,
+            "display_unit": "celsius",
+            "oil_heater_power_level": 40,
+            "max_heater_power": 0,
+            "limited_heating_power": null,
+            "additional_socket_mode": null,
+            "pid_parameters": null,
+            "hysteresis": null,
+            "timezone": "CET-1CEST,M3.5.0,M10.5.0/3",
+            "calibration_target_ambient_temperature": 0,
+            "fan_state": "off"
+          },
+          "desired": {
+            "operation_mode": "weekly_program",
+            "override_weekly_program": {
+              "value_type": "comfort",
+              "ends_at": -1
+            },
+            "regulator_type": null,
+            "weekly_program": {
+              "timers": [
+                {
+                  "value_type": "off",
+                  "timestamp": 0
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 1440
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 2880
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 4320
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 5760
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 7200
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 8640
+                }
+              ]
+            },
+            "non_repeatable_timers": {
+              "timers": []
+            },
+            "temperature_away": 10,
+            "temperature_normal": 22,
+            "temperature_comfort": 18,
+            "temperature_sleep": 11,
+            "temperature_vacation": 5,
+            "temperature_last_set": null,
+            "vacation_mode": {
+              "start_timestamp": 0,
+              "end_timestamp": 0,
+              "advanced": false
+            },
+            "lock_status": null,
+            "predictive_heating_type": null,
+            "open_window": null,
+            "temperature_calibration_offset": null,
+            "temperature_in_independent_mode": 22,
+            "display_unit": "celsius",
+            "oil_heater_power_level": null,
+            "max_heater_power": null,
+            "limited_heating_power": null,
+            "additional_socket_mode": null,
+            "pid_parameters": null,
+            "hysteresis": null,
+            "timezone": "CET-1CEST,M3.5.0,M10.5.0/3",
+            "calibration_target_ambient_temperature": null,
+            "fan_state": null
+          },
+          "delta": null
+        },
+        "energyUsageForCurrentDay": 0
+      }
+    ]
+  },
+  {
+    "roomId": "OFFICE",
+    "roomName": "Kontor oppe",
+    "devices": [
+      {
+        "deviceId": "DEVICEID_OFFICE",
+        "macAddress": "MAC_OFFICE",
+        "deviceType": {
+          "childType": {
+            "id": "CHILD_TYPE1",
+            "name": "GL-Panel Heater G2"
+          },
+          "parentType": {
+            "id": "PARENT_TYPE1",
+            "name": "Heaters"
+          }
+        },
+        "isConnected": false,
+        "customName": "Kontor oppe ovn",
+        "houseId": "HOUSEID",
+        "roomId": "OFFICE",
+        "controlSource": "mobile_api",
+        "isArchived": false,
+        "isEnabled": false,
+        "createdAt": "2024-01-03 17:23:26.938711+00",
+        "lastMetrics": {
+          "deviceId": "DEVICEID_OFFICE",
+          "receivedAt": "2024-03-21 02:40:57+00",
+          "sentAt": "2024-03-21 02:40:54+00",
+          "temperature": 0,
+          "humidity": 0,
+          "currentPower": 0,
+          "currentOperationMode": 1,
+          "currentTemperatureTypeInWeeklyProgram": 5,
+          "controlSignal": 0,
+          "energyUsage": 0,
+          "timeSinceHeaterStartup": 2384976,
+          "temperatureAmbient": 21,
+          "openWindowsStatus": 0,
+          "powerStatus": 1,
+          "heaterFlag": 0,
+          "time": 1710988854
+        },
+        "deviceSettings": {
+          "reported": {
+            "operation_mode": "weekly_program",
+            "override_weekly_program": {
+              "value_type": "comfort",
+              "ends_at": -1
+            },
+            "regulator_type": null,
+            "weekly_program": {
+              "timers": [
+                {
+                  "value_type": "off",
+                  "timestamp": 0
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 1440
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 2880
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 4320
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 5760
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 7200
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 8640
+                }
+              ]
+            },
+            "non_repeatable_timers": {
+              "timers": []
+            },
+            "temperature_away": 10,
+            "temperature_normal": 22,
+            "temperature_comfort": 19,
+            "temperature_sleep": 15,
+            "temperature_vacation": 5,
+            "temperature_last_set": 0,
+            "vacation_mode": {
+              "start_timestamp": 0,
+              "end_timestamp": 0,
+              "advanced": false
+            },
+            "lock_status": null,
+            "predictive_heating_type": null,
+            "open_window": null,
+            "temperature_calibration_offset": null,
+            "temperature_in_independent_mode": 22,
+            "display_unit": "celsius",
+            "oil_heater_power_level": 40,
+            "max_heater_power": 0,
+            "limited_heating_power": null,
+            "additional_socket_mode": null,
+            "pid_parameters": null,
+            "hysteresis": null,
+            "timezone": "CET-1CEST,M3.5.0,M10.5.0/3",
+            "calibration_target_ambient_temperature": 0,
+            "fan_state": "off"
+          },
+          "desired": {
+            "operation_mode": "weekly_program",
+            "override_weekly_program": {
+              "value_type": "comfort",
+              "ends_at": -1
+            },
+            "regulator_type": null,
+            "weekly_program": {
+              "timers": [
+                {
+                  "value_type": "off",
+                  "timestamp": 0
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 1440
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 2880
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 4320
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 5760
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 7200
+                },
+                {
+                  "value_type": "off",
+                  "timestamp": 8640
+                }
+              ]
+            },
+            "non_repeatable_timers": {
+              "timers": []
+            },
+            "temperature_away": 10,
+            "temperature_normal": 22,
+            "temperature_comfort": 19,
+            "temperature_sleep": 15,
+            "temperature_vacation": 5,
+            "temperature_last_set": null,
+            "vacation_mode": {
+              "start_timestamp": 0,
+              "end_timestamp": 0,
+              "advanced": false
+            },
+            "lock_status": null,
+            "predictive_heating_type": null,
+            "open_window": null,
+            "temperature_calibration_offset": null,
+            "temperature_in_independent_mode": 22,
+            "display_unit": "celsius",
+            "oil_heater_power_level": null,
+            "max_heater_power": null,
+            "limited_heating_power": null,
+            "additional_socket_mode": null,
+            "pid_parameters": null,
+            "hysteresis": null,
+            "timezone": "CET-1CEST,M3.5.0,M10.5.0/3",
+            "calibration_target_ambient_temperature": null,
+            "fan_state": null
+          },
+          "delta": null
+        },
+        "energyUsageForCurrentDay": 0
+      }
+    ]
+  }
+]

@@ -19,7 +19,7 @@ package org.openhab.binding.millheat.internal.config;
  */
 public class MillheatHomeConfiguration {
 
-    public Long homeId;
+    public String homeId;
 
     @Override
     public String toString() {

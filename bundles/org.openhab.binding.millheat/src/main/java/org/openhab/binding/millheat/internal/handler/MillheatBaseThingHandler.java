@@ -15,14 +15,13 @@ package org.openhab.binding.millheat.internal.handler;
 import java.util.Optional;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.millheat.internal.model.MillheatModel;
-import org.openhab.core.thing.Bridge;
-import org.openhab.core.thing.Channel;
-import org.openhab.core.thing.ChannelUID;
-import org.openhab.core.thing.Thing;
+import org.openhab.core.thing.*;
 import org.openhab.core.thing.binding.BaseThingHandler;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.RefreshType;
+import org.openhab.core.types.UnDefType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +42,11 @@ public abstract class MillheatBaseThingHandler extends BaseThingHandler {
         for (final Channel channel : getThing().getChannels()) {
             handleCommand(channel.getUID(), RefreshType.REFRESH, model);
         }
+    }
+
+    protected void setOffline(ThingStatusDetail detail, @Nullable String description) {
+        getThing().getChannels().forEach(channel -> updateState(channel.getUID(), UnDefType.UNDEF));
+        updateStatus(ThingStatus.OFFLINE, detail, description);
     }
 
     protected MillheatModel getMillheatModel() {

@@ -12,29 +12,27 @@
  */
 package org.openhab.binding.millheat.internal.dto;
 
-import com.google.gson.annotations.SerializedName;
-
 /**
  * The {@link DeviceDTO} class represents a heater device
  *
  * @author Arne Seime - Initial contribution
  */
 public class DeviceDTO {
-    public boolean heaterFlag;
-    public int subDomainId;
-    public int controlType;
-    public double currentTemp;
-    public boolean canChangeTemp;
-    public long deviceId;
-    public String deviceName;
-    @SerializedName("mac")
+    public String deviceId;
+
     public String macAddress;
-    public int deviceStatus;
-    public int holidayTemp;
-    public boolean fanStatus;
-    @SerializedName("open")
-    public boolean openWindow;
-    public boolean powerStatus;
-    @SerializedName("isHoliday")
-    public boolean holiday;
+
+    public boolean isConnected;
+
+    public String customName;
+
+    public String roomId;
+
+    public String houseId;
+
+    public boolean isEnabled;
+
+    public MetricsDTO lastMetrics;
+
+    public DeviceSettingsDTO deviceSettings;
 }

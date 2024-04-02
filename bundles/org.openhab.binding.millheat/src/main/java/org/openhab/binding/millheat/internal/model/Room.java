@@ -14,6 +14,7 @@ package org.openhab.binding.millheat.internal.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.openhab.binding.millheat.internal.dto.RoomDTO;
 
@@ -24,28 +25,31 @@ import org.openhab.binding.millheat.internal.dto.RoomDTO;
  */
 public class Room {
     private final Home home;
-    private final long id;
+    private final String id;
     private final String name;
-    private final int currentTemp;
-    private final int comfortTemp;
-    private final int sleepTemp;
-    private final int awayTemp;
+    private final Double currentTemp;
+    private final double comfortTemp;
+    private final double sleepTemp;
+    private final double awayTemp;
     private final boolean heatingActive;
     private final ModeType mode;
     private final String roomProgramName;
     private final List<Heater> heaters = new ArrayList<>();
 
+    private boolean online;
+
     public Room(final RoomDTO dto, final Home home) {
         this.home = home;
-        id = dto.roomId;
+        id = dto.id;
         name = dto.name;
-        currentTemp = (int) dto.currentTemp;
-        comfortTemp = dto.comfortTemp;
-        sleepTemp = dto.sleepTemp;
-        awayTemp = dto.awayTemp;
+        currentTemp = dto.currentTemp;
+        comfortTemp = dto.roomComfortTemperature;
+        sleepTemp = dto.roomSleepTemperature;
+        awayTemp = dto.roomAwayTemperature;
         heatingActive = dto.heatStatus;
-        mode = ModeType.valueOf(dto.currentMode);
+        mode = ModeType.valueOf(dto.activeModeFromWeeklyProgram.toUpperCase(Locale.ROOT));
         roomProgramName = dto.roomProgram;
+        online = dto.online;
     }
 
     public void addHeater(final Heater h) {
@@ -56,7 +60,7 @@ public class Room {
         return heaters;
     }
 
-    public Integer getTargetTemperature() {
+    public Double getTargetTemperature() {
         switch (mode) {
             case VACATION:
                 return home.getHolidayTemp();
@@ -85,7 +89,7 @@ public class Room {
         return home;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
@@ -93,19 +97,19 @@ public class Room {
         return name;
     }
 
-    public int getCurrentTemp() {
+    public Double getCurrentTemp() {
         return currentTemp;
     }
 
-    public int getComfortTemp() {
+    public double getComfortTemp() {
         return comfortTemp;
     }
 
-    public int getSleepTemp() {
+    public double getSleepTemp() {
         return sleepTemp;
     }
 
-    public int getAwayTemp() {
+    public double getAwayTemp() {
         return awayTemp;
     }
 
@@ -119,5 +123,9 @@ public class Room {
 
     public String getRoomProgramName() {
         return roomProgramName;
+    }
+
+    public boolean isOnline() {
+        return online;
     }
 }

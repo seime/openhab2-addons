@@ -23,17 +23,12 @@ public class MillheatHeaterConfiguration {
      */
     public String macAddress;
     /*
-     * Wi-Fi heater id - found in logs
-     */
-    public Long heaterId;
-    /*
      * Nominal heater panel power
      */
     public Integer power;
 
     @Override
     public String toString() {
-        return "MillheatHeaterConfiguration [macAddress=" + macAddress + ", heaterId=" + heaterId + ", power=" + power
-                + "]";
+        return "MillheatHeaterConfiguration [macAddress=" + macAddress + ", power=" + power + "]";
     }
 }

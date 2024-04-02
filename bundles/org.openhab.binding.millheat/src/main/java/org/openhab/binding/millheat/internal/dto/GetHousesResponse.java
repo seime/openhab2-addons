@@ -15,11 +15,11 @@ package org.openhab.binding.millheat.internal.dto;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * This DTO class wraps the select device by home response
- * 
+ * This DTO class wraps the selectHomeList response
+ *
  * @author Arne Seime - Initial contribution
  */
-public class SelectDeviceByRoomResponse extends AbstractResponse {
-    @SerializedName("deviceInfo")
-    public DeviceDTO[] devices = new DeviceDTO[0];
+public class GetHousesResponse extends AbstractResponse {
+    @SerializedName("ownHouses")
+    public HouseDTO[] houses = new HouseDTO[0];
 }

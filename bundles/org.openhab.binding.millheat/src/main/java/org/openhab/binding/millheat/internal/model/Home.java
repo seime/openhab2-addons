@@ -12,13 +12,11 @@
  */
 package org.openhab.binding.millheat.internal.model;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openhab.binding.millheat.internal.dto.HomeDTO;
-import org.openhab.core.library.types.OnOffType;
+import org.openhab.binding.millheat.internal.dto.HouseDTO;
 
 /**
  * The {@link Home} represents a home
@@ -26,26 +24,22 @@ import org.openhab.core.library.types.OnOffType;
  * @author Arne Seime - Initial contribution
  */
 public class Home {
-    private final long id;
+    private final String id;
     private final String name;
-    private final int type;
     private final String zoneOffset;
-    private int holidayTemp;
+    private double holidayTemp;
     private Mode mode;
     private final String program = null;
     private final List<Room> rooms = new ArrayList<>();
     private final List<Heater> independentHeaters = new ArrayList<>();
-    private LocalDateTime vacationModeStart;
-    private LocalDateTime vacationModeEnd;
-    private boolean advancedVacationMode;
+    private Instant vacationModeStart;
+    private Instant vacationModeEnd;
 
-    public Home(final HomeDTO dto) {
-        id = dto.homeId;
+    public Home(final HouseDTO dto) {
+        id = dto.id;
         name = dto.name;
-        type = dto.homeType;
-        zoneOffset = dto.timeZone;
+        zoneOffset = dto.timezone;
         holidayTemp = dto.holidayTemp;
-        advancedVacationMode = dto.holidayTempType == 0;
         if (dto.holidayStartTime != 0) {
             vacationModeStart = convertFromEpoch(dto.holidayStartTime);
         }
@@ -53,20 +47,23 @@ public class Home {
             vacationModeEnd = convertFromEpoch(dto.holidayEndTime);
         }
 
-        if (dto.holiday) {
-            mode = new Mode(ModeType.VACATION, vacationModeStart, vacationModeEnd);
-        } else if (dto.alwaysHome) {
-            mode = new Mode(ModeType.ALWAYSHOME, null, null);
-        } else {
-            final LocalDateTime modeStart = LocalDateTime.ofEpochSecond(dto.modeStartTime, 0,
-                    ZoneOffset.of(zoneOffset));
-            final LocalDateTime modeEnd = modeStart.withHour(dto.modeHour).withMinute(dto.modeMinute);
-            mode = new Mode(ModeType.valueOf(dto.currentMode), modeStart, modeEnd);
-        }
+        /*
+         * if (dto.holiday) {
+         * mode = new Mode(ModeType.VACATION, vacationModeStart, vacationModeEnd);
+         * } else if (dto.alwaysHome) {
+         * mode = new Mode(ModeType.ALWAYSHOME, null, null);
+         * } else {
+         * final LocalDateTime modeStart = LocalDateTime.ofEpochSecond(dto.modeStartTime, 0,
+         * ZoneOffset.of(zoneOffset));
+         * final LocalDateTime modeEnd = modeStart.withHour(dto.modeHour).withMinute(dto.modeMinute);
+         * mode = new Mode(ModeType.valueOf(dto.currentMode), modeStart, modeEnd);
+         * }
+         */
     }
 
-    private LocalDateTime convertFromEpoch(long epoch) {
-        return LocalDateTime.ofEpochSecond(epoch, 0, ZoneOffset.of(zoneOffset));
+    private Instant convertFromEpoch(long epoch) {
+
+        return Instant.ofEpochSecond(epoch);
     }
 
     public void addRoom(final Room room) {
@@ -79,12 +76,12 @@ public class Home {
 
     @Override
     public String toString() {
-        return "Home [id=" + id + ", name=" + name + ", type=" + type + ", zoneOffset=" + zoneOffset + ", holidayTemp="
-                + holidayTemp + ", mode=" + mode + ", rooms=" + rooms + ", independentHeaters=" + independentHeaters
-                + ", program=" + program + "]";
+        return "Home [id=" + id + ", name=" + name + ", zoneOffset=" + zoneOffset + ", holidayTemp=" + holidayTemp
+                + ", mode=" + mode + ", rooms=" + rooms + ", independentHeaters=" + independentHeaters + ", program="
+                + program + "]";
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
@@ -92,15 +89,11 @@ public class Home {
         return name;
     }
 
-    public int getType() {
-        return type;
-    }
-
     public String getTimezone() {
         return zoneOffset;
     }
 
-    public int getHolidayTemp() {
+    public double getHolidayTemp() {
         return holidayTemp;
     }
 
@@ -120,11 +113,11 @@ public class Home {
         return independentHeaters;
     }
 
-    public LocalDateTime getVacationModeStart() {
+    public Instant getVacationModeStart() {
         return vacationModeStart;
     }
 
-    public LocalDateTime getVacationModeEnd() {
+    public Instant getVacationModeEnd() {
         return vacationModeEnd;
     }
 
@@ -149,15 +142,17 @@ public class Home {
         }
     }
 
-    public void setVacationModeAdvanced(OnOffType command) {
-        advancedVacationMode = (OnOffType.ON == command);
-    }
-
-    public boolean isAdvancedVacationMode() {
-        return advancedVacationMode;
-    }
-
-    public void setAdvancedVacationMode(boolean advancedVacationMode) {
-        this.advancedVacationMode = advancedVacationMode;
-    }
+    /*
+     * public void setVacationModeAdvanced(OnOffType command) {
+     * advancedVacationMode = (OnOffType.ON == command);
+     * }
+     * 
+     * public boolean isAdvancedVacationMode() {
+     * return advancedVacationMode;
+     * }
+     * 
+     * public void setAdvancedVacationMode(boolean advancedVacationMode) {
+     * this.advancedVacationMode = advancedVacationMode;
+     * }
+     */
 }

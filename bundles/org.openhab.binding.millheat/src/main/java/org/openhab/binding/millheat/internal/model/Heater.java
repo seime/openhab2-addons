@@ -21,77 +21,58 @@ import org.openhab.binding.millheat.internal.dto.DeviceDTO;
  */
 public class Heater {
     private Room room;
-    private final Long id;
+    private final String id;
     private final String name;
     private final String macAddress;
     private final boolean heatingActive;
     private boolean canChangeTemp = true;
-    private final int subDomain;
-    private final int currentTemp;
-    private Integer targetTemp;
+    private final double currentTemp;
+    private Double targetTemp;
     private boolean fanActive;
     private boolean powerStatus;
     private final boolean windowOpen;
 
-    public Heater(final DeviceDTO dto) {
-        id = dto.deviceId;
-        name = dto.deviceName;
-        macAddress = dto.macAddress;
-        heatingActive = dto.heaterFlag;
-        canChangeTemp = dto.canChangeTemp;
-        subDomain = dto.subDomainId;
-        currentTemp = (int) dto.currentTemp;
-        setTargetTemp(dto.holidayTemp);
-        setFanActive(dto.fanStatus);
-        setPowerStatus(dto.powerStatus);
-        windowOpen = dto.openWindow;
-    }
+    private boolean connected;
 
-    public Heater(final DeviceDTO dto, final Room room) {
+    private boolean enabled;
+
+    public Heater(final Room room, final DeviceDTO dto) {
         this.room = room;
         id = dto.deviceId;
-        name = dto.deviceName;
+        name = dto.customName;
         macAddress = dto.macAddress;
-        heatingActive = dto.heaterFlag;
-        canChangeTemp = dto.canChangeTemp;
-        subDomain = dto.subDomainId;
-        currentTemp = (int) dto.currentTemp;
-        if (room != null && room.getMode() != null) {
-            switch (room.getMode()) {
-                case COMFORT:
-                    setTargetTemp(room.getComfortTemp());
-                    break;
-                case SLEEP:
-                    setTargetTemp(room.getSleepTemp());
-                    break;
-                case AWAY:
-                    setTargetTemp(room.getAwayTemp());
-                    break;
-                case OFF:
-                    setTargetTemp(null);
-                    break;
-                default:
-                    // NOOP
-            }
-        }
-        setFanActive(dto.fanStatus);
-        setPowerStatus(dto.powerStatus);
-        windowOpen = dto.openWindow;
+        heatingActive = dto.lastMetrics.heaterFlag == 1;
+        // canChangeTemp = dto.canChangeTemp;
+        currentTemp = dto.lastMetrics.temperatureAmbient;
+        setTargetTemp(dto.deviceSettings.temperatureLastSet);
+        // setFanActive(dto.fanStatus);
+        setPowerStatus(dto.lastMetrics.powerStatus == 1);
+        windowOpen = dto.lastMetrics.openWindowStatus == 1;
+        connected = dto.isConnected;
+        enabled = dto.isEnabled;
     }
 
     @Override
     public String toString() {
         return "Heater [room=" + room + ", id=" + id + ", name=" + name + ", macAddress=" + macAddress
-                + ", heatingActive=" + heatingActive + ", canChangeTemp=" + canChangeTemp + ", subDomain=" + subDomain
-                + ", currentTemp=" + currentTemp + ", targetTemp=" + getTargetTemp() + ", fanActive=" + fanActive()
-                + ", powerStatus=" + powerStatus() + ", windowOpen=" + windowOpen + "]";
+                + ", heatingActive=" + heatingActive + ", canChangeTemp=" + canChangeTemp + ", currentTemp="
+                + currentTemp + ", targetTemp=" + getTargetTemp() + ", fanActive=" + fanActive() + ", powerStatus="
+                + powerStatus() + ", windowOpen=" + windowOpen + "]";
+    }
+
+    public boolean isConnected() {
+        return connected;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public Room getRoom() {
         return room;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
@@ -111,15 +92,11 @@ public class Heater {
         return canChangeTemp;
     }
 
-    public int getSubDomain() {
-        return subDomain;
-    }
-
-    public int getCurrentTemp() {
+    public double getCurrentTemp() {
         return currentTemp;
     }
 
-    public Integer getTargetTemp() {
+    public Double getTargetTemp() {
         return targetTemp;
     }
 
@@ -135,7 +112,7 @@ public class Heater {
         return windowOpen;
     }
 
-    public void setTargetTemp(final Integer targetTemp) {
+    public void setTargetTemp(final Double targetTemp) {
         this.targetTemp = targetTemp;
     }
 

@@ -13,8 +13,8 @@
 package org.openhab.binding.millheat.internal.handler;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -28,56 +28,25 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.BytesContentProvider;
-import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
+import org.openhab.binding.millheat.internal.GsonFactory;
 import org.openhab.binding.millheat.internal.MillheatCommunicationException;
-import org.openhab.binding.millheat.internal.client.BooleanSerializer;
 import org.openhab.binding.millheat.internal.client.RequestLogger;
 import org.openhab.binding.millheat.internal.config.MillheatAccountConfiguration;
-import org.openhab.binding.millheat.internal.dto.AbstractRequest;
-import org.openhab.binding.millheat.internal.dto.AbstractResponse;
-import org.openhab.binding.millheat.internal.dto.DeviceDTO;
-import org.openhab.binding.millheat.internal.dto.GetHomesRequest;
-import org.openhab.binding.millheat.internal.dto.GetHomesResponse;
-import org.openhab.binding.millheat.internal.dto.GetIndependentDevicesByHomeRequest;
-import org.openhab.binding.millheat.internal.dto.GetIndependentDevicesByHomeResponse;
-import org.openhab.binding.millheat.internal.dto.HomeDTO;
-import org.openhab.binding.millheat.internal.dto.LoginRequest;
-import org.openhab.binding.millheat.internal.dto.LoginResponse;
-import org.openhab.binding.millheat.internal.dto.RoomDTO;
-import org.openhab.binding.millheat.internal.dto.SelectDeviceByRoomRequest;
-import org.openhab.binding.millheat.internal.dto.SelectDeviceByRoomResponse;
-import org.openhab.binding.millheat.internal.dto.SelectRoomByHomeRequest;
-import org.openhab.binding.millheat.internal.dto.SelectRoomByHomeResponse;
-import org.openhab.binding.millheat.internal.dto.SetDeviceTempRequest;
-import org.openhab.binding.millheat.internal.dto.SetHolidayParameterRequest;
-import org.openhab.binding.millheat.internal.dto.SetHolidayParameterResponse;
-import org.openhab.binding.millheat.internal.dto.SetRoomTempRequest;
-import org.openhab.binding.millheat.internal.dto.SetRoomTempResponse;
-import org.openhab.binding.millheat.internal.model.Heater;
-import org.openhab.binding.millheat.internal.model.Home;
-import org.openhab.binding.millheat.internal.model.MillheatModel;
-import org.openhab.binding.millheat.internal.model.ModeType;
-import org.openhab.binding.millheat.internal.model.Room;
+import org.openhab.binding.millheat.internal.dto.*;
+import org.openhab.binding.millheat.internal.model.*;
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.QuantityType;
-import org.openhab.core.thing.Bridge;
-import org.openhab.core.thing.ChannelUID;
-import org.openhab.core.thing.Thing;
-import org.openhab.core.thing.ThingStatus;
-import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.*;
 import org.openhab.core.thing.binding.BaseBridgeHandler;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.types.Command;
-import org.openhab.core.util.HexUtils;
-import org.openhab.core.util.StringUtils;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 /**
  * The {@link MillheatAccountHandler} is responsible for handling commands, which are
@@ -87,16 +56,10 @@ import com.google.gson.GsonBuilder;
  */
 @NonNullByDefault
 public class MillheatAccountHandler extends BaseBridgeHandler {
-    private static final String SHA_1_ALGORITHM = "SHA-1";
     private static final int MIN_TIME_BETWEEEN_MODEL_UPDATES_MS = 30_000;
-    private static final int NUM_NONCE_CHARS = 16;
-    private static final String CONTENT_TYPE = "application/x-zc-object";
-    private static final String ALLOWED_NONCE_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private static final String REQUEST_TIMEOUT = "300";
-    public static String authEndpoint = "https://eurouter.ablecloud.cn:9005/zc-account/v1/";
-    public static String serviceEndpoint = "https://eurouter.ablecloud.cn:9005/millService/v1/";
+    private static final String CONTENT_TYPE = "application/json";
+    public static String serviceEndpoint = "https://api.millnorwaycloud.com/";
     private final Logger logger = LoggerFactory.getLogger(MillheatAccountHandler.class);
-    private @Nullable String userId;
     private @Nullable String token;
     private final HttpClient httpClient;
     private final RequestLogger requestLogger;
@@ -105,14 +68,12 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
     private @Nullable ScheduledFuture<?> statusFuture;
     private @NonNullByDefault({}) MillheatAccountConfiguration config;
 
+    private Instant tokenExpirationTime = Instant.now();
+
     public MillheatAccountHandler(final Bridge bridge, final HttpClient httpClient, final BundleContext context) {
         super(bridge);
         this.httpClient = httpClient;
-        final BooleanSerializer serializer = new BooleanSerializer();
-
-        gson = new GsonBuilder().setPrettyPrinting().setDateFormat("yyyy-MM-dd HH:mm:ss")
-                .registerTypeAdapter(Boolean.class, serializer).registerTypeAdapter(boolean.class, serializer)
-                .setLenient().create();
+        gson = GsonFactory.create();
         requestLogger = new RequestLogger(bridge.getUID().getId(), gson);
     }
 
@@ -142,16 +103,14 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
                                 rsp.errorDescription));
             } else {
                 // No error provided on login, proceed to find token and userid
-                String localToken = rsp.token.trim();
-                userId = rsp.userId == null ? null : rsp.userId.toString();
-                if (localToken == null || localToken.isEmpty()) {
+                String idToken = rsp.idToken;
+                if (idToken == null || idToken.isEmpty()) {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                             "error login in, no token provided");
-                } else if (userId == null) {
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                            "error login in, no userId provided");
                 } else {
-                    token = localToken;
+                    token = idToken;
+
+                    tokenExpirationTime = Instant.now().plusSeconds(9 * 60);
                     return true;
                 }
             }
@@ -207,36 +166,38 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
 
     private <T> T sendLoginRequest(final AbstractRequest req, final Class<T> responseType)
             throws MillheatCommunicationException {
-        final Request request = httpClient.newRequest(authEndpoint + req.getRequestUrl());
+        final Request request = httpClient.newRequest(serviceEndpoint + req.getRequestUrl());
         addStandardHeadersAndPayload(request, req);
-        return sendRequest(request, req, responseType);
+        return sendRequest(request, responseType);
     }
 
     private <T> T sendLoggedInRequest(final AbstractRequest req, final Class<T> responseType)
             throws MillheatCommunicationException {
         try {
+            if (Instant.now().isAfter(tokenExpirationTime)) {
+                if (!doLogin()) {
+                    throw new MillheatCommunicationException("Error logging in, cannot send request");
+                }
+            }
+
             final Request request = buildLoggedInRequest(req);
-            return sendRequest(request, req, responseType);
+            // Check if token is valid, it not try to login again
+
+            return sendRequest(request, responseType);
         } catch (NoSuchAlgorithmException e) {
             throw new MillheatCommunicationException("Error building Millheat request: " + e.getMessage(), e);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> T sendRequest(final Request request, final AbstractRequest req, final Class<T> responseType)
+    private <T> T sendRequest(final Request request, final Class<T> responseType)
             throws MillheatCommunicationException {
         try {
+
             final ContentResponse contentResponse = request.send();
             final String responseJson = contentResponse.getContentAsString();
             if (contentResponse.getStatus() == HttpStatus.OK_200) {
-                final AbstractResponse rsp = (AbstractResponse) gson.fromJson(responseJson, responseType);
-                if (rsp == null) {
-                    return (T) null;
-                } else if (rsp.errorCode == 0) {
-                    return (T) rsp;
-                } else {
-                    throw new MillheatCommunicationException(req, rsp);
-                }
+                final T rsp = gson.fromJson(responseJson, responseType);
+                return rsp;
             } else {
                 throw new MillheatCommunicationException(
                         "Error sending request to Millheat server. Server responded with " + contentResponse.getStatus()
@@ -249,31 +210,35 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
 
     public MillheatModel refreshModel() throws MillheatCommunicationException {
         final MillheatModel model = new MillheatModel(System.currentTimeMillis());
-        final GetHomesResponse homesRsp = sendLoggedInRequest(new GetHomesRequest(), GetHomesResponse.class);
-        for (final HomeDTO dto : homesRsp.homes) {
+        final GetHousesResponse homesRsp = sendLoggedInRequest(new GetHousesRequest(), GetHousesResponse.class);
+        for (final HouseDTO dto : homesRsp.houses) {
             model.addHome(new Home(dto));
         }
         for (final Home home : model.getHomes()) {
-            final SelectRoomByHomeResponse roomRsp = sendLoggedInRequest(
-                    new SelectRoomByHomeRequest(home.getId(), home.getTimezone()), SelectRoomByHomeResponse.class);
+            final GetRoomsResponse roomRsp = sendLoggedInRequest(new GetRoomsRequest(home.getId()),
+                    GetRoomsResponse.class);
             for (final RoomDTO dto : roomRsp.rooms) {
                 home.addRoom(new Room(dto, home));
             }
 
-            for (final Room room : home.getRooms()) {
-                final SelectDeviceByRoomResponse deviceRsp = sendLoggedInRequest(
-                        new SelectDeviceByRoomRequest(room.getId(), home.getTimezone()),
-                        SelectDeviceByRoomResponse.class);
+            final GetDevicesResponse[] deviceRsps = sendLoggedInRequest(
+                    new GetDevicesRequest(home.getId(), home.getTimezone()), GetDevicesResponse[].class);
+
+            for (GetDevicesResponse deviceRsp : deviceRsps) {
                 for (final DeviceDTO dto : deviceRsp.devices) {
-                    room.addHeater(new Heater(dto, room));
+                    final Optional<Room> optionalRoom = model.findRoomById(dto.roomId);
+                    home.addHeater(new Heater(optionalRoom.get(), dto));
                 }
             }
-            final GetIndependentDevicesByHomeResponse independentRsp = sendLoggedInRequest(
-                    new GetIndependentDevicesByHomeRequest(home.getId(), home.getTimezone()),
-                    GetIndependentDevicesByHomeResponse.class);
-            for (final DeviceDTO dto : independentRsp.devices) {
-                home.addHeater(new Heater(dto));
-            }
+
+            /*
+             * final GetIndependentDevicesByHomeResponse independentRsp = sendLoggedInRequest(
+             * new GetIndependentDevicesByHomeRequest(home.getId(), home.getTimezone()),
+             * GetIndependentDevicesByHomeResponse.class);
+             * for (final DeviceDTO dto : independentRsp.devices) {
+             * home.addHeater(new Heater(dto));
+             * }
+             */
         }
         return model;
     }
@@ -332,46 +297,34 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
     }
 
     private Request buildLoggedInRequest(final AbstractRequest req) throws NoSuchAlgorithmException {
-        final String nonce = StringUtils.getRandomString(NUM_NONCE_CHARS, ALLOWED_NONCE_CHARACTERS);
-        final String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
-        final String signatureBasis = REQUEST_TIMEOUT + timestamp + nonce + token;
-        MessageDigest md = MessageDigest.getInstance(SHA_1_ALGORITHM);
-        byte[] sha1Hash = md.digest(signatureBasis.getBytes(StandardCharsets.UTF_8));
-        final String signature = HexUtils.bytesToHex(sha1Hash).toLowerCase();
-        final String reqJson = gson.toJson(req);
 
         final Request request = httpClient.newRequest(serviceEndpoint + req.getRequestUrl());
 
-        return addStandardHeadersAndPayload(request, req).header("X-Zc-Timestamp", timestamp)
-                .header("X-Zc-Timeout", REQUEST_TIMEOUT).header("X-Zc-Nonce", nonce).header("X-Zc-User-Id", userId)
-                .header("X-Zc-User-Signature", signature).header("X-Zc-Content-Length", "" + reqJson.length());
+        return addStandardHeadersAndPayload(request, req).header("Authorization", "Bearer " + token);
     }
 
     private Request addStandardHeadersAndPayload(final Request req, final AbstractRequest payload) {
         requestLogger.listenTo(req);
 
-        return req.header("Connection", "Keep-Alive").header("X-Zc-Major-Domain", "seanywell")
-                .header("X-Zc-Msg-Name", "millService").header("X-Zc-Sub-Domain", "milltype").header("X-Zc-Seq-Id", "1")
-                .header("X-Zc-Version", "1").method(HttpMethod.POST).timeout(30, TimeUnit.SECONDS)
+        return req.method(payload.getMethod()).timeout(30, TimeUnit.SECONDS)
                 .content(new BytesContentProvider(gson.toJson(payload).getBytes(StandardCharsets.UTF_8)), CONTENT_TYPE);
     }
 
-    public void updateRoomTemperature(final Long roomId, final Command command, final ModeType mode) {
-        final Optional<Home> optionalHome = model.findHomeByRoomId(roomId);
+    public void updateRoomTemperature(final String roomId, final Command command, final ModeType mode) {
         final Optional<Room> optionalRoom = model.findRoomById(roomId);
-        if (optionalHome.isPresent() && optionalRoom.isPresent()) {
-            final SetRoomTempRequest req = new SetRoomTempRequest(optionalHome.get(), optionalRoom.get());
+        if (optionalRoom.isPresent()) {
+            final SetRoomTempRequest req = new SetRoomTempRequest(optionalRoom.get());
             if (command instanceof QuantityType<?> quantityCommand) {
                 final int newTemp = (int) quantityCommand.longValue();
                 switch (mode) {
                     case SLEEP:
-                        req.sleepTemp = newTemp;
+                        req.roomSleepTemperature = newTemp;
                         break;
                     case AWAY:
-                        req.awayTemp = newTemp;
+                        req.roomAwayTemperature = newTemp;
                         break;
                     case COMFORT:
-                        req.comfortTemp = newTemp;
+                        req.roomComfortTemperature = newTemp;
                         break;
                     default:
                         logger.info("Cannot set room temp for mode {}", mode);
@@ -388,11 +341,10 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
         }
     }
 
-    public void updateIndependentHeaterProperties(@Nullable final String macAddress, @Nullable final Long heaterId,
-            @Nullable final Command temperatureCommand, @Nullable final Command masterOnOffCommand,
-            @Nullable final Command fanCommand) {
-        model.findHeaterByMacOrId(macAddress, heaterId).ifPresent(heater -> {
-            int setTemp = heater.getTargetTemp();
+    public void updateIndependentHeaterProperties(final String macAddress, @Nullable final Command temperatureCommand,
+            @Nullable final Command masterOnOffCommand, @Nullable final Command fanCommand) {
+        model.findHeaterByMac(macAddress).ifPresent(heater -> {
+            double setTemp = heater.getTargetTemp();
             if (temperatureCommand instanceof QuantityType<?> temperature) {
                 setTemp = (int) temperature.longValue();
             }
@@ -446,19 +398,21 @@ public class MillheatAccountHandler extends BaseBridgeHandler {
                     }
                     break;
                 }
-                case SetHolidayParameterRequest.PROP_MODE_ADVANCED: {
-                    if (home.getMode().getMode() == ModeType.VACATION) {
-                        int value = OnOffType.ON == command ? 0 : 1;
-                        SetHolidayParameterRequest req = new SetHolidayParameterRequest(home.getId(),
-                                home.getTimezone(), SetHolidayParameterRequest.PROP_MODE_ADVANCED, value);
-                        if (sendLoggedInRequest(req, SetHolidayParameterResponse.class).isSuccess()) {
-                            home.setVacationModeAdvanced((OnOffType) command);
-                        }
-                    } else {
-                        logger.debug("Must enable vaction mode before advanced vacation mode can be enabled");
-                    }
-                    break;
-                }
+                /*
+                 * case SetHolidayParameterRequest.PROP_MODE_ADVANCED: {
+                 * if (home.getMode().getMode() == ModeType.VACATION) {
+                 * int value = OnOffType.ON == command ? 0 : 1;
+                 * SetHolidayParameterRequest req = new SetHolidayParameterRequest(home.getId(),
+                 * home.getTimezone(), SetHolidayParameterRequest.PROP_MODE_ADVANCED, value);
+                 * if (sendLoggedInRequest(req, SetHolidayParameterResponse.class).isSuccess()) {
+                 * home.setVacationModeAdvanced((OnOffType) command);
+                 * }
+                 * } else {
+                 * logger.debug("Must enable vaction mode before advanced vacation mode can be enabled");
+                 * }
+                 * break;
+                 * }
+                 */
                 case SetHolidayParameterRequest.PROP_MODE: {
                     if (home.getVacationModeStart() != null && home.getVacationModeEnd() != null) {
                         int value = OnOffType.ON == command ? 1 : 0;

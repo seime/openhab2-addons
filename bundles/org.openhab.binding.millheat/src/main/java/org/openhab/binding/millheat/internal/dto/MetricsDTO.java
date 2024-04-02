@@ -12,15 +12,28 @@
  */
 package org.openhab.binding.millheat.internal.dto;
 
-import com.google.gson.annotations.SerializedName;
-
 /**
- * This DTO class wraps the selectHomeList response
+ * This DTO class wraps the metrics details of a device
  *
  * @author Arne Seime - Initial contribution
  */
-public class GetHomesResponse extends AbstractResponse {
-    public Integer hourSystem;
-    @SerializedName("homeList")
-    public HomeDTO[] homes = new HomeDTO[0];
+public class MetricsDTO {
+    public String deviceId;
+
+    public double temperature;
+    public double temperatureAmbient;
+
+    public double humidity;
+
+    public double currentPower;
+
+    public int currentOperationMode;
+
+    public int currentTemperatureTypeInWeeklyProgram;
+
+    public int openWindowStatus;
+
+    public int powerStatus;
+
+    public int heaterFlag;
 }
