@@ -23,9 +23,9 @@ public class RoomDTO {
     public String id;
 
     public String name;
-    public int roomAwayTemperature;
-    public int roomComfortTemperature;
-    public int roomSleepTemperature;
+    public double roomAwayTemperature;
+    public double roomComfortTemperature;
+    public double roomSleepTemperature;
     @SerializedName("averageTemperature")
     public Double currentTemp;
     public String roomProgram;
