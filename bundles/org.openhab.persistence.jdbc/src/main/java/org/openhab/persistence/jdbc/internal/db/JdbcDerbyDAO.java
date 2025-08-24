@@ -21,6 +21,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.knowm.yank.Yank;
 import org.knowm.yank.exceptions.YankSQLException;
 import org.openhab.core.items.Item;
+import org.openhab.core.library.CoreItemFactory;
 import org.openhab.core.persistence.FilterCriteria;
 import org.openhab.core.persistence.FilterCriteria.Ordering;
 import org.openhab.core.types.State;
@@ -69,11 +70,11 @@ public class JdbcDerbyDAO extends JdbcBaseDAO {
     }
 
     private void initSqlTypes() {
-        sqlTypes.put("DATETIMEITEM", "TIMESTAMP");
-        sqlTypes.put("DIMMERITEM", "SMALLINT");
-        sqlTypes.put("IMAGEITEM", "VARCHAR(32000)");
-        sqlTypes.put("ROLLERSHUTTERITEM", "SMALLINT");
-        sqlTypes.put("STRINGITEM", "VARCHAR(32000)");
+        sqlTypes.put(CoreItemFactory.DATETIME, "TIMESTAMP");
+        sqlTypes.put(CoreItemFactory.DIMMER, "SMALLINT");
+        sqlTypes.put(CoreItemFactory.IMAGE, "VARCHAR(32000)");
+        sqlTypes.put(CoreItemFactory.ROLLERSHUTTER, "SMALLINT");
+        sqlTypes.put(CoreItemFactory.STRING, "VARCHAR(32000)");
         sqlTypes.put("tablePrimaryValue", "CURRENT_TIMESTAMP");
         logger.debug("JDBC::initSqlTypes: Initialized the type array sqlTypes={}", sqlTypes.values());
     }
@@ -183,10 +184,10 @@ public class JdbcDerbyDAO extends JdbcBaseDAO {
 
     @Override
     protected String histItemFilterQueryProvider(FilterCriteria filter, int numberDecimalcount, String table,
-            String simpleName, ZoneId timeZone) {
+            String itemType, ZoneId timeZone) {
         logger.debug(
-                "JDBC::getHistItemFilterQueryProvider filter = {}, numberDecimalcount = {}, table = {}, simpleName = {}",
-                StringUtilsExt.filterToString(filter), numberDecimalcount, table, simpleName);
+                "JDBC::getHistItemFilterQueryProvider filter = {}, numberDecimalcount = {}, table = {}, itemType = {}",
+                StringUtilsExt.filterToString(filter), numberDecimalcount, table, itemType);
 
         String filterString = "";
         ZonedDateTime beginDate = filter.getBeginDate();
@@ -218,7 +219,7 @@ public class JdbcDerbyDAO extends JdbcBaseDAO {
         // simulated round function in Derby: "CAST(value 0.0005 AS DECIMAL(15,"+numberDecimalcount+"))"
 
         String queryString = "SELECT time,";
-        if ("NUMBERITEM".equalsIgnoreCase(simpleName) && numberDecimalcount > -1) {
+        if (CoreItemFactory.NUMBER.equalsIgnoreCase(itemType) && numberDecimalcount > -1) {
             // rounding HALF UP
             queryString += "CAST(value 0.";
             for (int i = 0; i < numberDecimalcount; i++) {

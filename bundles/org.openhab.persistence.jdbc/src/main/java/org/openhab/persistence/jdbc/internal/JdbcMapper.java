@@ -236,7 +236,7 @@ public class JdbcMapper {
                 true, numberDecimalcount, table, item, item.getName());
         long timerStart = System.currentTimeMillis();
         List<HistoricItem> result = conf.getDBDAO().doGetHistItemFilterQuery(item, filter, numberDecimalcount, table,
-                item.getName(), timeZoneProvider.getTimeZone());
+                timeZoneProvider.getTimeZone());
         logTime("getHistItemFilterQuery", timerStart, System.currentTimeMillis());
         errCnt = 0;
         return result;

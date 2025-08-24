@@ -18,6 +18,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.knowm.yank.Yank;
 import org.knowm.yank.exceptions.YankSQLException;
+import org.openhab.core.library.CoreItemFactory;
 import org.openhab.persistence.jdbc.internal.exceptions.JdbcSQLException;
 import org.openhab.persistence.jdbc.internal.utils.DbMetaData;
 import org.slf4j.Logger;
@@ -62,8 +63,8 @@ public class JdbcMysqlDAO extends JdbcBaseDAO {
         logger.debug("JDBC::initSqlTypes: Initialize the type array");
 
         // MySQL using utf8mb4 max 65535/4 = 16383, using 16383-128 = 16255
-        sqlTypes.put("IMAGEITEM", "VARCHAR(16255)");
-        sqlTypes.put("STRINGITEM", "VARCHAR(16255)");
+        sqlTypes.put(CoreItemFactory.IMAGE, "VARCHAR(16255)");
+        sqlTypes.put(CoreItemFactory.STRING, "VARCHAR(16255)");
     }
 
     /**
@@ -93,7 +94,7 @@ public class JdbcMysqlDAO extends JdbcBaseDAO {
         this.dbMeta = dbMeta;
         // Initialize sqlTypes, depending on DB version for example
         if (dbMeta.isDbVersionGreater(5, 5)) {
-            sqlTypes.put("DATETIMEITEM", "DATETIME(3)");
+            sqlTypes.put(CoreItemFactory.DATETIME, "DATETIME(3)");
             sqlTypes.put("tablePrimaryKey", "TIMESTAMP(3)");
             sqlTypes.put("tablePrimaryValue", "NOW(3)");
         }

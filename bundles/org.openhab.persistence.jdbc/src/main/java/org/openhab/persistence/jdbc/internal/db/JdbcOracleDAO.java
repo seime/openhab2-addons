@@ -22,6 +22,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.knowm.yank.Yank;
 import org.knowm.yank.exceptions.YankSQLException;
 import org.openhab.core.items.Item;
+import org.openhab.core.library.CoreItemFactory;
 import org.openhab.core.persistence.FilterCriteria;
 import org.openhab.core.persistence.FilterCriteria.Ordering;
 import org.openhab.core.types.State;
@@ -121,21 +122,21 @@ public class JdbcOracleDAO extends JdbcBaseDAO {
      * INFO: http://www.java2s.com/Code/Java/Database-SQL-JDBC/StandardSQLDataTypeswithTheirJavaEquivalents.htm
      */
     private void initSqlTypes() {
-        sqlTypes.put("CALLITEM", "VARCHAR2(200 CHAR)");
-        sqlTypes.put("COLORITEM", "VARCHAR2(70)");
-        sqlTypes.put("CONTACTITEM", "VARCHAR2(6)");
-        sqlTypes.put("DATETIMEITEM", "TIMESTAMP");
-        sqlTypes.put("DIMMERITEM", "NUMBER(3)");
-        sqlTypes.put("IMAGEITEM", "CLOB");
-        sqlTypes.put("LOCATIONITEM", "VARCHAR2(50)");
-        sqlTypes.put("NUMBERITEM", "FLOAT");
-        sqlTypes.put("PLAYERITEM", "VARCHAR2(20)");
-        sqlTypes.put("ROLLERSHUTTERITEM", "NUMBER(3)");
+        sqlTypes.put(CoreItemFactory.CALL, "VARCHAR2(200 CHAR)");
+        sqlTypes.put(CoreItemFactory.COLOR, "VARCHAR2(70)");
+        sqlTypes.put(CoreItemFactory.CONTACT, "VARCHAR2(6)");
+        sqlTypes.put(CoreItemFactory.DATETIME, "TIMESTAMP");
+        sqlTypes.put(CoreItemFactory.DIMMER, "NUMBER(3)");
+        sqlTypes.put(CoreItemFactory.IMAGE, "CLOB");
+        sqlTypes.put(CoreItemFactory.LOCATION, "VARCHAR2(50)");
+        sqlTypes.put(CoreItemFactory.NUMBER, "FLOAT");
+        sqlTypes.put(CoreItemFactory.PLAYER, "VARCHAR2(20)");
+        sqlTypes.put(CoreItemFactory.ROLLERSHUTTER, "NUMBER(3)");
         // VARCHAR2 max length 32767 bytes for MAX_STRING_SIZE=EXTENDED, only 4000 bytes when MAX_STRING_SIZE=STANDARD
         // (EXTENDED is default for ADB). As default character set for ADB is AL32UTF8, it takes between 1 and 4 bytes
         // per character, where most typical characters will only take one. Therefore use a maximum of 16000 characters.
-        sqlTypes.put("STRINGITEM", "VARCHAR2(16000 CHAR)");
-        sqlTypes.put("SWITCHITEM", "VARCHAR2(6)");
+        sqlTypes.put(CoreItemFactory.STRING, "VARCHAR2(16000 CHAR)");
+        sqlTypes.put(CoreItemFactory.SWITCH, "VARCHAR2(6)");
         sqlTypes.put("tablePrimaryKey", "TIMESTAMP");
         sqlTypes.put("tablePrimaryValue", "CURRENT_TIMESTAMP");
         logger.debug("JDBC::initSqlTypes: Initialized the type array sqlTypes={}", sqlTypes.values());
@@ -246,10 +247,10 @@ public class JdbcOracleDAO extends JdbcBaseDAO {
 
     @Override
     protected String histItemFilterQueryProvider(FilterCriteria filter, int numberDecimalcount, String table,
-            String simpleName, ZoneId timeZone) {
+            String itemType, ZoneId timeZone) {
         logger.debug(
-                "JDBC::getHistItemFilterQueryProvider filter = {}, numberDecimalcount = {}, table = {}, simpleName = {}",
-                filter, numberDecimalcount, table, simpleName);
+                "JDBC::getHistItemFilterQueryProvider filter = {}, numberDecimalcount = {}, table = {}, itemType = {}",
+                filter, numberDecimalcount, table, itemType);
 
         String filterString = resolveTimeFilter(filter, timeZone);
         filterString += (filter.getOrdering() == Ordering.ASCENDING) ? " ORDER BY time ASC" : " ORDER BY time DESC";
@@ -259,7 +260,7 @@ public class JdbcOracleDAO extends JdbcBaseDAO {
         }
         // SELECT time, ROUND(value,3) FROM number_item_0114 ORDER BY time DESC OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
         // rounding HALF UP
-        String queryString = "NUMBERITEM".equalsIgnoreCase(simpleName) && numberDecimalcount > -1
+        String queryString = CoreItemFactory.NUMBER.equalsIgnoreCase(itemType) && numberDecimalcount > -1
                 ? "SELECT time, ROUND(value," + numberDecimalcount + ") FROM " + table
                 : "SELECT time, value FROM " + table;
         if (!filterString.isEmpty()) {

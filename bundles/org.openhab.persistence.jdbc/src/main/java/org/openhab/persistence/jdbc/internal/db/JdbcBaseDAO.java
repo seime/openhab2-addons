@@ -35,6 +35,7 @@ import org.knowm.yank.Yank;
 import org.knowm.yank.exceptions.YankSQLException;
 import org.openhab.core.items.GroupItem;
 import org.openhab.core.items.Item;
+import org.openhab.core.library.CoreItemFactory;
 import org.openhab.core.library.items.ColorItem;
 import org.openhab.core.library.items.ContactItem;
 import org.openhab.core.library.items.DateTimeItem;
@@ -70,9 +71,11 @@ import org.slf4j.LoggerFactory;
  * Default Database Configuration class.
  *
  * @author Helmut Lehmeyer - Initial contribution
+ * @author Arne Seime - Use item.getType() to determine db type, not class name reflection
  */
 @NonNullByDefault
 public class JdbcBaseDAO {
+    static final String NUMBER_WITH_DIMENSION = CoreItemFactory.NUMBER + ":";
     private final Logger logger = LoggerFactory.getLogger(JdbcBaseDAO.class);
 
     public final Properties databaseProps = new Properties();
@@ -147,18 +150,18 @@ public class JdbcBaseDAO {
      */
     private void initSqlTypes() {
         logger.debug("JDBC::initSqlTypes: Initialize the type array");
-        sqlTypes.put("CALLITEM", "VARCHAR(200)");
-        sqlTypes.put("COLORITEM", "VARCHAR(70)");
-        sqlTypes.put("CONTACTITEM", "VARCHAR(6)");
-        sqlTypes.put("DATETIMEITEM", "TIMESTAMP");
-        sqlTypes.put("DIMMERITEM", "TINYINT");
-        sqlTypes.put("IMAGEITEM", "VARCHAR(65500)");// jdbc max 21845
-        sqlTypes.put("LOCATIONITEM", "VARCHAR(50)");
-        sqlTypes.put("NUMBERITEM", "DOUBLE");
-        sqlTypes.put("PLAYERITEM", "VARCHAR(20)");
-        sqlTypes.put("ROLLERSHUTTERITEM", "TINYINT");
-        sqlTypes.put("STRINGITEM", "VARCHAR(65500)");// jdbc max 21845
-        sqlTypes.put("SWITCHITEM", "VARCHAR(6)");
+        sqlTypes.put(CoreItemFactory.CALL, "VARCHAR(200)");
+        sqlTypes.put(CoreItemFactory.COLOR, "VARCHAR(70)");
+        sqlTypes.put(CoreItemFactory.CONTACT, "VARCHAR(6)");
+        sqlTypes.put(CoreItemFactory.DATETIME, "TIMESTAMP");
+        sqlTypes.put(CoreItemFactory.DIMMER, "TINYINT");
+        sqlTypes.put(CoreItemFactory.IMAGE, "VARCHAR(65500)");// jdbc max 21845
+        sqlTypes.put(CoreItemFactory.LOCATION, "VARCHAR(50)");
+        sqlTypes.put(CoreItemFactory.NUMBER, "DOUBLE");
+        sqlTypes.put(CoreItemFactory.PLAYER, "VARCHAR(20)");
+        sqlTypes.put(CoreItemFactory.ROLLERSHUTTER, "TINYINT");
+        sqlTypes.put(CoreItemFactory.STRING, "VARCHAR(65500)");// jdbc max 21845
+        sqlTypes.put(CoreItemFactory.SWITCH, "VARCHAR(6)");
         sqlTypes.put("tablePrimaryKey", "TIMESTAMP");
         sqlTypes.put("tablePrimaryValue", "NOW()");
     }
@@ -458,8 +461,8 @@ public class JdbcBaseDAO {
     }
 
     public List<HistoricItem> doGetHistItemFilterQuery(Item item, FilterCriteria filter, int numberDecimalcount,
-            String table, String name, ZoneId timeZone) throws JdbcSQLException {
-        String sql = histItemFilterQueryProvider(filter, numberDecimalcount, table, name, timeZone);
+            String table, ZoneId timeZone) throws JdbcSQLException {
+        String sql = histItemFilterQueryProvider(filter, numberDecimalcount, table, item.getType(), timeZone);
         logger.debug("JDBC::doGetHistItemFilterQuery sql={}", sql);
         List<Object[]> m;
         try {
@@ -507,10 +510,10 @@ public class JdbcBaseDAO {
     static final DateTimeFormatter JDBC_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     protected String histItemFilterQueryProvider(FilterCriteria filter, int numberDecimalcount, String table,
-            String simpleName, ZoneId timeZone) {
+            String itemType, ZoneId timeZone) {
         logger.debug(
-                "JDBC::getHistItemFilterQueryProvider filter = {}, numberDecimalcount = {}, table = {}, simpleName = {}",
-                filter, numberDecimalcount, table, simpleName);
+                "JDBC::getHistItemFilterQueryProvider filter = {}, numberDecimalcount = {}, table = {}, itemType = {}",
+                filter, numberDecimalcount, table, itemType);
 
         String filterString = resolveTimeFilter(filter, timeZone);
         filterString += (filter.getOrdering() == Ordering.ASCENDING) ? " ORDER BY time ASC" : " ORDER BY time DESC";
@@ -519,7 +522,7 @@ public class JdbcBaseDAO {
         }
         // SELECT time, ROUND(value,3) FROM number_item_0114 ORDER BY time DESC LIMIT 0,1
         // rounding HALF UP
-        String queryString = "NUMBERITEM".equalsIgnoreCase(simpleName) && numberDecimalcount > -1
+        String queryString = CoreItemFactory.NUMBER.equalsIgnoreCase(itemType) && numberDecimalcount > -1
                 ? "SELECT time, ROUND(value," + numberDecimalcount + ") FROM " + formattedIdentifier(table)
                 : "SELECT time, value FROM " + formattedIdentifier(table);
         if (!filterString.isEmpty()) {
@@ -588,11 +591,11 @@ public class JdbcBaseDAO {
          * !!ATTENTION!!
          */
         switch (itemType) {
-            case "COLORITEM":
+            case CoreItemFactory.COLOR:
                 vo.setValueTypes(getSqlTypes().get(itemType), java.lang.String.class);
                 vo.setValue(itemState.toString());
                 break;
-            case "NUMBERITEM":
+            case CoreItemFactory.NUMBER:
                 State convertedState = itemState;
                 if (item instanceof NumberItem numberItem && itemState instanceof QuantityType<?> quantityState) {
                     Unit<? extends Quantity<?>> unit = numberItem.getUnit();
@@ -630,21 +633,21 @@ public class JdbcBaseDAO {
                     vo.setValue(convertedState.toString());
                 }
                 break;
-            case "ROLLERSHUTTERITEM":
-            case "DIMMERITEM":
+            case CoreItemFactory.ROLLERSHUTTER:
+            case CoreItemFactory.DIMMER:
                 vo.setValueTypes(getSqlTypes().get(itemType), java.lang.Integer.class);
                 int value = ((DecimalType) itemState).intValue();
                 logger.debug("JDBC::storeItemValueProvider: newVal.intValue: '{}'", value);
                 vo.setValue(value);
                 break;
-            case "DATETIMEITEM":
+            case CoreItemFactory.DATETIME:
                 vo.setValueTypes(getSqlTypes().get(itemType), java.sql.Timestamp.class);
                 java.sql.Timestamp d = new java.sql.Timestamp(
                         ((DateTimeType) itemState).getZonedDateTime().toInstant().toEpochMilli());
                 logger.debug("JDBC::storeItemValueProvider: DateTimeItem: '{}'", d);
                 vo.setValue(d);
                 break;
-            case "IMAGEITEM":
+            case CoreItemFactory.IMAGE:
                 vo.setValueTypes(getSqlTypes().get(itemType), java.lang.String.class);
                 String encodedString = item.getState().toFullString();
                 logger.debug("JDBC::storeItemValueProvider: ImageItem: '{}'", encodedString);
@@ -668,9 +671,10 @@ public class JdbcBaseDAO {
                 "JDBC::ItemResultHandler::handleResult getState value = '{}', unit = '{}', getClass = '{}', clazz = '{}'",
                 v, unit, v.getClass(), v.getClass().getSimpleName());
         if (item instanceof NumberItem) {
-            String it = getSqlTypes().get("NUMBERITEM");
+            String it = getSqlTypes().get(CoreItemFactory.NUMBER);
             if (it == null) {
-                throw new UnsupportedOperationException("No SQL type defined for item type NUMBERITEM");
+                throw new UnsupportedOperationException(
+                        String.format("No SQL type defined for item type %s", CoreItemFactory.NUMBER));
             }
             if (it.toUpperCase().contains("DOUBLE") || (it.toUpperCase().contains("FLOAT"))) {
                 return unit == null ? new DecimalType(objectAsNumber(v).doubleValue())
@@ -768,7 +772,7 @@ public class JdbcBaseDAO {
 
     private String getItemType(Item i) {
         Item item = i;
-        String def = "STRINGITEM";
+        String def = CoreItemFactory.STRING;
         if (i instanceof GroupItem groupItem) {
             item = groupItem.getBaseItem();
             if (item == null) {
@@ -778,19 +782,20 @@ public class JdbcBaseDAO {
                         i.getName());
                 Iterator<Item> iterator = groupItem.getMembers().iterator();
                 if (!iterator.hasNext()) {
-                    logger.debug(
-                            "JDBC::getItemType: No Child-Members of GroupItem {}, use ItemType for STRINGITEM as Fallback",
-                            i.getName());
+                    logger.debug("JDBC::getItemType: No Child-Members of GroupItem {}, use ItemType {} as Fallback",
+                            i.getName(), def);
                     return def;
                 }
                 item = iterator.next();
             }
         }
-        String itemType = item.getClass().getSimpleName().toUpperCase();
+        String itemType = item.getType();
+        if (itemType.startsWith(NUMBER_WITH_DIMENSION)) {
+            itemType = CoreItemFactory.NUMBER;
+        }
         if (sqlTypes.get(itemType) == null) {
-            logger.warn(
-                    "JDBC::getItemType: No sqlType found for ItemType {}, use ItemType for STRINGITEM as Fallback for {}",
-                    itemType, i.getName());
+            logger.warn("JDBC::getItemType: No sqlType found for ItemType {}, use ItemType for {} as Fallback for {}",
+                    itemType, def, i.getName());
             return def;
         }
         return itemType;

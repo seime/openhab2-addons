@@ -20,6 +20,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.knowm.yank.Yank;
 import org.knowm.yank.exceptions.YankSQLException;
 import org.openhab.core.items.Item;
+import org.openhab.core.library.CoreItemFactory;
 import org.openhab.core.persistence.FilterCriteria;
 import org.openhab.core.persistence.FilterCriteria.Ordering;
 import org.openhab.core.types.State;
@@ -103,18 +104,18 @@ public class JdbcPostgresqlDAO extends JdbcBaseDAO {
      */
     private void initSqlTypes() {
         // Initialize the type array
-        sqlTypes.put("CALLITEM", "VARCHAR");
-        sqlTypes.put("COLORITEM", "VARCHAR");
-        sqlTypes.put("CONTACTITEM", "VARCHAR");
-        sqlTypes.put("DATETIMEITEM", "TIMESTAMPTZ");
-        sqlTypes.put("DIMMERITEM", "SMALLINT");
-        sqlTypes.put("IMAGEITEM", "VARCHAR");
-        sqlTypes.put("LOCATIONITEM", "VARCHAR");
-        sqlTypes.put("NUMBERITEM", "DOUBLE PRECISION");
-        sqlTypes.put("PLAYERITEM", "VARCHAR");
-        sqlTypes.put("ROLLERSHUTTERITEM", "SMALLINT");
-        sqlTypes.put("STRINGITEM", "VARCHAR");
-        sqlTypes.put("SWITCHITEM", "VARCHAR");
+        sqlTypes.put(CoreItemFactory.CALL, "VARCHAR");
+        sqlTypes.put(CoreItemFactory.COLOR, "VARCHAR");
+        sqlTypes.put(CoreItemFactory.CONTACT, "VARCHAR");
+        sqlTypes.put(CoreItemFactory.DATETIME, "TIMESTAMPTZ");
+        sqlTypes.put(CoreItemFactory.DIMMER, "SMALLINT");
+        sqlTypes.put(CoreItemFactory.IMAGE, "VARCHAR");
+        sqlTypes.put(CoreItemFactory.LOCATION, "VARCHAR");
+        sqlTypes.put(CoreItemFactory.NUMBER, "DOUBLE PRECISION");
+        sqlTypes.put(CoreItemFactory.PLAYER, "VARCHAR");
+        sqlTypes.put(CoreItemFactory.ROLLERSHUTTER, "SMALLINT");
+        sqlTypes.put(CoreItemFactory.STRING, "VARCHAR");
+        sqlTypes.put(CoreItemFactory.SWITCH, "VARCHAR");
         sqlTypes.put("tablePrimaryKey", "TIMESTAMPTZ");
         logger.debug("JDBC::initSqlTypes: Initialized the type array sqlTypes={}", sqlTypes.values());
     }
@@ -250,10 +251,10 @@ public class JdbcPostgresqlDAO extends JdbcBaseDAO {
 
     @Override
     protected String histItemFilterQueryProvider(FilterCriteria filter, int numberDecimalcount, String table,
-            String simpleName, ZoneId timeZone) {
+            String itemType, ZoneId timeZone) {
         logger.debug(
-                "JDBC::getHistItemFilterQueryProvider filter = {}, numberDecimalcount = {}, table = {}, simpleName = {}",
-                filter.toString(), numberDecimalcount, table, simpleName);
+                "JDBC::getHistItemFilterQueryProvider filter = {}, numberDecimalcount = {}, table = {}, itemType = {}",
+                filter, numberDecimalcount, table, itemType);
 
         String filterString = "";
         ZonedDateTime beginDate = filter.getBeginDate();
@@ -273,7 +274,7 @@ public class JdbcPostgresqlDAO extends JdbcBaseDAO {
             filterString += " OFFSET " + filter.getPageNumber() * filter.getPageSize() + " LIMIT "
                     + filter.getPageSize();
         }
-        String queryString = "NUMBERITEM".equalsIgnoreCase(simpleName) && numberDecimalcount > -1
+        String queryString = CoreItemFactory.NUMBER.equalsIgnoreCase(itemType) && numberDecimalcount > -1
                 ? "SELECT time, ROUND(CAST (value AS numeric)," + numberDecimalcount + ") FROM "
                         + formattedIdentifier(table)
                 : "SELECT time, value FROM " + formattedIdentifier(table);
