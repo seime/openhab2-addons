@@ -522,7 +522,7 @@ public class JdbcBaseDAO {
         }
         // SELECT time, ROUND(value,3) FROM number_item_0114 ORDER BY time DESC LIMIT 0,1
         // rounding HALF UP
-        String queryString = CoreItemFactory.NUMBER.equalsIgnoreCase(itemType) && numberDecimalcount > -1
+        String queryString = isNumericItem(itemType) && numberDecimalcount > -1
                 ? "SELECT time, ROUND(value," + numberDecimalcount + ") FROM " + formattedIdentifier(table)
                 : "SELECT time, value FROM " + formattedIdentifier(table);
         if (!filterString.isEmpty()) {
@@ -814,5 +814,9 @@ public class JdbcBaseDAO {
             throw new UnsupportedOperationException("No data type found for " + getItemType(item));
         }
         return dataType;
+    }
+
+    protected static boolean isNumericItem(String itemType) {
+        return CoreItemFactory.NUMBER.equals(itemType) ||itemType.startsWith(NUMBER_WITH_DIMENSION);
     }
 }

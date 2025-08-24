@@ -260,7 +260,7 @@ public class JdbcOracleDAO extends JdbcBaseDAO {
         }
         // SELECT time, ROUND(value,3) FROM number_item_0114 ORDER BY time DESC OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
         // rounding HALF UP
-        String queryString = CoreItemFactory.NUMBER.equalsIgnoreCase(itemType) && numberDecimalcount > -1
+        String queryString = isNumericItem(itemType) && numberDecimalcount > -1
                 ? "SELECT time, ROUND(value," + numberDecimalcount + ") FROM " + table
                 : "SELECT time, value FROM " + table;
         if (!filterString.isEmpty()) {

@@ -274,7 +274,7 @@ public class JdbcPostgresqlDAO extends JdbcBaseDAO {
             filterString += " OFFSET " + filter.getPageNumber() * filter.getPageSize() + " LIMIT "
                     + filter.getPageSize();
         }
-        String queryString = CoreItemFactory.NUMBER.equalsIgnoreCase(itemType) && numberDecimalcount > -1
+        String queryString = isNumericItem(itemType) && numberDecimalcount > -1
                 ? "SELECT time, ROUND(CAST (value AS numeric)," + numberDecimalcount + ") FROM "
                         + formattedIdentifier(table)
                 : "SELECT time, value FROM " + formattedIdentifier(table);

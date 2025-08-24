@@ -219,7 +219,7 @@ public class JdbcDerbyDAO extends JdbcBaseDAO {
         // simulated round function in Derby: "CAST(value 0.0005 AS DECIMAL(15,"+numberDecimalcount+"))"
 
         String queryString = "SELECT time,";
-        if (CoreItemFactory.NUMBER.equalsIgnoreCase(itemType) && numberDecimalcount > -1) {
+        if (isNumericItem(itemType) && numberDecimalcount > -1) {
             // rounding HALF UP
             queryString += "CAST(value 0.";
             for (int i = 0; i < numberDecimalcount; i++) {
