@@ -28,6 +28,8 @@ public class UniFiPoePortThingConfig {
 
     private String macAddress = "";
 
+    private String nid = "";
+
     public int getPortNumber() {
         return portNumber;
     }
@@ -39,6 +41,10 @@ public class UniFiPoePortThingConfig {
     private void setMacAddress(final String macAddress) {
         // method to avoid ide auto format mark the field as final
         this.macAddress = macAddress;
+    }
+
+    public String getNid() {
+        return nid;
     }
 
     public boolean isValid() {

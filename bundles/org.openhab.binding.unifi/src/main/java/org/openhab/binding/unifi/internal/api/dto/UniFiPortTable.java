@@ -13,6 +13,7 @@
 package org.openhab.binding.unifi.internal.api.dto;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 /**
  * The {@link UniFiPortTable} represents the data model of UniFi port table, which is an extend of port override.
@@ -29,6 +30,17 @@ public class UniFiPortTable {
 
     @Expose
     private String poeMode;
+
+    @Expose
+    @SerializedName("tagged_vlan_mgmt")
+    private String taggedVlanManagementMode;
+
+    @Expose
+    @SerializedName("native_networkconf_id")
+    private String nativeNetworkConfId;
+
+    @Expose
+    private boolean portSecurityEnabled;
 
     private String name;
 
@@ -59,6 +71,10 @@ public class UniFiPortTable {
 
     public String getPoeMode() {
         return poeMode;
+    }
+
+    public String getTaggedVlanManagementMode() {
+        return taggedVlanManagementMode;
     }
 
     public String getName() {
@@ -93,10 +109,19 @@ public class UniFiPortTable {
         return poeCurrent;
     }
 
+    public String getNativeNetworkConfId() {
+        return nativeNetworkConfId;
+    }
+
+    public boolean isPortSecurityEnabled() {
+        return portSecurityEnabled;
+    }
+
     @Override
     public String toString() {
         return String.format(
-                "UniFiPortTable{portIx: '%d', portconfId: '%s', poeMode: '%s', name: '%s', enable: '%b', up: '%b', portPoe: '%b', poeEnable: '%b, poePower: '%s', poeVoltage: '%s', poeCurrent: '%s'}",
-                portIdx, portconfId, poeMode, name, enable, up, portPoe, poeEnable, poePower, poeVoltage, poeCurrent);
+                "UniFiPortTable{portIx: '%d', portconfId: '%s', poeMode: '%s', name: '%s', enable: '%b', up: '%b', portPoe: '%b', poeEnable: '%b, poePower: '%s', poeVoltage: '%s', poeCurrent: '%s', taggedVlanManagementMode: '%s', nativeNetworkConfId: '%s', portSecurityEnabled: '%b'}",
+                portIdx, portconfId, poeMode, name, enable, up, portPoe, poeEnable, poePower, poeVoltage, poeCurrent,
+                taggedVlanManagementMode, nativeNetworkConfId, portSecurityEnabled);
     }
 }

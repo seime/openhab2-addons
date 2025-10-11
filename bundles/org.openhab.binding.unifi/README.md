@@ -103,6 +103,7 @@ The following table describes the `poePort` configuration parameters:
 |------------|-----------------------------------------------------------|----------|
 | portNumber | The port number as reported by the switch (starts with 1) | Required |
 | macAddress | The MAC address of the switch device the port is part of  | Required |
+| nid        | The ID of the network to use when activating the port     | -        |
 
 ### `accessPoint`
 
@@ -222,18 +223,22 @@ Sending `ON` to this channel will trigger a reconnect via the controller.
 
 The `poePort` information that is retrieved is available as these channels:
 
-| Channel ID | Item Type                | Description                                           | Permissions |
-|------------|--------------------------|-------------------------------------------------------|-------------|
-| online     | Switch                   | Online status of the port                             | Read        |
-| mode       | Selection                | Select the PoE mode: off, auto, pasv24 or passthrough | Read, Write |
-| enable     | Switch                   | Enable Power over Ethernet                            | Read, Write |
-| cmd        | String                   | Command channel: `power-cycle`: Power Cycle port      | Write       |
-| power      | Number:Power             | Power consumption of the port in Watt                 | Read        |
-| voltage    | Number:ElectricPotential | Voltage of the port in Volt                           | Read        |
-| current    | Number:ElectricCurrent   | Current used by the port in mA                        | Read        |
+| Channel ID  | Item Type                | Description                                                                                                                                    | Permissions |
+|-------------|--------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
+| online      | Switch                   | Online status of the port                                                                                                                      | Read        |
+| portEnable  | Selection                | Select the overall port config: active, disabled, restricted. Note that to activate a disabled port, the thing `nid` config value must be set. | Read, Write |
+| mode        | Selection                | Select the PoE mode: off, auto, pasv24 or passthrough                                                                                          | Read, Write |
+| enable      | Switch                   | Enable Power over Ethernet                                                                                                                     | Read, Write |
+| cmd         | String                   | Command channel: `power-cycle`: Power Cycle port                                                                                               | Write       |
+| power       | Number:Power             | Power consumption of the port in Watt                                                                                                          | Read        |
+| voltage     | Number:ElectricPotential | Voltage of the port in Volt                                                                                                                    | Read        |
+| current     | Number:ElectricCurrent   | Current used by the port in mA                                                                                                                 | Read        |
 
 The `enable` switch channel has a configuration parameter `mode` which is the value used to switch PoE on when the channel is switched to ON.
 The default mode value is `auto`.
+
+The `portEnable` channel reflects this console configuration section:
+![Port enabling/disabling](port_enable.png)
 
 ### `accessPoint`
 

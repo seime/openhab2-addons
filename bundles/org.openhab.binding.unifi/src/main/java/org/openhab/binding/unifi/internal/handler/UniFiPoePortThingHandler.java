@@ -12,17 +12,7 @@
  */
 package org.openhab.binding.unifi.internal.handler;
 
-import static org.openhab.binding.unifi.internal.UniFiBindingConstants.CHANNEL_ENABLE_PARAMETER_MODE;
-import static org.openhab.binding.unifi.internal.UniFiBindingConstants.CHANNEL_ENABLE_PARAMETER_MODE_AUTO;
-import static org.openhab.binding.unifi.internal.UniFiBindingConstants.CHANNEL_ENABLE_PARAMETER_MODE_OFF;
-import static org.openhab.binding.unifi.internal.UniFiBindingConstants.CHANNEL_ONLINE;
-import static org.openhab.binding.unifi.internal.UniFiBindingConstants.CHANNEL_PORT_POE_CMD;
-import static org.openhab.binding.unifi.internal.UniFiBindingConstants.CHANNEL_PORT_POE_CMD_POWER_CYCLE;
-import static org.openhab.binding.unifi.internal.UniFiBindingConstants.CHANNEL_PORT_POE_CURRENT;
-import static org.openhab.binding.unifi.internal.UniFiBindingConstants.CHANNEL_PORT_POE_ENABLE;
-import static org.openhab.binding.unifi.internal.UniFiBindingConstants.CHANNEL_PORT_POE_MODE;
-import static org.openhab.binding.unifi.internal.UniFiBindingConstants.CHANNEL_PORT_POE_POWER;
-import static org.openhab.binding.unifi.internal.UniFiBindingConstants.CHANNEL_PORT_POE_VOLTAGE;
+import static org.openhab.binding.unifi.internal.UniFiBindingConstants.*;
 import static org.openhab.core.library.unit.MetricPrefix.MILLI;
 
 import javax.measure.Quantity;
@@ -125,6 +115,19 @@ public class UniFiPoePortThingHandler extends UniFiBaseThingHandler<UniFiSwitchP
             case CHANNEL_PORT_POE_MODE:
                 state = StringType.valueOf(port.getPoeMode());
                 break;
+            case CHANNEL_PORT_ENABLE:
+                if ("auto".equals(port.getTaggedVlanManagementMode())
+                        && Boolean.FALSE.equals(port.isPortSecurityEnabled())
+                        && !"".equals(port.getNativeNetworkConfId())) {
+                    state = StringType.valueOf("active");
+                } else if ("block_all".equals(port.getTaggedVlanManagementMode())
+                        && Boolean.TRUE.equals(port.isPortSecurityEnabled())
+                        && "".equals(port.getNativeNetworkConfId())) {
+                    state = StringType.valueOf("disabled");
+                } else {
+                    state = StringType.valueOf("restricted");
+                }
+                break;
             case CHANNEL_PORT_POE_POWER:
                 state = safeDouble(port.getPoePower(), Units.WATT);
                 break;
@@ -178,6 +181,10 @@ public class UniFiPoePortThingHandler extends UniFiBaseThingHandler<UniFiSwitchP
                     return handleModeCommand(controller, ports, command.toFullString());
                 }
                 break;
+            case CHANNEL_PORT_ENABLE:
+                if (command instanceof StringType) {
+                    return handlePortEnableCommand(controller, ports, command.toFullString());
+                }
             case CHANNEL_PORT_POE_CMD:
                 if (command instanceof StringType) {
                     return handleCmd(controller, ports, command.toFullString());
@@ -194,6 +201,33 @@ public class UniFiPoePortThingHandler extends UniFiBaseThingHandler<UniFiSwitchP
 
         if (canUpdate(device, ports) && device != null) {
             controller.poeMode(device, ports.updatedList(config.getPortNumber(), p -> p.setPoeMode(poeMode)));
+            // No refresh because UniFi device takes some time to update. Therefore a refresh would only show the
+            // old state.
+        }
+        return true;
+    }
+
+    private boolean handlePortEnableCommand(final UniFiController controller, final UniFiSwitchPorts ports,
+            final String taggedVlanManagementMode) throws UniFiException {
+        final @Nullable UniFiDevice device = controller.getCache().getDevice(config.getMacAddress());
+
+        if (canUpdate(device, ports) && device != null) {
+            switch (taggedVlanManagementMode) {
+                case "active":
+                    controller.poeMode(device, ports.updatedList(config.getPortNumber(), p -> {
+                        p.setTaggedVlanManagementMode("auto");
+                        p.setPortSecurityEnabled(false);
+                        p.setNativeNetworkConfId(config.getNid());
+                    }));
+                    break;
+                case "disabled":
+                    controller.poeMode(device, ports.updatedList(config.getPortNumber(), p -> {
+                        p.setTaggedVlanManagementMode("block_all");
+                        p.setPortSecurityEnabled(true);
+                        p.setNativeNetworkConfId("");
+                    }));
+                    break;
+            }
             // No refresh because UniFi device takes some time to update. Therefore a refresh would only show the
             // old state.
         }

@@ -90,6 +90,7 @@ public final class UniFiBindingConstants {
     public static final String CHANNEL_ENABLE_PARAMETER_MODE_OFF = "off";
     public static final String CHANNEL_ENABLE_PARAMETER_MODE_AUTO = "auto";
     public static final String CHANNEL_PORT_POE_MODE = "mode";
+    public static final String CHANNEL_PORT_ENABLE = "portEnable";
     public static final String CHANNEL_PORT_POE_CMD = "cmd";
     public static final String CHANNEL_PORT_POE_CMD_POWER_CYCLE = "powercycle";
     public static final String CHANNEL_PORT_POE_ENABLE = "enable";

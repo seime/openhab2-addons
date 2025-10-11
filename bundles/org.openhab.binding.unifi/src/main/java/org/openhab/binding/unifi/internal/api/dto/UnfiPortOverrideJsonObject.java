@@ -26,6 +26,9 @@ public class UnfiPortOverrideJsonObject {
     private static final String PORT_IDX = "port_idx";
     private static final String PORT_CONF_ID = "port_conf_id";
     private static final String POE_MODE = "poe_mode";
+    private static final String TAGGED_VLAN_MANAGEMENT = "tagged_vlan_mgmt";
+    private static final String NATIVE_NETWORK_CONF_ID = "native_networkconf_id";
+    private static final String PORT_SECURITY_ENABLED = "port_security_enabled";
 
     private final JsonObject jsonObject;
 
@@ -55,6 +58,30 @@ public class UnfiPortOverrideJsonObject {
 
     public void setPoeMode(final String poeMode) {
         jsonObject.addProperty(POE_MODE, poeMode);
+    }
+
+    public String getTaggedVlanManagementMode() {
+        return jsonObject.get(TAGGED_VLAN_MANAGEMENT).getAsString();
+    }
+
+    public void setTaggedVlanManagementMode(final String taggedVlanManagementMode) {
+        jsonObject.addProperty(TAGGED_VLAN_MANAGEMENT, taggedVlanManagementMode);
+    }
+
+    public String getNativeNetworkConfId() {
+        return jsonObject.get(NATIVE_NETWORK_CONF_ID).getAsString();
+    }
+
+    public void setNativeNetworkConfId(final String nativeNetworkConfId) {
+        jsonObject.addProperty(NATIVE_NETWORK_CONF_ID, nativeNetworkConfId);
+    }
+
+    public boolean isPortSecurityEnabled() {
+        return jsonObject.get(PORT_SECURITY_ENABLED).getAsBoolean();
+    }
+
+    public void setPortSecurityEnabled(final boolean portSecurityEnabled) {
+        jsonObject.addProperty(PORT_SECURITY_ENABLED, portSecurityEnabled);
     }
 
     @Override

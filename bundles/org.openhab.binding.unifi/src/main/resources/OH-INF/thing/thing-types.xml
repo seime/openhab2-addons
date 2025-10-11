@@ -131,6 +131,7 @@
 		<channels>
 			<channel id="online" typeId="portOnline"/>
 			<channel id="mode" typeId="poeMode"/>
+			<channel id="portEnable" typeId="portEnable"/>
 			<channel id="enable" typeId="poeEnable"/>
 			<channel id="cmd" typeId="poeCmd"/>
 			<channel id="power" typeId="poePower"/>
@@ -429,6 +430,25 @@
 				<option value="auto">Auto</option>
 				<option value="pasv24">24V</option>
 				<option value="passthrough">Passthrough</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="portEnable">
+		<item-type>String</item-type>
+		<label>Port Enable/Disable</label>
+		<description>General Port setting</description>
+		<command>
+			<options>
+				<option value="active">Active</option>
+				<option value="disabled">Disabled</option>
+			</options>
+		</command>
+		<state>
+			<options>
+				<option value="active">Active</option>
+				<option value="disabled">Disabled</option>
+				<option value="restricted">Restricted</option>
 			</options>
 		</state>
 	</channel-type>
